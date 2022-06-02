@@ -1,13 +1,13 @@
 ;;; reduce-delim.el -- highlight matching group or block delimiter
 
-;; Copyright (C) 2018 Francis J. Wright
+;; Copyright (C) 2018, 2022 Francis J. Wright
 
 ;; Author: Francis J. Wright <https://sourceforge.net/u/fjwright>
 ;; Created: 22 March 2018
-;; Version: $Id: reduce-delim.el 4680 2018-06-30 15:06:06Z fjwright $	
+;; Version: $Id: reduce-delim.el 4680 2018-06-30 15:06:06Z fjwright $
 ;; Keywords: languages, faces
 ;; Homepage: http://reduce-algebra.sourceforge.net/reduce-ide
-;; Package-Version: 1.54
+;; Package-Version: 1.55
 ;; Package-Requires: ((reduce-mode "1.54"))
 
 ;; This file is not part of GNU Emacs.
@@ -173,11 +173,14 @@ matching delimiter is highlighted in `reduce-show-delim-style' after
   ;; (logand x 1) = lowest order bit of x = 0 if x is even.
   (= (logand (skip-syntax-backward "/\\") 1) 0))
 
-(defun reduce-show-delim--unescaped-word-p ()
-  "Return non-nil if point precedes an unescaped word, i.e.
-point is not preceded by an escape or a word character."
+(defun reduce-show-delim--distinct-word-p (word-length)
+  "Return non-nil if word of length WORD-LENGTH after point is distinct,
+i.e. point is not preceded by an escape or a word character and
+the word is not followed by an escape or a word character."
   ;; Only used in reduce-show-delim--categorize-delim.
-  (= (skip-syntax-backward "/\\w") 0))
+  (and (= (skip-syntax-backward "/\\w") 0)
+       (progn (forward-char word-length)
+              (= (skip-syntax-forward "/\\w") 0))))
 
 (defun reduce-show-delim--categorize-delim (pos)
   "Determine whether the characters after POS form a delimiter.
@@ -195,23 +198,20 @@ isn't a delimiter, or it is an escaped delimiter, return nil."
 			(cons 2 pos))
 		   ((and (looking-at ">>") (reduce-show-delim--unescaped-p))
 			(cons -2 (+ pos 2)))
-		   ((and (looking-at "begin") (reduce-show-delim--unescaped-word-p))
+		   ((and (looking-at "begin") (reduce-show-delim--distinct-word-p 5))
 			(cons 5 pos))
-		   ((and (looking-at "end") (reduce-show-delim--unescaped-word-p))
+		   ((and (looking-at "end") (reduce-show-delim--distinct-word-p 3))
 			(cons -3 (+ pos 3))))))))
 
 (defun reduce-show-delim--locate-delim-backward (&optional pos)
   "Locate and return the start of a delimiter ending at POS.
 Use point if POS not given.  Return nil if no delimiter found."
+  ;; Only used as argument of reduce-show-delim--categorize-delim.
   (save-excursion
 	(if pos (goto-char pos))			; otherwise start from point
 	(save-match-data
-	  (and (setq pos (search-backward-regexp
-					  "\\(?:\\(<<\\|>>\\)\\|begin\\|end\\)\\=" nil 0))
-		   (if (match-beginning 1)
-			   (reduce-show-delim--unescaped-p)
-			 (reduce-show-delim--unescaped-word-p))
-		   pos))))
+	  (re-search-backward
+	   "\\(?:\\(<<\\|>>\\)\\|begin\\|end\\)\\=" nil t))))
 
 (defun reduce-show-delim--locate-near-delim ()
   "Locate an unescaped delimiter \"near\" point to show.
