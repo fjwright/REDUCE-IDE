@@ -2248,7 +2248,7 @@ the function name(s) matched; otherwise return nil."
   ;; already be fontified and var_or_functional_keyword should not be
   ;; fontified by this rule; it may be a variable or one of the
   ;; functional keywords that can return a value: begin, if, for*.
-  (message "Function composition search: %d %d" (point) limit)
+  ;; (message "Function composition search: %d %d" (point) limit)
   (let (beg newend end)
     ;; Find the next identifier that is not a keyword before limit
     ;; and save its beginning and end positions.
@@ -2289,7 +2289,7 @@ the function name(s) matched; otherwise return nil."
              (setq end newend newend (match-end 0)))))
       (when end                         ; also found final identifier
         (set-match-data (list beg end))
-        (message "Function composition found: %d %d" beg end)
+        ;; (message "Function composition found: %d %d" beg end)
         newend ;; t
         ;; (add-face-text-property beg end 'font-lock-warning-face) ; FOR DEBUGGING!
         ))))

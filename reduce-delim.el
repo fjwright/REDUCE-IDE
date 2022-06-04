@@ -1,4 +1,4 @@
-;;; reduce-delim.el -- highlight matching group or block delimiter
+;;; reduce-delim.el --- Highlight matching group or block delimiter
 
 ;; Copyright (C) 2018, 2022 Francis J. Wright
 
@@ -174,9 +174,9 @@ matching delimiter is highlighted in `reduce-show-delim-style' after
   (= (logand (skip-syntax-backward "/\\") 1) 0))
 
 (defun reduce-show-delim--distinct-word-p (word-length)
-  "Return non-nil if word of length WORD-LENGTH after point is distinct,
-i.e. point is not preceded by an escape or a word character and
-the word is not followed by an escape or a word character."
+  "Return non-nil if distinct word of length WORD-LENGTH after point.
+That is, point is not preceded by an escape or a word character
+and the word is not followed by an escape or a word character."
   ;; Only used in reduce-show-delim--categorize-delim.
   (and (= (skip-syntax-backward "/\\w") 0)
        (progn (forward-char word-length)
