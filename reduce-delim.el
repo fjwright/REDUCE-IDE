@@ -171,16 +171,16 @@ matching delimiter is highlighted in `reduce-show-delim-style' after
   "Return non-nil if the delimiter after point is unescaped."
   ;; Only used in reduce-show-delim--categorize-delim.
   ;; (logand x 1) = lowest order bit of x = 0 if x is even.
-  (= (logand (skip-syntax-backward "/\\") 1) 0))
+  (= (logand (skip-syntax-backward "/") 1) 0))
 
 (defun reduce-show-delim--distinct-word-p (word-length)
   "Return non-nil if distinct word of length WORD-LENGTH after point.
 That is, point is not preceded by an escape or a word character
 and the word is not followed by an escape or a word character."
   ;; Only used in reduce-show-delim--categorize-delim.
-  (and (= (skip-syntax-backward "/\\w") 0)
+  (and (= (skip-syntax-backward "/w") 0)
        (progn (forward-char word-length)
-              (= (skip-syntax-forward "/\\w") 0))))
+              (= (skip-syntax-forward "/w") 0))))
 
 (defun reduce-show-delim--categorize-delim (pos)
   "Determine whether the characters after POS form a delimiter.
@@ -272,7 +272,7 @@ Return t if successful; otherwise move as far as possible and return nil."
 Return t if successful; otherwise move as far as possible and return nil."
   (goto-char (- pos 3))
   (when (reduce-backward-block)
-	(skip-chars-forward " \t")
+	(skip-chars-forward " \t\n")
 	t))
 
 (defun reduce-show-delim-data-function ()
