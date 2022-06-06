@@ -1911,7 +1911,7 @@ passing on any prefix argument (in raw form)."
 
 ;; Note that Font Lock Mode is documented in the ELisp manual under
 ;; Major and Minor Modes.  Fontification is performed syntactically
-;; (e.g. comments) and THEN by keyword.
+;; (e.g. strings) and THEN by keyword.
 
 ;; Regard quoted identifiers and lists as data and don't fontify them.
 
@@ -1928,12 +1928,13 @@ passing on any prefix argument (in raw form)."
   (mapconcat 'identity
              (list
               "begin" "end" "return" "<<" ">>"
-              "if" "then" "else"
+              "if" "then" "else" "ws"
               "while" "do" "repeat" "until"
               "collect" "join" "conc" "sum" "product"
               "for\\(?:\\s-*\\(?:all\\|each\\)\\)?" "step"
               "in" "on" "off" "write" "pause"
-              "such" "that" "let" "match" "clear\\(?:rules\\)?"
+              "such\\s-+that" "let" "match" "clear\\(?:rules\\)?"
+              "factor" "remfac"
               ;; "assert_install" "assert_install_all"
               ;; "assert_uninstall" "assert_uninstall_all"
               ;; "assert"
@@ -2103,7 +2104,7 @@ scalar\\|integer\\|real\\|linear")
   "Basic REDUCE fontification rules including variable fontification.")
 
 
-(defconst reduce-font-lock-keywords-algebraic
+(defconst reduce-font-lock-keywords-algebraic ; DOESN'T SEEM TO WORK PROPERLY!
   `(;; Array, matrix and linear type declarations: e.g.
     ;; array a(10),b(2,3,4);
     ;; matrix x(2,1),y(3,4),z;
@@ -2217,7 +2218,7 @@ expr\\|s?macro\\|inline\\|asserted\
 
 (defconst entire-reduce-functional-keyword-regexp
   (concat
-   "\\`\\(?:"
+   "\\`\\(?:" "comment\\|"
    "begin\\|" "if\\|" "for\\(?:\\s-*\\(?:all\\|each\\)\\)?\\|"
    "\\)\\'"))
 
@@ -2227,7 +2228,7 @@ expr\\|s?macro\\|inline\\|asserted\
    entire-reduce-functional-keyword-regexp
    (match-string num)))
 
-(defun reduce-font-lock-match-functions (limit)
+(defun reduce-font-lock-match-functions (limit) ; SEEMS OVERLY AGGRESSIVE!
   "Search for function calls without () between point and LIMIT.
 Also match composed function calls where the final call has ().
 If successful, return non-nil and set the match data to describe
@@ -2328,7 +2329,7 @@ the match; otherwise return nil."
   ;; until it fails.  On failure, there is no need to reset point in
   ;; any particular way.
   (when
-      (re-search-forward "\\(\\<comment\\>[^;$]*\\)[;$]" limit t)
+      (re-search-forward "\\(\\<comment\\>[^;$]*[;$]\\)" limit t)
     ;; If successful, check that "comment" is preceded by beginning of
     ;; buffer or a terminator, possibly with white space and/or %
     ;; comments in between:
