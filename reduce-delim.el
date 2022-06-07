@@ -4,33 +4,33 @@
 
 ;; Author: Francis J. Wright <https://sourceforge.net/u/fjwright>
 ;; Created: 22 March 2018
-;; Version: $Id: reduce-delim.el 4680 2018-06-30 15:06:06Z fjwright $
+;; Time-stamp: <2022-06-07 17:27:10 franc>
 ;; Keywords: languages, faces
-;; Homepage: http://reduce-algebra.sourceforge.net/reduce-ide
-;; Package-Version: 1.55
+;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide
+;; Package-Version: 1.6
 ;; Package-Requires: ((reduce-mode "1.54"))
 
-;; This file is not part of GNU Emacs.
+;; This file is part of REDUCE IDE.
 
-;; This program is free software: you can redistribute it and/or
-;; modify it under the terms of the GNU General Public License as
-;; published by the Free Software Foundation, either version 3 of
-;; the License, or (at your option) any later version.
+;; REDUCE IDE is free software: you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published
+;; by the Free Software Foundation, either version 3 of the License,
+;; or (at your option) any later version.
 
-;; This program is distributed in the hope that it will be useful,
-;; but WITHOUT ANY WARRANTY; without even the implied warranty of
-;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-;; GNU General Public License for more details.
+;; REDUCE IDE is distributed in the hope that it will be useful, but
+;; WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+;; General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
+;; along with REDUCE IDE.  If not, see <https://www.gnu.org/licenses/>.
+
+;;; Commentary:
 
 ;; Based closely on Emacs 26 paren.el --- highlight matching paren
 
 ;; Display highlighting on whatever group or block delimiter matches
 ;; the one before or after point.
-
-;;; Commentary:
 
 ;; In a REDUCE mode buffer, execute `M-x reduce-show-delim-mode' to
 ;; toggle this buffer-local minor mode.  When on, it will display
