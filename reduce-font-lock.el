@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sourceforge.net/u/fjwright>
 ;; Created: 6 June 2022 as a separate file (was part of reduce-mode.el)
-;; Time-stamp: <2022-06-07 17:26:10 franc>
+;; Time-stamp: <2022-06-08 18:03:54 franc>
 ;; Keywords: languages, faces
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide
 ;; Package-Version: 1.6
@@ -30,22 +30,33 @@
 ;; Based on code by Rainer Schoepf.
 
 ;; Note that Font Lock Mode is documented in the ELisp manual under
-;; Major and Minor Modes.  Fontification is performed syntactically
-;; (e.g. strings) and THEN by keyword.
+;; Major and Minor Modes.  Syntactic fontification happens first; it
+;; finds %-comments and string constants and highlights them.
+;; Search-based fontification happens second.
 
 ;; Regard quoted identifiers and lists as data and don't fontify them.
+
+;; Font Lock mode processes the elements of `font-lock-keywords' one
+;; by one, and for each element, it finds and handles all matches.
+;; Ordinarily, once part of the text has been fontified already, this
+;; cannot be overridden by a subsequent match in the same text; but
+;; you can specify different behavior using the OVERRIDE element of a
+;; SUBEXP-HIGHLIGHTER.
 
 ;;; Code:
 
 (defconst reduce-font-lock--keywords
   '(
-    reduce-font-lock--keywords-0     ; Default = nil
+    reduce-font-lock--keywords-0     ; Minimal = nil
     reduce-font-lock--keywords-1     ; Algebraic
     reduce-font-lock--keywords-2     ; Symbolic
-    reduce-font-lock--keywords-3     ; Full = t
+    reduce-font-lock--keywords-3     ; Maximal = t
     )
   "A list of symbols corresponding to increasing fontification.
-Each is assigned a `font-lock-keywords' value for REDUCE mode.")
+Each is assigned a `font-lock-keywords' value for REDUCE mode.
+The symbols are in order of increasing fontification level, which
+is selected by the value of `font-lock-maximum-decoration'.
+This defaults to t, meaning maximal fontification.")
 
 (defconst reduce-font-lock--syntactic-keywords
   ;; ((MATCHER SUBEXP SYNTAX OVERRIDE LAXMATCH) ... )
@@ -82,6 +93,13 @@ unless preceded by ' or (, for correct syntax highlighing of strings.")
   ;; font-lock option (which is essential to parse "...!"):
   (set (make-local-variable 'parse-sexp-lookup-properties) t))
 
+
+;;;; **************************
+;;;; Search-based Fontification
+;;;; **************************
+
+;;;;; Minimal fontification
+
 (defconst reduce-identifier-regexp
   "\\(?:[a-z]\\|!.\\)\
 \\(?:\\w\\|\\s_\\|!.\\)*"
@@ -115,11 +133,53 @@ unless preceded by ' or (, for correct syntax highlighing of strings.")
   ;; reduce-font-lock--keywords-symbolic.
   "Regular expression matching a REDUCE keyword.")
 
-(defconst font-lock-default-face 'font-lock-default-face
-  "A copy of the default face for use by REDUCE Font Lock mode.")
+(defconst reduce-font-lock--keywords-00
+  `((reduce-font-lock--match-comment-statement
+     . (1 font-lock-comment-face t))
 
-(copy-face 'default 'font-lock-default-face)
+    ;; Main keywords:
+    (,(concat
+       ;; Ignore 'keyword, _keyword, #keyword:
+       "\\(?:^\\|[^'_#]\\)"
+       "\\<\\(" reduce-keyword-regexp "\\)\\>"
+       ;; Ignore composite identifiers beginning with a keyword:
+       "[^!_#]")
+     (1 font-lock-keyword-face)
+     ;; Handle consecutive keywords:
+     (,(concat "\\<\\(" reduce-keyword-regexp "\\)\\>[^!_#]")
+      nil nil (1 font-lock-keyword-face))))
+  "Rules to highlight comment statements and main keywords.
+Used at the start of all other rule sets.")
 
+(defconst reduce-type-regexp
+  "algebraic\\|symbolic\\|lisp\\|operator\\|\
+scalar\\|integer\\|real\\|linear")
+
+(defconst reduce-font-lock--keywords-0
+  `("reduce-font-lock--keywords-0"      ; TEMPORARY label for debugging
+
+    ,@reduce-font-lock--keywords-00
+
+    ;; References:
+    "\\<\\go\\(?:\\s-*to\\)?\\>"
+
+    ;; Procedure declarations:
+    (,(concat "\\<\\(procedure\\)\\s-+"
+              "\\(" reduce-identifier-regexp "\\)")
+     (1 font-lock-keyword-face)
+     (2 font-lock-function-name-face))
+
+    ;; Type declarations:
+    ;; (Ignore quoted keywords and composite identifiers.)
+    (,(concat
+       "\\(?:^\\|[^'_]\\)\\<\\("
+       reduce-type-regexp
+       "\\)\\>[^!_]")
+     (1 font-lock-type-face)))
+  "Minimal REDUCE fontification rules.  No variables are fontified.")
+
+
+;; *****************************************************************
 ;; Assertion and preprocessor rules based on code by Thomas Sturm.
 ;; A good test file for all assertion rules is "redlog/cl/clqe.red".
 
@@ -129,6 +189,12 @@ unless preceded by ' or (, for correct syntax highlighing of strings.")
 ;; fontification, whereas a constant with a name of the form
 ;; `font-lock-rules' (plural) below becomes appended to or spliced
 ;; into the list assigned to `font-lock-keywords'.
+;; *****************************************************************
+
+(defconst font-lock-default-face 'font-lock-default-face
+  "A copy of the default face for use by REDUCE Font Lock mode.")
+
+(copy-face 'default 'font-lock-default-face)
 
 (defconst reduce-font-lock--asserted-type-rule
   `("procedure"
@@ -177,54 +243,10 @@ unless preceded by ' or (, for correct syntax highlighing of strings.")
      (1 font-lock-preprocessor-face)))
   "Rules to highlight preprocessor #-directives.")
 
-
-(defconst reduce-font-lock--keywords-00
-  `((reduce-font-lock--match-comment-statement
-     . (1 font-lock-comment-face t))
-
-    ;; Main keywords:
-    (,(concat
-       ;; Ignore 'keyword, _keyword, #keyword:
-       "\\(?:^\\|[^'_#]\\)"
-       "\\<\\(" reduce-keyword-regexp "\\)\\>"
-       ;; Ignore composite identifiers beginning with a keyword:
-       "[^!_#]")
-     (1 font-lock-keyword-face)
-     ;; Handle consecutive keywords:
-     (,(concat "\\<\\(" reduce-keyword-regexp "\\)\\>[^!_#]")
-      nil nil (1 font-lock-keyword-face))))
-  "Rules to highlight comment statements and main keywords.
-Used at the start of all other rule sets.")
-
-
-(defconst reduce-type-regexp
-  "algebraic\\|symbolic\\|lisp\\|operator\\|\
-scalar\\|integer\\|real\\|linear")
-
-
-(defconst reduce-font-lock--keywords-0
-  `("reduce-font-lock--keywords-0"      ; TEMPORARY label for debugging
-
-    ,@reduce-font-lock--keywords-00
-
-    ;; References:
-    "\\<\\go\\(?:\\s-*to\\)?\\>"
-
-    ;; Procedure declarations:
-    (,(concat "\\<\\(procedure\\)\\s-+"
-              "\\(" reduce-identifier-regexp "\\)")
-     (1 font-lock-keyword-face)
-     (2 font-lock-function-name-face))
-
-    ;; Type declarations:
-    ;; (Ignore quoted keywords and composite identifiers.)
-    (,(concat
-       "\\(?:^\\|[^'_]\\)\\<\\("
-       reduce-type-regexp
-       "\\)\\>[^!_]")
-     (1 font-lock-type-face)))
-  "Minimal REDUCE fontification rules.  No variables are fontified.")
-
+
+;; ****************************************
+;; End of assertion and preprocessor rules.
+;; ****************************************
 
 (defconst reduce-font-lock--keywords-basic
   `(,@reduce-font-lock--keywords-00
@@ -268,8 +290,10 @@ scalar\\|integer\\|real\\|linear")
     ,@reduce-font-lock--preprocessor-rules)
   "Basic REDUCE fontification rules including variable fontification.")
 
+
+;;;;; Algebraic fontification
 
-(defconst reduce-font-lock--keywords-algebraic ; DOESN'T SEEM TO WORK PROPERLY!
+(defconst reduce-font-lock--keywords-algebraic
   `(;; Array, matrix and linear type declarations: e.g.
     ;; array a(10),b(2,3,4);
     ;; matrix x(2,1),y(3,4),z;
@@ -279,14 +303,17 @@ scalar\\|integer\\|real\\|linear")
      ;; Anchored matches (single line only!):
      (,(concat "\\s-*\\(" reduce-identifier-regexp "\\)\\s-*"
                "(\\(?:[[:digit:],]\\|\\s-\\)*)?\\s-*[,;$]")
-      nil nil (1 font-lock-variable-name-face)))
+      nil nil (1 font-lock-function-name-face)))
 
+    ;; Symbolic constants:
     ("[^[:alpha:]_]\\(e\\|i\\|infinity\\|nil\\|pi\\|t\\)\\_>"
      ;; Allow 5pi to match pi, etc.  Digits have word syntax.
      ;; Must also match within i*pi/2, etc.
      (1 font-lock-constant-face)))
   "More algebraic-mode REDUCE fontification rules.")
 
+
+;;;;; Symbolic fontification
 
 (defconst reduce-font-lock--keywords-symbolic
   `(;; References -- module:
@@ -316,6 +343,8 @@ expr\\|s?macro\\|inline\\|asserted\
     ,@reduce-font-lock--assert-declare/struct-rules)
   "More symbolic-mode REDUCE fontification sub-rules.")
 
+
+;;;;; Maximal fontification
 
 (defconst reduce-font-lock--keywords-extra
   `(;; Quoted identifiers:
@@ -340,8 +369,9 @@ expr\\|s?macro\\|inline\\|asserted\
 
     ;; Match f1 f2 ... fn in
     ;; f1 f2 ... fn f(...)  or  f1 f2 ... fn any_identifier
-    (reduce-font-lock--match-functions
-     . (0 font-lock-function-name-face t))
+    ;; Commented out for now since overly aggressive!
+    ;; (reduce-font-lock--match-functions
+    ;;  . (0 font-lock-function-name-face t))
 
     ;; Variable invocations:
     ;; ( var), var PUNCTUATION, var EOL, var KEYWORD, var INFIX )
@@ -360,6 +390,11 @@ expr\\|s?macro\\|inline\\|asserted\
     )
   "Maximal REDUCE fontification rules.")
 
+
+;;;; ********************************************
+;;;; Support for nested functions (experimental!)
+;;;; Not currently used.
+;;;; ********************************************
 
 (defconst anchored-reduce-identifier-regexp
   (concat "\\=\\s-+\\(" reduce-identifier-regexp "\\)"))
@@ -393,7 +428,8 @@ expr\\|s?macro\\|inline\\|asserted\
    entire-reduce-functional-keyword-regexp
    (match-string num)))
 
-(defun reduce-font-lock--match-functions (limit) ; SEEMS OVERLY AGGRESSIVE!
+;; Use commented out for now since overly aggressive!
+(defun reduce-font-lock--match-functions (limit)
   "Search for functions without () between point and LIMIT.
 Also match composed function calls where the final call has ().
 If successful, return non-nil and set the match data to describe
@@ -460,6 +496,10 @@ the function name(s) matched; otherwise return nil."
         ;; (add-face-text-property beg end 'font-lock-warning-face) ; FOR DEBUGGING!
         ))))
 
+
+;;;; ***********************************
+;;;; End of support for nested functions
+;;;; ***********************************
 
 (defconst reduce-font-lock--keywords-1
   `("reduce-font-lock--keywords-1"       ; TEMPORARY label for debugging
@@ -481,9 +521,12 @@ the function name(s) matched; otherwise return nil."
     ,@reduce-font-lock--keywords-extra)
   "Full REDUCE fontification rules.")
 
-;; Support functions for comment statements.  Being normally
-;; multi-line, they require the support of the function
-;; `reduce-font-lock--extend-region-for-comment-statement'.
+
+;;;; *********************************************************
+;;;; Support functions for comment statements.  Being normally
+;;;; multi-line, they require the support of the function
+;;;; `reduce-font-lock--extend-region-for-comment-statement'.
+;;;; *********************************************************
 
 (defun reduce-font-lock--match-comment-statement (limit)
   "Search for a comment statement between point and LIMIT.
@@ -536,8 +579,11 @@ This function is prepended to `font-lock-extend-region-functions'."
     (or (if new-beg (setq font-lock-beg new-beg))
         (if new-end (setq font-lock-end new-end)))))
 
-;; Provide a REDUCE font-lock menu, based originally on
-;; font-lock-menu.el by Simon Marshall <simon@gnu.ai.mit.edu>.
+
+;;;; ***********************************************************
+;;;; Provide a REDUCE font-lock menu, based originally on
+;;;; font-lock-menu.el by Simon Marshall <simon@gnu.ai.mit.edu>.
+;;;; ***********************************************************
 
 (defconst reduce-font-lock--level-max
   (1- (length reduce-font-lock--keywords))
@@ -574,13 +620,13 @@ which must be done in `reduce-mode'."
      :style toggle :selected font-lock-mode :active t]
     ["Highlight Buffer" font-lock-fontify-buffer t]
     ;; ["Toggle `!' Syntax" reduce-font-lock--toggle-escape t]
-    ["Maximum (3)" (reduce-font-lock--change 3)
+    ["Maximal (3)" (reduce-font-lock--change 3)
      :style radio :selected (eq reduce-font-lock--level 3) :active t]
     ["Symbolic (2)" (reduce-font-lock--change 2)
      :style radio :selected (eq reduce-font-lock--level 2) :active t]
     ["Algebraic (1)" (reduce-font-lock--change 1)
      :style radio :selected (eq reduce-font-lock--level 1) :active t]
-    ["Minimum (0)" (reduce-font-lock--change 0)
+    ["Minimal (0)" (reduce-font-lock--change 0)
      :style radio :selected (eq reduce-font-lock--level 0) :active t]))
 
 (easy-menu-define                       ; (symbol maps doc menu)
