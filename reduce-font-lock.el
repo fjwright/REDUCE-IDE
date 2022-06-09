@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sourceforge.net/u/fjwright>
 ;; Created: 6 June 2022 as a separate file (was part of reduce-mode.el)
-;; Time-stamp: <2022-06-08 18:03:54 franc>
+;; Time-stamp: <2022-06-09 17:15:36 franc>
 ;; Keywords: languages, faces
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide
 ;; Package-Version: 1.6
@@ -148,12 +148,11 @@ unless preceded by ' or (, for correct syntax highlighing of strings.")
      ;; Handle consecutive keywords:
      (,(concat "\\<\\(" reduce-keyword-regexp "\\)\\>[^!_#]")
       nil nil (1 font-lock-keyword-face))))
-  "Rules to highlight comment statements and main keywords.
-Used at the start of all other rule sets.")
+  "List of rules to highlight comment statements and main keywords.
+Spliced into the start of all other rule lists.")
 
 (defconst reduce-type-regexp
-  "algebraic\\|symbolic\\|lisp\\|operator\\|\
-scalar\\|integer\\|real\\|linear")
+  "algebraic\\|symbolic\\|lisp\\|scalar\\|integer\\|real")
 
 (defconst reduce-font-lock--keywords-0
   `("reduce-font-lock--keywords-0"      ; TEMPORARY label for debugging
@@ -176,7 +175,7 @@ scalar\\|integer\\|real\\|linear")
        reduce-type-regexp
        "\\)\\>[^!_]")
      (1 font-lock-type-face)))
-  "Minimal REDUCE fontification rules.  No variables are fontified.")
+  "List of minimal REDUCE fontification rules.  No variables are fontified.")
 
 
 ;; *****************************************************************
@@ -270,7 +269,7 @@ scalar\\|integer\\|real\\|linear")
 
     ;; Type declarations: e.g.
     ;; scalar var1 , var2 , ... ;
-    ("\\<\\(operator\\|scalar\\|integer\\|real\\)\\s-"
+    ("\\<\\(scalar\\|integer\\|real\\)\\s-"
      (1 font-lock-type-face)
      ;; Anchored matches (single line only!):
      (,(concat "\\s-*\\(" reduce-identifier-regexp "\\)\\s-*\\s.")
@@ -288,29 +287,53 @@ scalar\\|integer\\|real\\|linear")
 
     ,reduce-font-lock--asserted-type-rule
     ,@reduce-font-lock--preprocessor-rules)
-  "Basic REDUCE fontification rules including variable fontification.")
+  "List of basic REDUCE fontification rules including variable fontification.")
 
 
 ;;;;; Algebraic fontification
 
 (defconst reduce-font-lock--keywords-algebraic
-  `(;; Array, matrix and linear type declarations: e.g.
-    ;; array a(10),b(2,3,4);
+  `(;; Operator declarations of the form `type op1, op2, ...'
+    (,(concat "\\_<\\(?:"
+              (mapconcat #'identity
+                         '("even" "odd"
+                           "linear" "noncom"
+                           "\\(?:anti\\)?symmetric"
+                           "operator" "infix" "precedence"
+                           "vector")
+                         "\\|")
+              "\\_>\\)")
+     ;; Subexp highlighter:
+     (0 font-lock-type-face)
+     ;; Anchored highlighter:
+     (,(concat "\\s-*\\(" reduce-identifier-regexp "\\)\\s-*[,;$]")
+      ;; Pre-form -- return position of terminator to limit search:
+      (save-excursion (re-search-forward "[;$]"))
+      nil (1 font-lock-function-name-face)))
+
+    ;; Array and matrix type declarations: e.g.
+    ;; array a 10, b(2,3,4);
     ;; matrix x(2,1),y(3,4),z;
-    ;; linear f,g;
-    ("\\_<\\(array\\|matrix\\|linear\\)\\s-"
-     (1 font-lock-type-face)
-     ;; Anchored matches (single line only!):
-     (,(concat "\\s-*\\(" reduce-identifier-regexp "\\)\\s-*"
-               "(\\(?:[[:digit:],]\\|\\s-\\)*)?\\s-*[,;$]")
-      nil nil (1 font-lock-function-name-face)))
+    ("\\_<\\(?:array\\|matrix\\)\\_>"
+     ;; Subexp highlighter:
+     (0 font-lock-type-face)
+     ;; Anchored highlighter:
+     (,(concat "\\s-*\\(" reduce-identifier-regexp "\\)"
+               ;; Optional bounds with optional ():
+               "\\s-*\\(?:\\(?:(.*?)\\)\\|\\w*\\)\\s-*[,;$]"
+               )
+      ;; Pre-form -- return position of terminator to limit search:
+      (save-excursion (re-search-forward "[;$]"))
+      nil (1 font-lock-function-name-face)))
 
     ;; Symbolic constants:
     ("[^[:alpha:]_]\\(e\\|i\\|infinity\\|nil\\|pi\\|t\\)\\_>"
      ;; Allow 5pi to match pi, etc.  Digits have word syntax.
      ;; Must also match within i*pi/2, etc.
      (1 font-lock-constant-face)))
-  "More algebraic-mode REDUCE fontification rules.")
+  "List of more algebraic-mode REDUCE fontification rules.
+Operator, operator type and vector declarations; array and matrix
+declarations with or without bounds; symbolic constants.")
 
 
 ;;;;; Symbolic fontification
@@ -341,7 +364,7 @@ expr\\|s?macro\\|inline\\|asserted\
      (1 font-lock-type-face))
 
     ,@reduce-font-lock--assert-declare/struct-rules)
-  "More symbolic-mode REDUCE fontification sub-rules.")
+  "List of more symbolic-mode REDUCE fontification sub-rules.")
 
 
 ;;;;; Maximal fontification
@@ -388,7 +411,7 @@ expr\\|s?macro\\|inline\\|asserted\
 ;;; Should force ALL infix ops into right font!
 
     )
-  "Maximal REDUCE fontification rules.")
+  "List of maximal REDUCE fontification rules.")
 
 
 ;;;; ********************************************
