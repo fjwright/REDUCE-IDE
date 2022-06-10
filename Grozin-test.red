@@ -43,17 +43,24 @@ vector p1,p2;
 
 % even, odd etc. should be green; arguments should be blue:
 even f1; odd f2;
-linear f,g;
-noncom u,v;
-symmetric u,v;
-antisymmetric l,m;
+linear f,g; noncom u,v;
+symmetric u,v; antisymmetric l,m;
 operator h,g1,arctan;
-infix mm;
-precedence mm,-;
+infix mm; precedence mm,-;
+
+z**2+fac(4)-2*fac 2*y;
+2*det xx - 3*w;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 Comment Delimiter Highlighting$
+
 ( () );  ( ()
 << << >> >>;  << << >>;
 begin begin end end;  begin begin end;  beginning begin noend end;
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+/* This is a C-style comment! */
+
+Comment The above line seems to break this comment!

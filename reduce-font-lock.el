@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sourceforge.net/u/fjwright>
 ;; Created: 6 June 2022 as a separate file (was part of reduce-mode.el)
-;; Time-stamp: <2022-06-09 18:06:15 franc>
+;; Time-stamp: <2022-06-10 16:55:10 franc>
 ;; Keywords: languages, faces
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide
 ;; Package-Version: 1.6
@@ -104,7 +104,14 @@ unless preceded by ' or (, for correct syntax highlighing of strings.")
   "\\(?:[a-z]\\|!.\\)\
 \\(?:\\w\\|\\s_\\|!.\\)*"
   ;; NB: digits have word syntax
-  "Regular expression matching a REDUCE identifier.")
+  "Regular expression matching a REDUCE identifier.
+Identifiers consist of one or more alphanumeric
+characters (i.e. alphabetic letters or decimal digits) the first
+of which must be alphabetic.  In addition, the underscore
+character (_) is considered a letter if it is within an
+identifier.  Special characters may be used in identifiers too,
+even as the first character, but each must be preceded by an
+exclamation mark in input.")
 
 (defconst reduce-infix-regexp
   "where\\|when\\|or\\|and\\|member\\|memq\\|neq\\|eq")
@@ -372,6 +379,19 @@ expr\\|s?macro\\|inline\\|asserted\
 
 ;;;;; Maximal fontification
 
+(defconst reduce-number-regexp
+  "[[:digit:]]+\
+\\(?:\\.[[:digit:]]*\\)?\
+\\(?:e[+-]?[[:digit:]]+\\)?"
+  "Regular expression matching a REDUCE unsigned integer or real number.
+Real numbers can be input in two ways:
+* as a sequence of any number of decimal digits with an embedded
+or trailing decimal point;
+* as above followed by a decimal exponent which is written as the
+letter e followed by a signed or unsigned integer.
+For example, 32., 32.0, 0.32e2 and 320.e-1 are all
+representations of 32.")
+
 (defconst reduce-font-lock--keywords-extra
   `(;; Quoted identifiers:
     (,(concat "'\\(" reduce-identifier-regexp "\\)")
@@ -389,8 +409,15 @@ expr\\|s?macro\\|inline\\|asserted\
 
     ;; Function calls:
     ;; fn ( ), fn { }, fn " ", fn 'data, fn << >>
-    (,(concat "\\(" reduce-identifier-regexp "\\)\\s-*"
-              "\\(?:[\(\{\"']\\|<<\\)")
+    (,(concat "\\(" reduce-identifier-regexp "\\)"
+              "\\s-*\\(?:[\(\{\"']\\|<<\\)")
+     (1 font-lock-function-name-face))
+    ;; fn space variable-or-number optional-space punctuation
+    (,(concat "\\(" reduce-identifier-regexp "\\)"
+              "\\s-+\\(?:\\(?:"
+              reduce-identifier-regexp "\\)\\|\\(?:"
+              reduce-number-regexp
+              "\\)\\)\\s-*\\s.")
      (1 font-lock-function-name-face))
 
     ;; Match f1 f2 ... fn in
@@ -638,7 +665,7 @@ which must be done in `reduce-mode'."
                        reduce-font-lock--level-max)
                       (t level)))
                ((eq level t) reduce-font-lock--level-max) ; t means max
-               (t 0)))))                                 ; nil means 0
+               (t 0)))))                ; nil means 0
 
 (defconst reduce-font-lock--submenu
   '("Syntax Highlighting"
@@ -666,7 +693,7 @@ which must be done in `reduce-mode'."
   t)                                    ; was 'Make\ Proc\ Menu
 
 (defconst reduce-font-lock--level-names
-  '("minimum" "algebraic" "symbolic" "maximum"))
+  '("minimal" "algebraic" "symbolic" "maximal"))
 
 (defun reduce-font-lock--change (level)
   "Re-fontify at the specified LEVEL."
