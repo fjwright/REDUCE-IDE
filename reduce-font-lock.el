@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sourceforge.net/u/fjwright>
 ;; Created: 6 June 2022 as a separate file (was part of reduce-mode.el)
-;; Time-stamp: <2022-06-09 17:15:36 franc>
+;; Time-stamp: <2022-06-09 18:06:15 franc>
 ;; Keywords: languages, faces
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide
 ;; Package-Version: 1.6
@@ -110,7 +110,7 @@ unless preceded by ' or (, for correct syntax highlighing of strings.")
   "where\\|when\\|or\\|and\\|member\\|memq\\|neq\\|eq")
 
 (defconst reduce-keyword-regexp
-  (mapconcat 'identity
+  (mapconcat #'identity
              (list
               "begin" "end" "return" "<<" ">>"
               "if" "then" "else" "ws"
@@ -119,7 +119,8 @@ unless preceded by ' or (, for correct syntax highlighing of strings.")
               "for\\(?:\\s-*\\(?:all\\|each\\)\\)?" "step"
               "in" "on" "off" "write" "pause"
               "such\\s-+that" "let" "match" "clear\\(?:rules\\)?"
-              "factor" "remfac"
+              "order" "factor" "remfac" "showtime"
+              "index" "mass" "mshell"
               ;; "assert_install" "assert_install_all"
               ;; "assert_uninstall" "assert_uninstall_all"
               ;; "assert"
@@ -175,7 +176,9 @@ Spliced into the start of all other rule lists.")
        reduce-type-regexp
        "\\)\\>[^!_]")
      (1 font-lock-type-face)))
-  "List of minimal REDUCE fontification rules.  No variables are fontified.")
+  "List of minimal REDUCE fontification rules.
+Highlights comment statements, main keywords and procedure definitions.
+No variables are fontified.")
 
 
 ;; *****************************************************************
