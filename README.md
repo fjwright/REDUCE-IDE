@@ -5,7 +5,7 @@ Major modes for editing and running REDUCE source code
 
 **[Francis Wright](https://sourceforge.net/u/fjwright)**
 
-Version 1.55, June 2022
+Version 1.6, June 2022
 
 REDUCE IDE is a package that provides an Integrated Development
 Environment for the REDUCE computer algebra system within the GNU
@@ -16,8 +16,9 @@ However, many of the facilities require that Emacs is running under a
 GUI such as Microsoft Windows or the X Window System under some
 flavour of UNIX or Linux.
 
-REDUCE IDE requires GNU Emacs 23 or later, although I currently use
-GNU Emacs 28 for development and testing.
+I currently use GNU Emacs 28 (on Microsoft Windows) for development
+and testing, and REDUCE IDE may not work correctly with older
+versions.
 
 Source files
 ------------
@@ -28,6 +29,7 @@ Required:
 
 Optional:
 
+* `reduce-font-lock.el`  &ndash;  support syntactic highlighting
 * `reduce-delim.el`  &ndash;  highlight matching group or block delimiters
 * `reduce-run.el`  &ndash;  run REDUCE in an Emacs buffer
 * `reduce-ide.texinfo`  &ndash;  texinfo documentation
@@ -65,3 +67,10 @@ at the end of `reduce-ide.texinfo`.  For further details, please read
 sections 20 to 22 of the [Texinfo
 manual](https://www.gnu.org/software/texinfo/manual/texinfo/) or this
 [quick summary](https://en.wikipedia.org/wiki/Texinfo).
+
+To Do
+-----
+
+* Support C-style comments.
+* Further rationalise and perhaps simplify the font-lock support.
+* Maybe highlight nested function calls without ().
