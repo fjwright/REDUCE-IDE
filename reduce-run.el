@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sourceforge.net/u/fjwright>
 ;; Created: late 1998
-;; Time-stamp: <2022-06-12 15:22:53 franc>
+;; Time-stamp: <2022-06-12 16:30:19 franc>
 ;; Keywords: languages, processes
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide
 ;; Package-Version: 1.6
@@ -123,7 +123,7 @@ It should be an absolute pathname; e.g. on Windows the default is
 \"c:/Program Files/Reduce/\"."
   :type '(choice (const :tag "None" nil) directory)
   :group 'reduce-run
-  :package-version '(reduce-run . "1.55"))
+  :package-version '(reduce-run . "1.6"))
 
 ;; Use some of this code to find the reduce-installation-directory on Linux?
 
@@ -145,23 +145,12 @@ It should be an absolute pathname; e.g. on Windows the default is
  "1.3")
 
 (defcustom reduce-run-commands
-  (if (eq system-type 'windows-nt)
-      (and
-       reduce-installation-directory
-       (list (cons "CSL" (concat reduce-installation-directory
-                                 "bin/redcsl.bat --nogui"))
-             (cons "PSL"
-                   (let ((file (or load-true-file-name (buffer-file-name))))
-                     ;; file can be nil if REDUCE Run mode is customized
-                     ;; before it is otherwise used!
-                     (if file
-                         (setq file (concat (file-name-directory file)
-                                            "reduce-run-redpsl.bat")))
-                     (if (and file (file-exists-p file))
-                         file
-                       (concat reduce-installation-directory
-                               "bin/redpsl.bat"))))))
-    '(("CSL" "redcsl --nogui") ("PSL" "redpsl")))
+  (if (and (eq system-type 'windows-nt) reduce-installation-directory)
+      (list (cons "CSL" (concat reduce-installation-directory
+                                "bin/redcsl.bat --nogui"))
+            (cons "PSL" (concat reduce-installation-directory
+                                "bin/redpsl.bat")))
+    '(("CSL" . "redcsl --nogui") ("PSL" . "redpsl")))
   "Alist of commands to invoke CSL and PSL REDUCE in preference order.
 The commands may be absolute path names, and they may include switches.
 They must invoke a command-line version of REDUCE; a GUI version will not work!
@@ -488,23 +477,13 @@ Return t if successful; nil otherwise."
                (push (list xsl buf-name) reduce-run-buffer-alist)
                t)))))
 
-;; Try forcing the use of a shell by replacing the use of
-;; (start-file-process name buffer-or-name program &rest args) with
-;; (start-file-process-shell-command name buffer-or-name command) in
-;; make-comint.
-
 (defun reduce-run-reduce-1 (cmd process-name buffer-name)
   "Run CMD as a REDUCE process PROCESS-NAME in buffer BUFFER-NAME.
 Return the process buffer if successful; nil otherwise."
   (condition-case err
       ;; Protected form:
-      (let ((cmdlist (reduce-run-args-to-list cmd)))
-        ;; Hack to try to run PSL on native Windows GNU Emacs:
-        ;; (fset 'start-file-process
-        ;;    (lambda (name buffer-or-name program &rest args)
-        ;;      (start-file-process-shell-command
-        ;;       name buffer-or-name
-        ;;       (mapconcat identity (cons program args) " "))))
+      (let ((cmdlist (reduce-run-args-to-list cmd))
+            (shell-file-name "c:/Windows/System32/cmd.exe")) ; MS Windows only!
         (set-buffer
          ;; `apply' used below because last arg is &rest!
          (apply 'make-comint process-name (car cmdlist) nil (cdr cmdlist)))
