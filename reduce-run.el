@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sourceforge.net/u/fjwright>
 ;; Created: late 1998
-;; Time-stamp: <2022-06-12 16:30:19 franc>
+;; Time-stamp: <2022-06-14 14:56:18 franc>
 ;; Keywords: languages, processes
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide
 ;; Package-Version: 1.6
@@ -106,26 +106,44 @@
   :tag "REDUCE Run"
   :group 'reduce)
 
-(defcustom reduce-installation-directory
+;; *** Should define and use this only on MS Win! ***
+(defcustom reduce-run-MSWin-drives
   (if (eq system-type 'windows-nt)
-      (let (dir (skeleton ":/Program Files/Reduce/"))
-        (cond ((file-accessible-directory-p
-                (setq dir (concat "c" skeleton)))
-               dir)
-              ((file-accessible-directory-p
-                (setq dir (concat "d" skeleton)))
-               dir)
-              (t nil)))
+      (cdr (split-string
+            (shell-command-to-string "wmic LogicalDisk get Caption"))))
+  "On MS Windows, the list of drives searched for REDUCE.
+It is used only by `reduce-run-installation-directory'.
+Defaults to all local drives, e.g. (\"C:\" \"D:\" \"E:\" \"F:\").
+nil on other platforms."
+  ;; https://stackoverflow.com/questions/3652631/is-there-a-way-to-list-drive-letters-in-dired
+  :type '(repeat
+          (string
+           :match (lambda (widget value) (string-match "\\`[A-Z]:\\'" value))
+           :type-error "Drive must be specified as X:, where X is a letter A-Z."))
+  :group 'reduce-run
+  :package-version '(REDUCE-IDE . "1.6"))
+
+(defcustom reduce-run-installation-directory
+  (if (eq system-type 'windows-nt)
+      (let ((drives reduce-run-MSWin-drives)
+            (skeleton "/Program Files/Reduce/")
+            dir d)
+        (while drives
+          (setq d (concat (car drives) skeleton))
+          (if (file-accessible-directory-p d)
+              (setq dir d drives nil)
+            (setq drives (cdr drives))))
+        dir)
     "/usr/local/reduce")                ; *** CHECK THIS FOR LINUX ***
   "Root directory of the REDUCE installation, or nil if not set.
 Note that you can complete the directory name using `M-<TAB>'.
 It should be an absolute pathname; e.g. on Windows the default is
-\"c:/Program Files/Reduce/\"."
-  :type '(choice (const :tag "None" nil) directory)
+\"C:/Program Files/Reduce/\"."
+  :type  '(choice (const :tag "None" nil) directory)
   :group 'reduce-run
-  :package-version '(reduce-run . "1.6"))
+  :package-version '(REDUCE-IDE . "1.6"))
 
-;; Use some of this code to find the reduce-installation-directory on Linux?
+;; Use some of this code to find the reduce-run-installation-directory on Linux?
 
 ;; (defun reduce-packages-directory-default ()
 ;;   "Return the REDUCE packages directory or nil if it cannot be found."
@@ -145,11 +163,20 @@ It should be an absolute pathname; e.g. on Windows the default is
  "1.3")
 
 (defcustom reduce-run-commands
-  (if (and (eq system-type 'windows-nt) reduce-installation-directory)
-      (list (cons "CSL" (concat reduce-installation-directory
+  (if (and (eq system-type 'windows-nt) reduce-run-installation-directory)
+      (list (cons "CSL" (concat reduce-run-installation-directory
                                 "bin/redcsl.bat --nogui"))
-            (cons "PSL" (concat reduce-installation-directory
-                                "bin/redpsl.bat")))
+            (cons "PSL"
+                   (let ((file (or load-file-name (buffer-file-name))))
+                     ;; file can be nil if REDUCE Run mode is customized
+                     ;; before it is otherwise used!
+                     (if (and file
+                              (file-exists-p
+                               (setq file (concat (file-name-directory file)
+                                                  "reduce-run-redpsl.bat"))))
+                         file
+                       (concat reduce-run-installation-directory
+                               "bin/redpsl.bat")))))
     '(("CSL" . "redcsl --nogui") ("PSL" . "redpsl")))
   "Alist of commands to invoke CSL and PSL REDUCE in preference order.
 The commands may be absolute path names, and they may include switches.
@@ -158,7 +185,7 @@ The command `run-reduce' tries to run the first REDUCE command.
 If that fails then it tries to run the second REDUCE command."
   :type '(alist :key-type (choice (const "CSL") (const "PSL")) :value-type string)
   :group 'reduce-run
-  :set-after '(reduce-installation-directory))
+  :set-after '(reduce-run-installation-directory))
 
 (defcustom reduce-run-prompt "^\\(?:[0-9]+[:*] \\)+"
   "Regexp to recognise prompts in REDUCE Run mode."
@@ -482,8 +509,7 @@ Return t if successful; nil otherwise."
 Return the process buffer if successful; nil otherwise."
   (condition-case err
       ;; Protected form:
-      (let ((cmdlist (reduce-run-args-to-list cmd))
-            (shell-file-name "c:/Windows/System32/cmd.exe")) ; MS Windows only!
+      (let ((cmdlist (reduce-run-args-to-list cmd)))
         (set-buffer
          ;; `apply' used below because last arg is &rest!
          (apply 'make-comint process-name (car cmdlist) nil (cdr cmdlist)))
@@ -805,8 +831,8 @@ REDUCE packages directory."
               (mapcar #'list packages))))))
 
 (defcustom reduce-packages-directory
-  (and reduce-installation-directory
-       (let ((dir (concat reduce-installation-directory "packages/")))
+  (and reduce-run-installation-directory
+       (let ((dir (concat reduce-run-installation-directory "packages/")))
          (and (file-accessible-directory-p dir) dir)))
   "Directory of REDUCE packages, or nil if not set.
 Note that you can complete the directory name using `M-<TAB>'.
@@ -820,7 +846,7 @@ directly has no effect."
   :set #'(lambda (symbol value)
            (if value (reduce-set-package-completion-alist value))
            (set-default symbol value))
-  :set-after '(reduce-installation-directory))
+  :set-after '(reduce-run-installation-directory))
 
 (defvar reduce-load-package-history nil
      "A history list for `reduce-load-package'.")
