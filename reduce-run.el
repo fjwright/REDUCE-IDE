@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sourceforge.net/u/fjwright>
 ;; Created: late 1998
-;; Time-stamp: <2022-06-14 14:56:18 franc>
+;; Time-stamp: <2022-06-14 16:24:03 franc>
 ;; Keywords: languages, processes
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide
 ;; Package-Version: 1.6
@@ -161,6 +161,31 @@ It should be an absolute pathname; e.g. on Windows the default is
  'reduce-run-program
  "This variable has been replaced by `reduce-run-commands' with different syntax."
  "1.3")
+
+
+;;; Construct "reduce-run-redpsl.bat" in this directory.  Doing this
+;;; every time this file is loaded allows for changes between loads.
+;;; ================================================================
+
+(let (;; Absolute pathname of standard file "redpsl.bat" if it can be
+      ;; found, otherwise "redpsl.bat":
+      (redpsl-bat-filename
+       (if reduce-run-installation-directory
+           (concat reduce-run-installation-directory
+                   "bin/redpsl.bat")
+         "redpsl.bat"))
+      ;; Absolute pathname of this file if it can be found, otherwise
+      ;; nil (which might be the case if REDUCE Run mode is customized
+      ;; before it is otherwise used):
+      (this-filepath
+       (or load-file-name (buffer-file-name))))
+  (when this-filepath
+    (with-temp-file
+      ;; Absolute pathname of file "reduce-run-redpsl.bat":
+        (concat (file-name-directory this-filepath)
+                "reduce-run-redpsl.bat")
+      (insert "@echo off\r\n\"" redpsl-bat-filename "\""))))
+
 
 (defcustom reduce-run-commands
   (if (and (eq system-type 'windows-nt) reduce-run-installation-directory)
