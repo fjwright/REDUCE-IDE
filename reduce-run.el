@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sourceforge.net/u/fjwright>
 ;; Created: late 1998
-;; Time-stamp: <2022-06-14 16:24:03 franc>
+;; Time-stamp: <2022-06-14 17:25:41 franc>
 ;; Keywords: languages, processes
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide
 ;; Package-Version: 1.6
@@ -111,7 +111,7 @@
   (if (eq system-type 'windows-nt)
       (cdr (split-string
             (shell-command-to-string "wmic LogicalDisk get Caption"))))
-  "On MS Windows, the list of drives searched for REDUCE.
+  "On MS Windows, the list of drives to be searched for REDUCE.
 It is used only by `reduce-run-installation-directory'.
 Defaults to all local drives, e.g. (\"C:\" \"D:\" \"E:\" \"F:\").
 nil on other platforms."
@@ -163,28 +163,34 @@ It should be an absolute pathname; e.g. on Windows the default is
  "1.3")
 
 
-;;; Construct "reduce-run-redpsl.bat" in this directory.  Doing this
-;;; every time this file is loaded allows for changes between loads.
-;;; ================================================================
+(defconst reduce-run--redpsl-bat-filename
+  (if reduce-run-installation-directory
+      (concat reduce-run-installation-directory "bin/redpsl.bat")
+    "redpsl.bat")
+  "The absolute pathname of the standard file \"redpsl.bat\".
+If it cannot be found then just \"redpsl.bat\".")
 
-(let (;; Absolute pathname of standard file "redpsl.bat" if it can be
-      ;; found, otherwise "redpsl.bat":
-      (redpsl-bat-filename
-       (if reduce-run-installation-directory
-           (concat reduce-run-installation-directory
-                   "bin/redpsl.bat")
-         "redpsl.bat"))
-      ;; Absolute pathname of this file if it can be found, otherwise
-      ;; nil (which might be the case if REDUCE Run mode is customized
-      ;; before it is otherwise used):
-      (this-filepath
-       (or load-file-name (buffer-file-name))))
-  (when this-filepath
+(defconst reduce-run--this-filepath
+  (or load-file-name (buffer-file-name))
+  "The absolute pathname of this file, \"reduce-run.el\".
+If it cannot be found then nil (which might be the case if REDUCE
+Run mode is customized before it is otherwise used).")
+
+(defconst reduce-run--reduce-run-redpsl-bat-filename
+  (if reduce-run--this-filepath
+      (concat (file-name-directory reduce-run--this-filepath)
+              "reduce-run-redpsl.bat"))
+  "The absolute pathname of the local file \"reduce-run-redpsl.bat\".
+It must be in this directory; if it cannot be found then nil.")
+
+
+;; Construct "reduce-run-redpsl.bat" in this directory.  Doing this
+;; every time this file is loaded allows for changes between loads.
+
+(if reduce-run--reduce-run-redpsl-bat-filename
     (with-temp-file
-      ;; Absolute pathname of file "reduce-run-redpsl.bat":
-        (concat (file-name-directory this-filepath)
-                "reduce-run-redpsl.bat")
-      (insert "@echo off\r\n\"" redpsl-bat-filename "\""))))
+        reduce-run--reduce-run-redpsl-bat-filename
+      (insert "@echo off\r\n\"" reduce-run--redpsl-bat-filename "\"")))
 
 
 (defcustom reduce-run-commands
@@ -192,16 +198,12 @@ It should be an absolute pathname; e.g. on Windows the default is
       (list (cons "CSL" (concat reduce-run-installation-directory
                                 "bin/redcsl.bat --nogui"))
             (cons "PSL"
-                   (let ((file (or load-file-name (buffer-file-name))))
-                     ;; file can be nil if REDUCE Run mode is customized
-                     ;; before it is otherwise used!
-                     (if (and file
-                              (file-exists-p
-                               (setq file (concat (file-name-directory file)
-                                                  "reduce-run-redpsl.bat"))))
-                         file
-                       (concat reduce-run-installation-directory
-                               "bin/redpsl.bat")))))
+                  (if (and reduce-run--reduce-run-redpsl-bat-filename
+                           (file-exists-p reduce-run--reduce-run-redpsl-bat-filename))
+                      ;; local batch file if possible:
+                      reduce-run--reduce-run-redpsl-bat-filename
+                    ;; otherwise standard batch file:
+                    reduce-run--redpsl-bat-filename)))
     '(("CSL" . "redcsl --nogui") ("PSL" . "redpsl")))
   "Alist of commands to invoke CSL and PSL REDUCE in preference order.
 The commands may be absolute path names, and they may include switches.
@@ -692,10 +694,12 @@ which appears to have the form `buffer-name . buffer-object'."
 
 (defun switch-to-reduce (to-eob &optional no-mark switch)
   "Switch to REDUCE process buffer, at end if TO-EOB; if NO-MARK do not save mark.
-With interactive argument, TO-EOB, position cursor at end of
-buffer.  If `reduce-run-autostart' is non-nil then automatically
-start a new REDUCE process if necessary.  Return the window
-displaying the REDUCE process buffer."
+SWITCH means also switch to the REDUCE window; see
+`reduce-eval-region'.  With interactive argument, TO-EOB,
+position cursor at end of buffer.  If `reduce-run-autostart' is
+non-nil then automatically start a new REDUCE process if
+necessary.  Return the window displaying the REDUCE process
+buffer."
   (interactive "P")
   (let ((set-or-switch-to-buffer (if switch #'switch-to-buffer #'set-buffer)))
     ;; Find the appropriate REDUCE process buffer:
