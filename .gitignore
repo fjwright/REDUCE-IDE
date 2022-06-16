@@ -8,4 +8,5 @@ packages/
 reduce-ide*/
 reduce-ide.info
 reduce-ide.pdf
+reduce-run-redpsl.bat
 old/
