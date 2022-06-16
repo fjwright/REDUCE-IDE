@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sourceforge.net/u/fjwright>
 ;; Created: late 1998
-;; Time-stamp: <2022-06-14 17:25:41 franc>
+;; Time-stamp: <2022-06-15 18:03:03 franc>
 ;; Keywords: languages, processes
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide
 ;; Package-Version: 1.6
@@ -134,11 +134,15 @@ nil on other platforms."
               (setq dir d drives nil)
             (setq drives (cdr drives))))
         dir)
-    "/usr/local/reduce")                ; *** CHECK THIS FOR LINUX ***
-  "Root directory of the REDUCE installation, or nil if not set.
-Note that you can complete the directory name using `M-<TAB>'.
-It should be an absolute pathname; e.g. on Windows the default is
-\"C:/Program Files/Reduce/\"."
+    "/usr/share/reduce/")
+  "Absolute root directory of the REDUCE installation, or nil if not set.
+It is the directory containing the \"packages\" directory and, on
+MS Windows, the \"bin\" directory containing the user-executable
+batch files.  It defaults to \"X:/Program Files/Reduce/\" on MS
+Windows, where X is a letter A-Z, and to \"/usr/share/reduce/\"
+on other platforms.  On MS Windows, REDUCE Run Mode attempts to
+determine the correct value for this variable automatically.
+Note that you can complete the directory name using \\[widget-complete]."
   :type  '(choice (const :tag "None" nil) directory)
   :group 'reduce-run
   :package-version '(REDUCE-IDE . "1.6"))
@@ -205,11 +209,15 @@ It must be in this directory; if it cannot be found then nil.")
                     ;; otherwise standard batch file:
                     reduce-run--redpsl-bat-filename)))
     '(("CSL" . "redcsl --nogui") ("PSL" . "redpsl")))
-  "Alist of commands to invoke CSL and PSL REDUCE in preference order.
-The commands may be absolute path names, and they may include switches.
-They must invoke a command-line version of REDUCE; a GUI version will not work!
-The command `run-reduce' tries to run the first REDUCE command.
-If that fails then it tries to run the second REDUCE command."
+  "Alist of commands to invoke REDUCE versions in preference order.
+By default, it should be appropriate for standard installations
+of CSL and PSL REDUCE.  Each element has the form \"name
+. command\", where name and command are strings.  Name is
+arbitrary.  Command should be a relative or absolute pathname,
+and may include switches.  It must invoke a command-line version
+of REDUCE; a GUI version will not work!  The command `run-reduce'
+tries to run the first REDUCE command.  If that fails then it
+tries to run the second REDUCE command."
   :type '(alist :key-type (choice (const "CSL") (const "PSL")) :value-type string)
   :group 'reduce-run
   :set-after '(reduce-run-installation-directory))
@@ -252,9 +260,10 @@ character (e.g. y or n) possibly surrounded by whitespace."
 
 (defcustom reduce-source-modes '(reduce-mode)
   "Used to determine if a buffer contains REDUCE source code.
-If it's loaded into a buffer that is in one of these major modes, it's
-considered a REDUCE source file by `reduce-input-file' and `reduce-fasl-file'.
-Used by these commands to determine defaults."
+If a file is loaded into a buffer that is in one of the major
+modes in this list then it is considered to be a REDUCE source
+file by `reduce-input-file' and `reduce-fasl-file'.  Used by
+these commands to determine defaults."
   :type '(repeat symbol)
   :group 'reduce-run)
 
@@ -864,12 +873,13 @@ REDUCE packages directory."
        (let ((dir (concat reduce-run-installation-directory "packages/")))
          (and (file-accessible-directory-p dir) dir)))
   "Directory of REDUCE packages, or nil if not set.
-Note that you can complete the directory name using `M-<TAB>'.
-It should be an absolute pathname ending with \".../packages/\".
-This directory is used for completion by `reduce-load-package'.
-Customizing this variable assigns a REDUCE package completion
-alist to `reduce-package-completion-alist'; setting this variable
-directly has no effect."
+It should be an absolute pathname ending with \".../packages/\"
+and should be set automatically.  Note that you can complete the
+directory name using `M-<TAB>'.  This directory is used for
+completion by `reduce-load-package'.  Customizing this variable
+assigns a REDUCE package completion alist to
+`reduce-package-completion-alist'; setting this variable directly
+has no effect."
   :type '(choice (const :tag "None" nil) directory)
   :group 'reduce-run
   :set #'(lambda (symbol value)

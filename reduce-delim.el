@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sourceforge.net/u/fjwright>
 ;; Created: 22 March 2018
-;; Time-stamp: <2022-06-07 17:27:10 franc>
+;; Time-stamp: <2022-06-14 15:27:16 franc>
 ;; Keywords: languages, faces
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide
 ;; Package-Version: 1.6
@@ -50,7 +50,7 @@
 ;;;###autoload
 (defgroup reduce-delim-showing nil
   "Showing (un)matching of group/block delimiters and enclosed expressions."
-  :package-version '(reduce-mode . "1.54")
+  :package-version '(REDUCE-IDE . "1.54")
   :prefix "reduce-show-delim-"
   :group 'reduce-format-display)
 

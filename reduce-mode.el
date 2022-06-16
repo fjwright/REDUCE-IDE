@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sourceforge.net/u/fjwright>
 ;; Created: late 1992
-;; Time-stamp: <2022-06-07 17:26:52 franc>
+;; Time-stamp: <2022-06-14 15:28:39 franc>
 ;; Keywords: languages
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide
 ;; Package-Version: 1.6
@@ -275,7 +275,7 @@ It should end with \\=\\=.  The default value is \"\\(else\\|end\\|>>\\)\\=\\=\"
 (defcustom reduce-font-lock-mode-on t
   "If non-nil then turn on `reduce-font-lock-mode' initially.
 Defaults to t."
-  :package-version '(reduce-mode . "1.6")
+  :package-version '(REDUCE-IDE . "1.6")
   :type 'boolean
   :group 'reduce-format-display)
 
@@ -284,7 +284,7 @@ Defaults to t."
 Since `reduce-show-delim-mode' is a buffer-local minor mode, it
 can also be turned on and off in each buffer independently.
 Defaults to the value of `show-paren-mode'."
-  :package-version '(reduce-mode . "1.54")
+  :package-version '(REDUCE-IDE . "1.54")
   :type 'boolean
   :group 'reduce-format-display)
 
@@ -1938,7 +1938,7 @@ in mode line after `reduce-show-proc-delay' seconds of Emacs idle time."
 (defcustom reduce-etags-directory invocation-directory
   "Directory containing the etags program, or nil if it is in path.
 If non-nil the string must end with /."
-  :package-version '(reduce-mode . "1.54")
+  :package-version '(REDUCE-IDE . "1.54")
   :type '(choice (directory :tag "Etags program directory")
                  (const :tag "Etags is in exec path" nil))
   :group 'reduce-interface)
