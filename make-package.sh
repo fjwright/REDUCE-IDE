@@ -1,7 +1,7 @@
 #! /bin/bash
 
 # Author: Francis J. Wright <https://sourceforge.net/u/fjwright>
-# Time-stamp: <2022-06-16 17:03:41 franc>
+# Time-stamp: <2022-06-17 18:28:48 franc>
 
 # Construct a reduce-ide package archive.
 # Usage: make-package.sh version-number
@@ -26,8 +26,8 @@ pkg2='" "REDUCE Integrated Development Environment")
 dir=reduce-ide-$1
 mkdir $dir
 cd $dir
-ln -s ../info-dir dir
-ln -s ../README.md
+ln -s ../package-info-dir dir
+ln -s ../package-README README
 ln -s ../reduce-delim.el
 ln -s ../reduce-font-lock.el
 ln -s ../reduce-ide.info
