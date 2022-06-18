@@ -1,7 +1,7 @@
 #! /bin/bash
 
 # Author: Francis J. Wright <https://sourceforge.net/u/fjwright>
-# Time-stamp: <2022-06-17 18:28:48 franc>
+# Time-stamp: <2022-06-18 16:23:21 franc>
 
 # Construct a reduce-ide package archive.
 # Usage: make-package.sh version-number
@@ -18,7 +18,7 @@ if [ reduce-ide.info -ot reduce-ide.texinfo ]; then
     makeinfo reduce-ide.texinfo
 fi
 
-pkg1='(define-package "REDUCE-IDE" "'
+pkg1='(define-package "reduce-ide" "'
 pkg2='" "REDUCE Integrated Development Environment")
 '
 

@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sourceforge.net/u/fjwright>
 ;; Created: late 1998
-;; Time-stamp: <2022-06-15 18:03:03 franc>
+;; Time-stamp: <2022-06-18 16:25:07 franc>
 ;; Keywords: languages, processes
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide
 ;; Package-Version: 1.6
@@ -121,7 +121,7 @@ nil on other platforms."
            :match (lambda (widget value) (string-match "\\`[A-Z]:\\'" value))
            :type-error "Drive must be specified as X:, where X is a letter A-Z."))
   :group 'reduce-run
-  :package-version '(REDUCE-IDE . "1.6"))
+  :package-version '(reduce-ide . "1.6"))
 
 (defcustom reduce-run-installation-directory
   (if (eq system-type 'windows-nt)
@@ -145,7 +145,7 @@ determine the correct value for this variable automatically.
 Note that you can complete the directory name using \\[widget-complete]."
   :type  '(choice (const :tag "None" nil) directory)
   :group 'reduce-run
-  :package-version '(REDUCE-IDE . "1.6"))
+  :package-version '(reduce-ide . "1.6"))
 
 ;; Use some of this code to find the reduce-run-installation-directory on Linux?
 
