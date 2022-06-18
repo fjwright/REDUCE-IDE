@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sourceforge.net/u/fjwright>
 ;; Created: late 1992
-;; Time-stamp: <2022-06-14 15:28:39 franc>
+;; Time-stamp: <2022-06-18 13:53:22 franc>
 ;; Keywords: languages
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide
 ;; Package-Version: 1.6
@@ -120,9 +120,14 @@
   :tag "REDUCE Interface"
   :group 'reduce)
 
-(defgroup reduce-format-display nil
-  "Format and display options for editing and running REDUCE code."
-  :tag "REDUCE Format & Display"
+(defgroup reduce-display nil
+  "Display options for editing and running REDUCE code."
+  :tag "REDUCE Display"
+  :group 'reduce)
+
+(defgroup reduce-format nil
+  "Format options for editing and running REDUCE code."
+  :tag "REDUCE Format"
   :group 'reduce)
 
 (defcustom reduce-mode-load-hook nil
@@ -236,18 +241,18 @@ Optional `cdr' is a replacement string or nullary function (for structures)."
 (defcustom reduce-indentation 3
   "*Depth of successive indentations in REDUCE code."
   :type 'integer
-  :group 'reduce-format-display)
+  :group 'reduce-format)
 
 (defcustom reduce-indent-line-conservative nil ; TS
   "*If non-nil, `reduce-indent-line' will not successively indent."
   :type 'boolean
-  :group 'reduce-format-display)
+  :group 'reduce-format)
 
 (defcustom reduce-comment-region-string "%% "
   "*String inserted by \\[reduce-comment-region] at start of each line."
   :version "1.21" ; Name was reduce-comment-region up to version 1555!
   :type 'string
-  :group 'reduce-format-display)
+  :group 'reduce-format)
 
 (defcustom reduce-auto-indent-mode t
   "*If non-nil then conditionally re-indent the current line.
@@ -257,18 +262,18 @@ time if the text just typed matches `reduce-auto-indent-regex'."
      (reduce-auto-indent-mode (or value 0)))
   :initialize 'custom-initialize-default
   :type 'boolean
-  :group 'reduce-format-display)
+  :group 'reduce-format)
 
 (defcustom reduce-auto-indent-delay 0.125
   "*Time in seconds to delay before maybe re-indenting current line."
   :type 'number
-  :group 'reduce-format-display)
+  :group 'reduce-format)
 
 (defcustom reduce-auto-indent-regexp "\\(else\\|end\\|>>\\)\\="
   "*Auto indent current line if text just typed matches this regexp.
 It should end with \\=\\=.  The default value is \"\\(else\\|end\\|>>\\)\\=\\=\"."
   :type 'regexp
-  :group 'reduce-format-display)
+  :group 'reduce-format)
 
 ;; Display:
 
@@ -277,7 +282,7 @@ It should end with \\=\\=.  The default value is \"\\(else\\|end\\|>>\\)\\=\\=\"
 Defaults to t."
   :package-version '(REDUCE-IDE . "1.6")
   :type 'boolean
-  :group 'reduce-format-display)
+  :group 'reduce-display)
 
 (defcustom reduce-show-delim-mode-on show-paren-mode
   "If non-nil then turn on `reduce-show-delim-mode' initially.
@@ -286,7 +291,7 @@ can also be turned on and off in each buffer independently.
 Defaults to the value of `show-paren-mode'."
   :package-version '(REDUCE-IDE . "1.54")
   :type 'boolean
-  :group 'reduce-format-display)
+  :group 'reduce-display)
 
 (defcustom reduce-show-proc-mode nil
   "*If non-nil then display current procedure name in mode line.
@@ -295,12 +300,12 @@ Update after `reduce-show-proc-delay' seconds of Emacs idle time."
      (reduce-show-proc-mode (or value 0)))
   :initialize 'custom-initialize-default
   :type 'boolean
-  :group 'reduce-format-display)
+  :group 'reduce-display)
 
 (defcustom reduce-show-proc-delay 0.125
   "*Time in seconds to delay before showing the current procedure name."
   :type 'number
-  :group 'reduce-format-display)
+  :group 'reduce-display)
 
 ;; External variables:
 
