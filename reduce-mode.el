@@ -4,10 +4,10 @@
 
 ;; Author: Francis J. Wright <https://sourceforge.net/u/fjwright>
 ;; Created: late 1992
-;; Time-stamp: <2022-06-25 12:39:11 franc>
+;; Time-stamp: <2022-06-25 15:57:01 franc>
 ;; Keywords: languages
-;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide
-;; Package-Version: 1.6
+;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
+;; Package-Version: 1.61
 
 ;; This file is part of REDUCE IDE.
 
@@ -36,7 +36,7 @@
 ;; sturm@redlog.eu
 
 ;;;###autoload
-(add-to-list 'auto-mode-alist '("\\.\\(red\\|tst\\)\\'" . reduce-mode))
+(add-to-list 'auto-mode-alist '("\\.\\(?:red\\|tst\\)\\'" . reduce-mode))
 
 ;; To turn on only REDUCE font-lock mode by default include
 ;; (add-hook 'reduce-mode-hook 'turn-on-font-lock)
@@ -55,7 +55,7 @@
 ;;  more flexible intelligent indentation, rationalize the code
 ;;  make skipping comment statements configurable (?)
 ;;  add RLisp88 support (?)
-;;  more structure templates (?) -- while, repeat
+;;  more structure templates (?) − while, repeat
 
 ;;; Code:
 
@@ -120,7 +120,7 @@ It can be used to customize buffer-local features of REDUCE mode."
   '((nil "^\\([^%\n]+\\(ic\\|ro\\) \\)?\\s *procedure \\(\\w\\(\\w\\|\\s_\\|!.\\)*\\)" 3)
     ("Operators" "^\\([^%\n]+ic \\)?\\s *operator \\(\\w\\(\\w\\|\\s_\\|!.\\)*\\)" 2))
   "Imenu support for procedure definitions and operator declarations.
-An alist with elements of the form (MENU-TITLE REGEXP INDEX) --
+An alist with elements of the form (MENU-TITLE REGEXP INDEX) −
 see the documentation for ‘imenu-generic-expression’."
   :type '(repeat (list (choice (const nil) string) regexp integer))
   :group 'reduce-interface)
@@ -308,30 +308,31 @@ Update after ‘reduce-show-proc-delay’ seconds of Emacs idle time."
 
 ;;;###autoload
 (defun reduce-mode ()
-  "Major mode for editing REDUCE source code -- part of REDUCE IDE.
-Author: Francis Wright <http://sourceforge.net/users/fjwright>
-Version: see ‘reduce-mode-version’
+  "Major mode for editing REDUCE source code − part of REDUCE IDE.
+Version: see ‘reduce-mode-version’.
+Author: Francis J. Wright (URL ‘https://sites.google.com/site/fjwcentaur’).
+Website: URL ‘https://reduce-algebra.sourceforge.io/reduce-ide/’.
 Comments, suggestions, bug reports, etc. are welcome.
-Full texinfo documentation is provided in the file ‘reduce-ide.texinfo’.
+Full documentation is provided in the info node ‘(reduce-ide)Top’.
 
 Commands are aware of REDUCE syntax, and syntax-directed commands
 ignore comments, strings and character case.  Standard indentation and
 comment commands are supported.  Modelled primarily on Lisp mode;
 comment commands follow Lisp conventions.
 
-‘<< ... >>’ and ‘begin ... end’ are treated as bracketed or
-‘`symbolic’' expressions for motion, delimiter matching, etc.
-
-The command ‘reduce-indent-line’ (‘\\[reduce-indent-line]’) indents in a fixed style (mine!).
-If re-run immediately after itself or ‘reindent-then-newline-and-indent’
-\(‘\\[reindent-then-newline-and-indent]’) or ‘newline-and-indent’ (‘\\[newline-and-indent]’) it indents further.
+“<<...>>” and “begin...end” are treated as bracketed or
+symbolic expressions for motion, delimiter matching, etc.
+\\<reduce-mode-map>
+The command ‘\\[reduce-indent-line]’ indents in a fixed style (mine!).
+If re-run immediately after itself or ‘\\[reindent-then-newline-and-indent]’
+or ‘\\[newline-and-indent]’ it indents further.
 The indentation increment is the value of the variable ‘reduce-indentation’.
 
 Structure template commands are provided to insert and indent
 if-then (‘\\[reduce-insert-if-then]’), block (‘\\[reduce-insert-block]’) and group (‘\\[reduce-insert-group]’) constructs,
 the latter optionally on a single line.
 
-The command ‘reduce-complete-symbol’ (‘\\[reduce-complete-symbol]’) performs REDUCE
+The command ‘\\[reduce-complete-symbol]’ performs REDUCE
 keyword/phrase/structure completion.
 
 Text highlighting is supported via the command ‘font-lock-mode’, and
@@ -341,9 +342,9 @@ the style of highlighting may be controlled by setting
   0, nil : basic keyword highlighting;
   1      : algebraic-mode highlighting;
   2      : symbolic-mode highlighting;
-  3, t   : full highlighting -- of almost everything!
+  3, t   : full highlighting − of almost everything!
 
-Highlighting may also be controlled using the REDUCE menu.
+Text highlighting may also be controlled using the REDUCE menu.
 
 Delete converts tabs to spaces as it moves back.
 Blank lines separate paragraphs.  Percent signs start comments.
@@ -543,7 +544,7 @@ Entry to this mode calls the value of ‘reduce-mode-hook’ if non-nil."
 (defun reduce-mode-show-version ()
   "Echo version information for REDUCE Major Mode."
   (interactive)
-  (message "REDUCE Major Mode version: %s" reduce-mode-version))
+  (message "REDUCE Mode − REDUCE IDE Package-Version: %s" reduce-mode-version))
 
 
 ;;;; ************
@@ -704,7 +705,7 @@ of the construct; otherwise return nil."
     (or (and
      (reduce-re-search-backward pattern)
      (cond
-      ((looking-at "if"))       ; found it -- return t
+      ((looking-at "if"))       ; found it − return t
       ((looking-at "else")      ; nested conditional
        (reduce-find-matching-if) (reduce-find-matching-if))
       ((= (following-char) ?>)  ; end of group
@@ -1414,7 +1415,7 @@ Otherwise do not move and return nil."
          (pattern "[^!][;$]\\|\\<comment\\>"))
      (cond
       ((setq posn (reduce-back-to-comment-statement-start pattern))
-       ;; in comment statement -- go to its true beginning
+       ;; in comment statement − go to its true beginning
        (goto-char posn) t)
       (t (goto-char start) nil))        ; not in comment statement
      )))
@@ -1540,7 +1541,7 @@ If JUSTIFY is non-nil (interactively, with prefix argument), justify as well."
                 (and (re-search-backward "\\(comment\\)\\|\\(;\\)" nil t)
                      (match-beginning 1)
                      (setq first (point)))))
-          ;; Yes -- use normal text-mode fill, but only within the
+          ;; Yes − use normal text-mode fill, but only within the
           ;; comment statement, which might be within code:
           (save-restriction
             (narrow-to-region first (save-excursion (search-forward ";")))
