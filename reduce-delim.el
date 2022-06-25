@@ -4,10 +4,10 @@
 
 ;; Author: Francis J. Wright <https://sourceforge.net/u/fjwright>
 ;; Created: 22 March 2018
-;; Time-stamp: <2022-06-25 12:40:11 franc>
+;; Time-stamp: <2022-06-25 16:36:49 franc>
 ;; Keywords: languages, faces
-;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide
-;; Package-Version: 1.6
+;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
+;; Package-Version: 1.61
 ;; Package-Requires: ((reduce-mode "1.54"))
 
 ;; This file is part of REDUCE IDE.
@@ -214,7 +214,7 @@ Use point if POS not given.  Return nil if no delimiter found."
 	   "\\(?:\\(<<\\|>>\\)\\|begin\\|end\\)\\=" nil t))))
 
 (defun reduce-show-delim--locate-near-delim ()
-  "Locate an unescaped delimiter \"near\" point to show.
+  "Locate an unescaped delimiter “near” point to show.
 If one is found, return a cons (DIR . OUTSIDE), where DIR is > 0
 for an opening delimiter, < 0 for a closing delimiter, and
 OUTSIDE is the buffer position of the outside of the delimiter.

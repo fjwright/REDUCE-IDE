@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sourceforge.net/u/fjwright>
 ;; Created: late 1992
-;; Time-stamp: <2022-06-25 15:57:01 franc>
+;; Time-stamp: <2022-06-25 16:19:33 franc>
 ;; Keywords: languages
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.61
@@ -64,7 +64,7 @@
   (eval-when-compile
     (require 'lisp-mnt)
     (save-excursion (lm-header "package-version")))
-  "Version information for REDUCE Mode.")
+  "Version information for REDUCE mode.")
 
 ;; (message "Loading reduce-mode")  ; TEMPORARY!
 
@@ -542,9 +542,9 @@ Entry to this mode calls the value of ‘reduce-mode-hook’ if non-nil."
    ))
 
 (defun reduce-mode-show-version ()
-  "Echo version information for REDUCE Major Mode."
+  "Echo version information for REDUCE mode."
   (interactive)
-  (message "REDUCE Mode − REDUCE IDE Package-Version: %s" reduce-mode-version))
+  (message "REDUCE mode − REDUCE IDE Package-Version: %s" reduce-mode-version))
 
 
 ;;;; ************

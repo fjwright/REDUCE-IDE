@@ -4,10 +4,10 @@
 
 ;; Author: Francis J. Wright <https://sourceforge.net/u/fjwright>
 ;; Created: late 1998
-;; Time-stamp: <2022-06-25 12:40:47 franc>
+;; Time-stamp: <2022-06-25 16:31:25 franc>
 ;; Keywords: languages, processes
-;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide
-;; Package-Version: 1.6
+;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
+;; Package-Version: 1.61
 ;; Package-Requires: ((reduce-mode "1.5"))
 
 ;; This file is part of REDUCE IDE.
@@ -27,12 +27,12 @@
 
 ;;; Commentary:
 
-;; REDUCE Run is a package for running the REDUCE computer algebra
-;; system, which is Open Source and available from
-;; <https://sourceforge.net/projects/reduce-algebra>.
+;; This file is intended to be installed as part of the REDUCE IDE
+;; package; see the homepage for guidance on installing REDUCE IDE.
 
-;; The latest version of REDUCE Run is available from
-;; <https://sourceforge.net/p/reduce-algebra/code/HEAD/tree/trunk/generic/emacs>.
+;; REDUCE Run mode is a package for running the REDUCE computer
+;; algebra system, which is Open Source and available from
+;; <https://sourceforge.net/projects/reduce-algebra>.
 
 ;; Hacked from inf-lisp.el by Olin Shivers <shivers@cs.cmu.edu>
 
@@ -46,35 +46,13 @@
 ;; For documentation on the functionality provided by comint mode, and
 ;; the hooks available for customising it, see the file comint.el.
 
-;; Usage:
-
-;; To install in GNU Emacs 24+, download this file to any convenient
-;; directory and run the Emacs command ‘package-install-file’ on it.
-
-;; REDUCE Run requires ‘reduce-mode.el’ also available from the above
-;; URL, which must be installed first.
-
-;; Brief manual installation instructions follow.
-
-;; Byte-compile this file, put it somewhere in your ‘load-path’, and
-;; put the following in your ‘.emacs’ file:
-
-;; (autoload 'run-reduce "reduce-run" "Run a REDUCE process" t)
-
-;; To have automatic access to REDUCE Run from REDUCE Mode, and make
-;; REDUCE Mode customization always available, put the following
-;; (after ‘autoload’) in your ‘.emacs’ file:
-
-;; This can cause strange circular loading problems, especially if
-;; placed here before (require 'reduce-mode):
-;; ;;;###autoload
-;; (add-hook 'reduce-mode-load-hook 'require-reduce-run)
-
-;;; Code:
+;; REDUCE Run mode requires ‘reduce-mode.el’.
 
 ;;; To do:
 
 ;; control echoing from input of statement, proc or region?
+
+;;; Code:
 
 ;; Declare variables and functions defined in reduce-mode.el to avoid
 ;; compiler warnings:
@@ -86,13 +64,12 @@
 
 (require 'reduce-mode);; (if load-in-progress (require 'reduce-mode))
 
-
 (defconst reduce-run-version
-  ;; Extract version from ‘package-version’ in file header:
+  ;; Extract version from Package-Version in file header:
   (eval-when-compile
     (require 'lisp-mnt)
     (save-excursion (lm-header "package-version")))
-  "Version information for REDUCE Run.")
+  "Version information for REDUCE Run mode.")
 
 ;; (message "Loading reduce-run")       ; TEMPORARY!
 
@@ -142,7 +119,7 @@ batch files.  It defaults to \"X:/Program Files/Reduce/\" on MS
 Windows, where X is a letter A-Z, and to \"/usr/share/reduce/\"
 on other platforms.  On MS Windows, REDUCE Run Mode attempts to
 determine the correct value for this variable automatically.
-Note that you can complete the directory name using \\[widget-complete]."
+Note that you can complete the directory name using ‘\\[widget-complete]’."
   :type  '(choice (const :tag "None" nil) directory)
   :group 'reduce-run
   :package-version '(reduce-ide . "1.6"))
@@ -351,9 +328,9 @@ send REDUCE input.")
     ))
 
 (defun reduce-run-show-version ()
-  "Echo version information for REDUCE Run."
+  "Echo version information for REDUCE Run mode."
   (interactive)
-  (message "REDUCE Run version: %s" reduce-run-version))
+  (message "REDUCE Run mode − REDUCE IDE Package-Version: %s" reduce-run-version))
 
 ;; Put the Run REDUCE menu on the menu bar AFTER the REDUCE menu:
 (define-key-after
@@ -397,11 +374,12 @@ You can modify this function to install just the bindings you want."
 ;;; ===================================
 
 (defun reduce-run-mode ()
-  "Major mode for interacting with a REDUCE process -- part of REDUCE IDE.
-Author: Francis J. Wright <https://sourceforge.net/u/fjwright>
+  "Major mode for interacting with a REDUCE process − part of REDUCE IDE.
 Version: see ‘reduce-run-version’.
-Comments, suggestions, bug reports, etc., are welcome.
-Full texinfo documentation is provided in the file ‘reduce-ide.texinfo’.
+Author: Francis J. Wright (URL ‘https://sites.google.com/site/fjwcentaur’).
+Website: URL ‘https://reduce-algebra.sourceforge.io/reduce-ide/’.
+Comments, suggestions, bug reports, etc. are welcome.
+Full documentation is provided in the info node ‘(reduce-ide)Top’.
 
 Run REDUCE as a subprocess of Emacs, with I/O through an Emacs buffer.
 
@@ -421,7 +399,7 @@ buffers containing REDUCE source:
    the selected REDUCE process;
  * ‘reduce-eval-region’ sends the current region to the selected
    REDUCE process.
-Prefixing the reduce-eval- commands with a \\[universal-argument]
+Prefixing the reduce-eval- commands with a ‘\\[universal-argument]’
 also switches to the selected REDUCE process buffer window.
 
 Commands:
@@ -430,12 +408,12 @@ Commands:
  * Return before the end of the process' output copies the statement
    ending at point to the end of the process' output, and sends it.
  * Delete converts tabs to spaces as it moves back.
- * \\[reduce-indent-line] indents for REDUCE; with argument,
+ * ‘\\[reduce-indent-line]’ indents for REDUCE; with argument,
    shifts rest of expression rigidly with the current line.
- * \\[reduce-indent-procedure] does ‘reduce-indent-line’ on each
+ * ‘\\[reduce-indent-procedure]’ does ‘reduce-indent-line’ on each
    line starting within following expression.
 Paragraphs are separated only by blank lines.  Percent signs start comments.
-If you accidentally suspend your process, use \\[comint-continue-subjob]
+If you accidentally suspend your process, use ‘\\[comint-continue-subjob]’
 to continue it."
   (interactive)
   (kill-all-local-variables)
@@ -474,7 +452,7 @@ If CMD omitted or nil, use whichever REDUCE appears first in
 always start a new distinct REDUCE process, Otherwise, if there
 is a REDUCE process already running, just switch to it.  Runs the
 hooks from ‘reduce-run-mode-hook’ (after the ‘comint-mode-hook’ is run).
-\(Type \\[describe-mode] in the process buffer for a list of commands.)"
+\(Type ‘\\[describe-mode]’ in the process buffer for a list of commands.)"
   (interactive
    (let ((reduce-run-command (cdar reduce-run-commands)))
      (list (if current-prefix-arg
@@ -497,7 +475,7 @@ The appropriate command is taken from ‘reduce-run-commands’.  If
 REDUCE process, Otherwise, if there is a CSL REDUCE process
 already running, just switch to it.  Runs the hooks from
 ‘reduce-run-mode-hook’ (after the ‘comint-mode-hook’ is run).
-\(Type \\[describe-mode] in the process buffer for a list of commands.)"
+\(Type ‘\\[describe-mode]’ in the process buffer for a list of commands.)"
   (interactive)
   (reduce-run-reduce (cdr (assoc "CSL" reduce-run-commands)) "CSL"))
 
@@ -508,7 +486,7 @@ If ‘reduce-run-multiple’ in non-nil then always start a new
 distinct REDUCE process, Otherwise, if there is a PSL REDUCE
 process already running, just switch to it.  Runs the hooks from
 ‘reduce-run-mode-hook’ (after the ‘comint-mode-hook’ is run).
-\(Type \\[describe-mode] in the process buffer for a list of commands.)"
+\(Type ‘\\[describe-mode]’ in the process buffer for a list of commands.)"
   (interactive)
   (reduce-run-reduce (cdr (assoc "PSL" reduce-run-commands)) "PSL"))
 
@@ -970,7 +948,7 @@ Start a new (default) REDUCE process named from file or buffer NAME
 ;;; ===================
 
 (defun reduce-send-bye (proc)
-  "Send PROC the string ‘bye;’."
+  "Send PROC the string \"bye;\"."
   (process-send-string proc "bye\;\n"))
 
 (defun reduce-kill-buffer-tidy-up ()

@@ -4,10 +4,10 @@
 
 ;; Author: Francis J. Wright <https://sourceforge.net/u/fjwright>
 ;; Created: 6 June 2022 as a separate file (was part of reduce-mode.el)
-;; Time-stamp: <2022-06-25 12:40:28 franc>
+;; Time-stamp: <2022-06-25 16:46:28 franc>
 ;; Keywords: languages, faces
-;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide
-;; Package-Version: 1.6
+;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
+;; Package-Version: 1.61
 ;; Package-Requires: ((reduce-mode "1.6"))
 
 ;; This file is part of REDUCE IDE.
@@ -27,7 +27,7 @@
 
 ;;; Commentary:
 
-;; Based on code by Rainer Schoepf.
+;; Based on code by Rainer Schöpf.
 
 ;; Note that Font Lock Mode is documented in the ELisp manual under
 ;; Major and Minor Modes.  Syntactic fontification happens first; it
@@ -230,7 +230,7 @@ No variables are fontified.")
      (2 font-lock-type-face)
      (3 font-lock-keyword-face t)
      (4 font-lock-function-name-face)))
-  "Rules to highlight ‘declare’ and ‘struct’ statements, as used in ‘redlog’.")
+  "Rules to highlight “declare” and “struct” statements, as used in “redlog”.")
 
 (defconst reduce-font-lock--preprocessor-rules
   `((,(concat
@@ -385,9 +385,9 @@ expr\\|s?macro\\|inline\\|asserted\
 \\(?:e[+-]?[[:digit:]]+\\)?"
   "Regular expression matching a REDUCE unsigned integer or real number.
 Real numbers can be input in two ways:
-* as a sequence of any number of decimal digits with an embedded
+• as a sequence of any number of decimal digits with an embedded
 or trailing decimal point;
-* as above followed by a decimal exponent which is written as the
+• as above followed by a decimal exponent which is written as the
 letter e followed by a signed or unsigned integer.
 For example, 32., 32.0, 0.32e2 and 320.e-1 are all
 representations of 32.")
@@ -476,7 +476,7 @@ representations of 32.")
    "\\)\\'"))
 
 (defsubst reduce-font-lock--match-functional-keyword (num)
-  "Return non-nil if ‘(match-string NUM)’ is a REDUCE functional keyword."
+  "Return non-nil if “(match-string NUM)” is a REDUCE functional keyword."
   (string-match-p                   ; avoids modifying the match data.
    entire-reduce-functional-keyword-regexp
    (match-string num)))
@@ -726,12 +726,12 @@ which must be done in ‘reduce-mode’."
 ;;              level name))))
 
 (defun reduce-font-lock--toggle-escape (&optional arg)
-  "Toggle ‘!’ escape syntax for REDUCE Font Lock mode (only) and re-fontify.
-With ARG, clear ‘!’ escape syntax if ARG >= 0 and set it if ARG < 0.
+  "Toggle “!” escape syntax for REDUCE Font Lock mode (only) and re-fontify.
+With ARG, clear “!” escape syntax if ARG >= 0 and set it if ARG < 0.
 For example,
 \(add-hook 'reduce-mode-hook
       (function (lambda () (reduce-font-lock--toggle-escape 1))))
-will turn off the default font-lock escape syntax for ‘!’."
+will turn off the default font-lock escape syntax for “!”."
   (interactive "P")
   (require 'font-lock)
   (let ((reset font-lock-syntax-table))
