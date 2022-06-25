@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sourceforge.net/u/fjwright>
 ;; Created: late 1992
-;; Time-stamp: <2022-06-18 16:25:12 franc>
+;; Time-stamp: <2022-06-25 12:39:11 franc>
 ;; Keywords: languages
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide
 ;; Package-Version: 1.6
@@ -26,54 +26,17 @@
 
 ;;; Commentary:
 
+;; This file is intended to be installed as part of the REDUCE IDE
+;; package; see the homepage for guidance on installing REDUCE IDE.
+
 ;; Contributions by Rainer Schoepf flagged ; RS
 ;; Schoepf@goofy.zdv.Uni-Mainz.DE
 
 ;; Contributions by Thomas Sturm flagged ; TS
 ;; sturm@redlog.eu
 
-;; REDUCE Mode is a major mode for editing source code for the REDUCE
-;; computer algebra system, which is Open Source and available from
-;; <https://sourceforge.net/projects/reduce-algebra>.
-
-;; The latest version of REDUCE Mode is available from
-;; <https://sourceforge.net/p/reduce-algebra/code/HEAD/tree/trunk/generic/emacs>.
-
-;; Full documentation covering the installation and use of REDUCE mode
-;; is provided by a texinfo source file called `reduce-ide.texinfo'.
-;; From this are (or can be) derived the info file `reduce-ide.info',
-;; the HTML file `reduce-ide.html' and the PDF file `reduce-ide.pdf'.
-;; The info file can be browsed using the independent info browsing
-;; program called `info', or installed into the Emacs info browser.
-
-;;; Usage:
-
-;; To install in GNU Emacs 24+, download this file to any convenient
-;; directory and run the Emacs command `package-install-file' on it.
-
-;; Brief manual installation instructions follow.
-
-;; Byte-compile this file, put it somewhere in your `load-path', and
-;; put the following in your `.emacs' file:
-
-;; (autoload 'reduce-mode "reduce-mode" "Major mode for REDUCE code editing" t)
-
-;; To run REDUCE Mode automatically on files with extension ".red" or
-;; ".tst" put the following (after `autoload') in your `.emacs' file:
-
 ;;;###autoload
 (add-to-list 'auto-mode-alist '("\\.\\(red\\|tst\\)\\'" . reduce-mode))
-
-;; To make REDUCE Mode customization always available put the
-;; following (after `autoload') in your `.emacs' file:
-
-;;;###autoload
-(defgroup reduce nil
-  "Support for editing and running REDUCE code."
-  :tag "REDUCE"
-  :group 'languages
-  ;; Include the REDUCE Run customization group:
-  :load "reduce-run")
 
 ;; To turn on only REDUCE font-lock mode by default include
 ;; (add-hook 'reduce-mode-hook 'turn-on-font-lock)
@@ -97,7 +60,7 @@
 ;;; Code:
 
 (defconst reduce-mode-version
-  ;; Extract version from `package-version' in file header:
+  ;; Extract version from Package-Version in file header:
   (eval-when-compile
     (require 'lisp-mnt)
     (save-excursion (lm-header "package-version")))
@@ -110,10 +73,15 @@
 
 ;; Customizable user options:
 
+;;;###autoload
 (defgroup reduce nil
   "Support for editing and running REDUCE code."
   :tag "REDUCE"
-  :group 'languages)
+  :group 'languages
+  :link '(custom-manual "(reduce-ide)Top")
+  :link '(url-link "https://reduce-algebra.sourceforge.io/reduce-ide")
+  ;; Include the REDUCE Run customization group:
+  :load "reduce-run")
 
 (defgroup reduce-interface nil
   "Interface options for editing and running REDUCE code."
@@ -131,17 +99,17 @@
   :group 'reduce)
 
 (defcustom reduce-mode-load-hook nil
-  "*List of functions to be called when REDUCE mode is loaded.
-E.g. `require-reduce-run' to automatically load `reduce-run'.
-It can be used to customize global features of REDUCE mode such as its
-key map, i.e. it is a good place to put keybindings."
+  "List of functions to be called when REDUCE mode is loaded.
+For example, ‘require-reduce-run’ to automatically load REDUCE
+Run mode.  It can be used to customize global features of REDUCE
+mode and so is a good place to put keybindings."
   :type 'hook
   :options '(require-reduce-run)
   :group 'reduce)
 
 (defcustom reduce-mode-hook nil
-  "*List of functions to be called when REDUCE mode is entered.
-E.g. `turn-on-font-lock' to turn on font-lock mode locally.
+  "List of functions to be called when REDUCE mode is entered.
+For example, ‘turn-on-font-lock’ to turn on font-lock mode locally.
 It can be used to customize buffer-local features of REDUCE mode."
   :type 'hook
   :group 'reduce)
@@ -151,26 +119,26 @@ It can be used to customize buffer-local features of REDUCE mode."
 (defcustom reduce-imenu-generic-expression ; EXPERIMENTAL!
   '((nil "^\\([^%\n]+\\(ic\\|ro\\) \\)?\\s *procedure \\(\\w\\(\\w\\|\\s_\\|!.\\)*\\)" 3)
     ("Operators" "^\\([^%\n]+ic \\)?\\s *operator \\(\\w\\(\\w\\|\\s_\\|!.\\)*\\)" 2))
-  "*Imenu support for procedure definitions and operator declarations.
+  "Imenu support for procedure definitions and operator declarations.
 An alist with elements of the form (MENU-TITLE REGEXP INDEX) --
-see the documentation for `imenu-generic-expression'."
+see the documentation for ‘imenu-generic-expression’."
   :type '(repeat (list (choice (const nil) string) regexp integer))
   :group 'reduce-interface)
 
 (defcustom reduce-imenu nil
-  "*If non-nil REDUCE mode automatically calls `imenu-add-to-menubar'.
+  "If non-nil REDUCE mode automatically calls ‘imenu-add-to-menubar’.
 This adds a Contents menu to the menubar.  Default is nil."
   :type 'boolean
   :group 'reduce-interface)
 
 (defcustom reduce-imenu-title "Procs/Ops"
-  "*The title to use if REDUCE mode adds a proc/op menu to the menubar.
+  "The title to use if REDUCE mode adds a proc/op menu to the menubar.
 Default is \"Procs/Ops\"."
   :type 'string
   :group 'reduce-interface)
 
 (defcustom reduce-max-up-tries 2
-  "*Repeats of reduce-forward/backward-statement to move up block or group."
+  "Repeats of reduce-forward/backward-statement to move up block or group."
   :type 'integer
   :group 'reduce-interface)
 
@@ -231,33 +199,33 @@ Default is \"Procs/Ops\"."
     ("write ")
     ("<<" . reduce-insert-group)
     )
-  "Alist of REDUCE symbols to be completed by `reduce-complete-symbol'.
-Optional `cdr' is a replacement string or nullary function (for structures)."
+  "Alist of REDUCE symbols to be completed by ‘reduce-complete-symbol’.
+Optional ‘cdr’ is a replacement string or nullary function (for structures)."
   :type '(repeat (cons string (choice (const nil) string function)))
   :group 'reduce-interface)
 
 ;; Formatting:
 
 (defcustom reduce-indentation 3
-  "*Depth of successive indentations in REDUCE code."
+  "Depth of successive indentations in REDUCE code."
   :type 'integer
   :group 'reduce-format)
 
 (defcustom reduce-indent-line-conservative nil ; TS
-  "*If non-nil, `reduce-indent-line' will not successively indent."
+  "If non-nil, ‘reduce-indent-line’ will not successively indent."
   :type 'boolean
   :group 'reduce-format)
 
 (defcustom reduce-comment-region-string "%% "
-  "*String inserted by \\[reduce-comment-region] at start of each line."
+  "String inserted by \\[reduce-comment-region] at start of each line."
   :version "1.21" ; Name was reduce-comment-region up to version 1555!
   :type 'string
   :group 'reduce-format)
 
 (defcustom reduce-auto-indent-mode t
-  "*If non-nil then conditionally re-indent the current line.
-This will happen after `reduce-auto-indent-delay' seconds of idle
-time if the text just typed matches `reduce-auto-indent-regex'."
+  "If non-nil then conditionally re-indent the current line.
+This will happen after ‘reduce-auto-indent-delay’ seconds of idle
+time if the text just typed matches ‘reduce-auto-indent-regex’."
   :set (lambda (symbol value)
      (reduce-auto-indent-mode (or value 0)))
   :initialize 'custom-initialize-default
@@ -265,12 +233,12 @@ time if the text just typed matches `reduce-auto-indent-regex'."
   :group 'reduce-format)
 
 (defcustom reduce-auto-indent-delay 0.125
-  "*Time in seconds to delay before maybe re-indenting current line."
+  "Time in seconds to delay before maybe re-indenting current line."
   :type 'number
   :group 'reduce-format)
 
 (defcustom reduce-auto-indent-regexp "\\(else\\|end\\|>>\\)\\="
-  "*Auto indent current line if text just typed matches this regexp.
+  "Auto indent current line if text just typed matches this regexp.
 It should end with \\=\\=.  The default value is \"\\(else\\|end\\|>>\\)\\=\\=\"."
   :type 'regexp
   :group 'reduce-format)
@@ -278,24 +246,24 @@ It should end with \\=\\=.  The default value is \"\\(else\\|end\\|>>\\)\\=\\=\"
 ;; Display:
 
 (defcustom reduce-font-lock-mode-on t
-  "If non-nil then turn on `reduce-font-lock-mode' initially.
+  "If non-nil then turn on ‘reduce-font-lock-mode’ initially.
 Defaults to t."
   :package-version '(reduce-ide . "1.6")
   :type 'boolean
   :group 'reduce-display)
 
 (defcustom reduce-show-delim-mode-on show-paren-mode
-  "If non-nil then turn on `reduce-show-delim-mode' initially.
-Since `reduce-show-delim-mode' is a buffer-local minor mode, it
+  "If non-nil then turn on ‘reduce-show-delim-mode’ initially.
+Since ‘reduce-show-delim-mode’ is a buffer-local minor mode, it
 can also be turned on and off in each buffer independently.
-Defaults to the value of `show-paren-mode'."
+Defaults to the value of ‘show-paren-mode’."
   :package-version '(reduce-ide . "1.54")
   :type 'boolean
   :group 'reduce-display)
 
 (defcustom reduce-show-proc-mode nil
-  "*If non-nil then display current procedure name in mode line.
-Update after `reduce-show-proc-delay' seconds of Emacs idle time."
+  "If non-nil then display current procedure name in mode line.
+Update after ‘reduce-show-proc-delay’ seconds of Emacs idle time."
   :set (lambda (symbol value)
      (reduce-show-proc-mode (or value 0)))
   :initialize 'custom-initialize-default
@@ -303,15 +271,15 @@ Update after `reduce-show-proc-delay' seconds of Emacs idle time."
   :group 'reduce-display)
 
 (defcustom reduce-show-proc-delay 0.125
-  "*Time in seconds to delay before showing the current procedure name."
+  "Time in seconds to delay before showing the current procedure name."
   :type 'number
   :group 'reduce-display)
 
 ;; External variables:
 
 ;; Due to improvements of byte compilation around 2003 the compiler
-;; would complain about `make-local-var' on these later on. I left
-;; unchanged another (too late) declaration for `which-func-mode' below,
+;; would complain about ‘make-local-var’ on these later on. I left
+;; unchanged another (too late) declaration for ‘which-func-mode’ below,
 ;; which appears not to disturb. TS
 
 (defvar which-func-mode)
@@ -321,7 +289,7 @@ Update after `reduce-show-proc-delay' seconds of Emacs idle time."
 ;; Internal variables:
 
 (defvar reduce-imenu-done nil
-  "Buffer-local: set to true if `reduce-imenu-add-to-menubar' has been called.")
+  "Buffer-local: set to true if ‘reduce-imenu-add-to-menubar’ has been called.")
 (make-variable-buffer-local 'reduce-imenu-done)
 
 (defvar reduce-mode-map nil
@@ -342,33 +310,33 @@ Update after `reduce-show-proc-delay' seconds of Emacs idle time."
 (defun reduce-mode ()
   "Major mode for editing REDUCE source code -- part of REDUCE IDE.
 Author: Francis Wright <http://sourceforge.net/users/fjwright>
-Version: see `reduce-mode-version'
+Version: see ‘reduce-mode-version’
 Comments, suggestions, bug reports, etc. are welcome.
-Full texinfo documentation is provided in the file `reduce-ide.texinfo'.
+Full texinfo documentation is provided in the file ‘reduce-ide.texinfo’.
 
 Commands are aware of REDUCE syntax, and syntax-directed commands
 ignore comments, strings and character case.  Standard indentation and
 comment commands are supported.  Modelled primarily on Lisp mode;
 comment commands follow Lisp conventions.
 
-`<< ... >>' and `begin ... end' are treated as bracketed or
-``symbolic'' expressions for motion, delimiter matching, etc.
+‘<< ... >>’ and ‘begin ... end’ are treated as bracketed or
+‘`symbolic’' expressions for motion, delimiter matching, etc.
 
-The command `reduce-indent-line' (`\\[reduce-indent-line]') indents in a fixed style (mine!).
-If re-run immediately after itself or `reindent-then-newline-and-indent'
-\(`\\[reindent-then-newline-and-indent]') or `newline-and-indent' (`\\[newline-and-indent]') it indents further.
-The indentation increment is the value of the variable `reduce-indentation'.
+The command ‘reduce-indent-line’ (‘\\[reduce-indent-line]’) indents in a fixed style (mine!).
+If re-run immediately after itself or ‘reindent-then-newline-and-indent’
+\(‘\\[reindent-then-newline-and-indent]’) or ‘newline-and-indent’ (‘\\[newline-and-indent]’) it indents further.
+The indentation increment is the value of the variable ‘reduce-indentation’.
 
 Structure template commands are provided to insert and indent
-if-then (`\\[reduce-insert-if-then]'), block (`\\[reduce-insert-block]') and group (`\\[reduce-insert-group]') constructs,
+if-then (‘\\[reduce-insert-if-then]’), block (‘\\[reduce-insert-block]’) and group (‘\\[reduce-insert-group]’) constructs,
 the latter optionally on a single line.
 
-The command `reduce-complete-symbol' (`\\[reduce-complete-symbol]') performs REDUCE
+The command ‘reduce-complete-symbol’ (‘\\[reduce-complete-symbol]’) performs REDUCE
 keyword/phrase/structure completion.
 
-Text highlighting is supported via the command `font-lock-mode', and
+Text highlighting is supported via the command ‘font-lock-mode’, and
 the style of highlighting may be controlled by setting
-`font-lock-maximum-decoration' to one of:
+‘font-lock-maximum-decoration’ to one of:
 
   0, nil : basic keyword highlighting;
   1      : algebraic-mode highlighting;
@@ -382,7 +350,7 @@ Blank lines separate paragraphs.  Percent signs start comments.
 REDUCE mode defines the following local key bindings:
 
 \\{reduce-mode-map}
-Entry to this mode calls the value of `reduce-mode-hook' if non-nil."
+Entry to this mode calls the value of ‘reduce-mode-hook’ if non-nil."
   (interactive)
   (kill-all-local-variables)
   (use-local-map reduce-mode-map)
@@ -404,12 +372,12 @@ Entry to this mode calls the value of `reduce-mode-hook' if non-nil."
   (if reduce-show-proc-mode (reduce-show-proc-mode t))
   ;; This seems to be obsolete in Emacs 26!
   ;; Experimental support for outline minor mode (cf. lisp-mode.el)
-  ;; `outline-regexp' must match `heading' from beginning of line;
+  ;; ‘outline-regexp’ must match ‘heading’ from beginning of line;
   ;; length of match determines level:
   ;; (set (make-local-variable 'outline-regexp) "[^ \t\n]")
   ;; Imenu support:
   (set (make-local-variable 'imenu-generic-expression)
-       ;; `make-local-variable' in case imenu not yet loaded!
+       ;; ‘make-local-variable’ in case imenu not yet loaded!
        reduce-imenu-generic-expression)
   (set (make-local-variable 'imenu-space-replacement) " ")
   ;; Necessary to avoid re-installing the same imenu:
@@ -546,11 +514,11 @@ Entry to this mode calls the value of `reduce-mode-hook' if non-nil."
    ;;   "-- TEMPLATES --" ; not good in ntemacs
    "--"
    ["Insert If-Then" reduce-insert-if-then :active t
-    :help "Insert an `if-then' template"]
+    :help "Insert an ‘if-then’ template"]
    ["Insert Block" reduce-insert-block :active t
-    :help "Insert a `block' template"]
+    :help "Insert a ‘block’ template"]
    ["Insert Group" reduce-insert-group :active t
-    :help "Insert a `group' template"]
+    :help "Insert a ‘group’ template"]
    "--"
    ["Indent Region" reduce-indent-region :active mark-active
     :help "Re-indent the current region"]
@@ -618,8 +586,8 @@ Entry to this mode calls the value of `reduce-mode-hook' if non-nil."
 (defun reduce-indent-line (&optional arg)
   "Indent current line; if ARG indent whole statement rigidly.
 Indents to fixed style determined by current and previous non-blank line.
-Subsequent consecutive calls indent additionally by `reduce-indentation'
-unless `reduce-indent-line-conservative' is non-nil.  With argument,
+Subsequent consecutive calls indent additionally by ‘reduce-indentation’
+unless ‘reduce-indent-line-conservative’ is non-nil.  With argument,
 indent any additional lines of the same statement rigidly together with
 this one."
   (interactive "*P")            ; error if buffer read-only
@@ -688,10 +656,10 @@ this one."
 
 (defun reduce-calculate-indent-this ()
   "Handle current line BEGINNING with a special token.
-For an opening token (`begin' or `<<') normally return the indentation of
-the previous non-blank line; for an intermediate token (`then' or `else')
+For an opening token (‘begin’ or ‘<<’) normally return the indentation of
+the previous non-blank line; for an intermediate token (‘then’ or ‘else’)
 return the indentation of the beginning of the statement; for a
-closing token (`end' or `>>') return the indentation of the beginning
+closing token (‘end’ or ‘>>’) return the indentation of the beginning
 of the construct; otherwise return nil."
   (save-excursion
     (back-to-indentation)
@@ -729,9 +697,9 @@ of the construct; otherwise return nil."
       0))))
 
 (defun reduce-find-matching-if ()
-  "Find the `if' matching a `then' or `else'."
+  "Find the ‘if’ matching a ‘then’ or ‘else’."
   ;; Must skip groups, blocks and brackets.
-  ;; Detects a missing `if' as early as possible as an unrecoverable error.
+  ;; Detects a missing ‘if’ as early as possible as an unrecoverable error.
   (let ((pattern "\\<\\(if\\|else\\|end\\|begin\\)\\>\\|>>\\|\\s)\\|<<\\|\\s(\\|[^!][;$]"))
     (or (and
      (reduce-re-search-backward pattern)
@@ -746,8 +714,8 @@ of the construct; otherwise return nil."
       ((= (char-syntax (following-char)) ?\) )
        (forward-char) (backward-list) ; skip balanced brackets
        (reduce-find-matching-if))))
-    ;; begin, <<, opening bracket, `;', `$' or beginning of buffer
-    (error "`if' matching `then' or `else' not found"))
+    ;; begin, <<, opening bracket, ‘;’, ‘$’ or beginning of buffer
+    (error "‘if’ matching ‘then’ or ‘else’ not found"))
     ))
 
 
@@ -817,14 +785,14 @@ of the construct; otherwise return nil."
 ;       (reduce-backward-statement 1)
 ;       (back-to-indentation)
 ;       (+ (current-column) reduce-indentation))
-       ;; If continuing `if' then indent relative to the `if' ...
+       ;; If continuing ‘if’ then indent relative to the ‘if’ ...
 ;      ((looking-at ".*\\(\\<then\\>\\|\\<else\\>\\)[ \t]*[%\n]")
 ;       (if (looking-at ".*\\<if\\>")
 ;       ()
 ;         (goto-char (match-beginning 1))
 ;         (reduce-find-matching-if))
 ;       (+ (current-indentation) reduce-indentation))
-       ;; ... but the `if' must be embedded ...
+       ;; ... but the ‘if’ must be embedded ...
        ((looking-at ".+\\<if\\>.*\\(\\<then\\>\\|\\<else\\>\\)[ \t]*[%\n]")
         (goto-char (match-beginning 1))
         (reduce-find-matching-if)
@@ -834,9 +802,9 @@ of the construct; otherwise return nil."
        ))))))
 
 (defun reduce-calculate-indent-prev1 ()
-  "Sub-function of `reduce-calculate-indent-prev'.
+  "Sub-function of ‘reduce-calculate-indent-prev’.
 If beginning new statement or comma-separated element or
-sub-expression ending with `+', `-', `or' or `and' then indent to
+sub-expression ending with ‘+’, ‘-’, ‘or’ or ‘and’ then indent to
 previous statement or element unless it is a first argument ..."
   (if (looking-at ".*\\(\\([,+-]\\|\\<or\\|\\<and\\)\\|[\;$]\\)[ \t]*[%\n]")
       (let* ((second_arg (match-string 2))
@@ -865,7 +833,7 @@ previous statement or element unless it is a first argument ..."
 
 (defun reduce-unindent-line (arg)
   "Unindent current line; if ARG indent whole statement rigidly.
-Delete `reduce-indentation' spaces from beginning of line.
+Delete ‘reduce-indentation’ spaces from beginning of line.
 With argument, unindent any additional lines of the same statement
 rigidly along with this one."
   (interactive "*P")            ; error if buffer read-only
@@ -886,7 +854,7 @@ rigidly along with this one."
 
 
 (defun reduce-comment-indent ()
-  "Value of `comment-indent-function'."
+  "Value of ‘comment-indent-function’."
   ;; Called only by indent-for-comment and
   ;; (hence) indent-new-comment-line.
   (if (looking-at "%%%")
@@ -949,8 +917,8 @@ With prefix ARG, turn mode on if and only if ARG is positive.
 Returns the new status of REDUCE Auto Indent mode (non-nil means on).
 
 When REDUCE Auto Indent mode is enabled, after
-`reduce-auto-indent-delay' seconds of Emacs idle time re-indent the
-current line if the text just typed matches `reduce-auto-indent-regexp'."
+‘reduce-auto-indent-delay’ seconds of Emacs idle time re-indent the
+current line if the text just typed matches ‘reduce-auto-indent-regexp’."
   (interactive "P")
   (let ((on-p (if arg
           (> (prefix-numeric-value arg) 0)
@@ -965,7 +933,7 @@ current line if the text just typed matches `reduce-auto-indent-regexp'."
     (reduce-auto-indent-function)))
 
 (defun reduce-auto-indent-function ()
-  "Re-indent current line if match with `reduce-auto-indent-regexp' just typed."
+  "Re-indent current line if match with ‘reduce-auto-indent-regexp’ just typed."
   (and (eq major-mode 'reduce-mode)
        (eq last-command 'self-insert-command)
        (save-excursion
@@ -1046,7 +1014,7 @@ Return t is successful, nil otherwise."
       (kill-region (region-beginning) (region-end))))
 
 (defun reduce-narrow-to-procedure (arg)
-  ;; Based on `narrow-to-defun' in `lisp.el'.
+  ;; Based on ‘narrow-to-defun’ in ‘lisp.el’.
   "Narrow to this and following ARG procedures.
 Make text outside current procedure invisible.
 The procedure visible is the one that contains point or follows point."
@@ -1067,7 +1035,7 @@ The procedure visible is the one that contains point or follows point."
   "Repeat count of reduce-forward/backward-statement at end of block or group.")
 
 (defun reduce-up-block-or-group-maybe (found start)
-  "Move over `<<', `begin', `>>' or `end' (including end-of-file marker)
+  "Move over ‘<<’, ‘begin’, ‘>>’ or ‘end’ (including end-of-file marker)
 after reduce-max-up-tries repeated interactive attempts."
   (if (and found (= (point) start) (eq this-command last-command))
       (if (< reduce-up-tries reduce-max-up-tries)
@@ -1083,13 +1051,13 @@ after reduce-max-up-tries repeated interactive attempts."
     (setq reduce-up-tries 1)))
 
 (defvar reduce-forward-statement-found nil
-  "Free variable bound in `reduce-forward-statement'.")
+  "Free variable bound in ‘reduce-forward-statement’.")
 ;; Consider replacing with lexical binding.
 
 (defun reduce-forward-statement (arg)
   "Move forward to end of statement.  With ARG, do it ARG times.
 If looking at the end of a block or group, or the end-of-file marker,
-move over it after `reduce-max-up-tries' consecutive interactive tries."
+move over it after ‘reduce-max-up-tries’ consecutive interactive tries."
   (interactive "p")
   (let ((case-fold-search t)
         (pattern "[;$]\\|>>\\|\\<end\\>\\|<<\\|\\<begin\\>\\|\\s(\\|\\s)")
@@ -1138,7 +1106,7 @@ move over it after `reduce-max-up-tries' consecutive interactive tries."
 (defun reduce-backward-statement (arg)
   "Move backward to start of statement.  With ARG, do it ARG times.
 If looking at the beginning of a block or group move over it after
-`reduce-max-up-tries' consecutive interactive tries.
+‘reduce-max-up-tries’ consecutive interactive tries.
 The end-of-file marker is treated as a statement.
 Returns the count of statements left to move."
 ;; Return count used by reduce-calculate-indent-proc.
@@ -1146,7 +1114,7 @@ Returns the count of statements left to move."
   (let ((case-fold-search t)
     (pattern "[;$]\\|<<\\|\\<begin\\>\\|>>\\|\\<end\\>\\|\\s)\\|\\s(")
     (start (point)) (found t)
-    ;; Check whether after end of file marker, ``end''.
+    ;; Check whether after end of file marker, ‘`end’'.
     ;; Assume it starts at the beginning of the line.
     (not-eof (save-excursion
            (or (reduce-re-search-forward "[^ \t\f\n]")
@@ -1203,7 +1171,7 @@ Return t if successful, nil if reaches beginning of buffer."
   "Kill the rest of the current statement or ARG statements from point.
 If no nonblanks kill thru newline.
 With prefix argument, kill that many statements from point.
-Negative arguments kill complete statements backwards, cf. `kill-line'."
+Negative arguments kill complete statements backwards, cf. ‘kill-line’."
   ;; Based on kill-line in simple.el
   (interactive "*P")            ; error if buffer read-only
   (kill-region (point)
@@ -1225,9 +1193,9 @@ Negative arguments kill complete statements backwards, cf. `kill-line'."
 
 (defun reduce-up-block-or-group (arg)
   "Move backwards up one level of block or group; if ARG move forwards.
-Move to beginning of nearest unpaired  `begin'  or  `<<'.
+Move to beginning of nearest unpaired  ‘begin’  or  ‘<<’.
 A universal argument means move forwards
-to end of nearest unpaired  `end'  or  `>>'.
+to end of nearest unpaired  ‘end’  or  ‘>>’.
 With a numeric argument, do it that many times, where a
 negative argument means move forward instead of backward."
   (interactive "P")
@@ -1238,7 +1206,7 @@ negative argument means move forward instead of backward."
       )))
 
 (defun reduce-up-block-or-group1 (arg)
-  "Sub-function of `reduce-up-block-or-group'."
+  "Sub-function of ‘reduce-up-block-or-group’."
   (let ((start (point)))
     (if (or
      (and (> arg 0) (reduce-backward-block-or-group))
@@ -1273,9 +1241,9 @@ negative argument means move forward instead of backward."
 
 (defun reduce-down-block-or-group (arg)
   "Move forward down one level of block or group; if ARG move backwards.
-Move to end of nearest unpaired  `begin'  or  `<<'.
+Move to end of nearest unpaired  ‘begin’  or  ‘<<’.
 A universal argument means move backward
-to beginning of nearest unpaired  `end'  or  `>>'.
+to beginning of nearest unpaired  ‘end’  or  ‘>>’.
 With a numeric argument, do it that many times, where a
 negative argument means move backward instead of forward."
   (interactive "P")
@@ -1286,7 +1254,7 @@ negative argument means move backward instead of forward."
       )))
 
 (defun reduce-down-block-or-group1 (arg)
-  "Sub-function of `reduce-down-block-or-group'."
+  "Sub-function of ‘reduce-down-block-or-group’."
   (let ((start (point)))
     (if
     (if (> arg 0)
@@ -1303,7 +1271,7 @@ negative argument means move backward instead of forward."
 
 
 (defun reduce-prefix-numeric-value (arg)
-  "Interpret universal ARG as -1, otherwise apply `prefix-numeric-value'."
+  "Interpret universal ARG as -1, otherwise apply ‘prefix-numeric-value’."
   (if (and arg (listp arg)) -1 (prefix-numeric-value arg)))
 
 
@@ -1354,7 +1322,7 @@ Return t if successful; otherwise move as far as possible and return nil."
 
 (defun reduce-re-search-forward (regexp &optional MOVE)
   "Syntactic search forwards for REGEXP; if no match and MOVE then move to end.
-Skip comments, strings, escaped tokens, and quoted tokens other than `('.
+Skip comments, strings, escaped tokens, and quoted tokens other than ‘(’.
 Return t if match found, nil otherwise."
   (let ((start (point))
     (pattern (concat regexp "\\|%\\|\\<comment\\>"))
@@ -1412,7 +1380,7 @@ Skip REDUCE comments and strings.  Return t if match found, nil otherwise."
     ))
 
 (defun reduce-re-search-backward1 (regexp move)
-  "Sub-function of `reduce-re-search-backward'.
+  "Sub-function of ‘reduce-re-search-backward’.
 Skip strings backwards."
   (if (reduce-re-search-backward2 regexp move)
       (if (reduce-in-string)        ; try again!
@@ -1452,8 +1420,8 @@ Otherwise do not move and return nil."
      )))
 
 (defun reduce-back-to-comment-statement-start (pattern)
-  "Move backwards to the nearest `comment' keyword or separator.
-If it is `comment' then return its start position; otherwise return nil."
+  "Move backwards to the nearest ‘comment’ keyword or separator.
+If it is ‘comment’ then return its start position; otherwise return nil."
   (while (and (re-search-backward pattern nil 'move)
               (reduce-back-to-percent-comment-start)))
   (if (looking-at "comment") (point)))
@@ -1495,7 +1463,7 @@ Otherwise do not move and return nil."
   "Comment/uncomment every line in region, from BEG-REGION to END-REGION.
 With interactive ARG, comment if non-negative, uncomment if null
 or negative (cf. minor modes).
-Put `reduce-comment-region-string' at the beginning of every line in the region.
+Put ‘reduce-comment-region-string’ at the beginning of every line in the region.
 First two args specify the region boundaries, third arg is interactive."
   ;; Taken almost directly from fortran.el
   ;; by Michael D. Prange (prange@erl.mit.edu).
@@ -1567,7 +1535,7 @@ If JUSTIFY is non-nil (interactively, with prefix argument), justify as well."
       ;; Is point within a comment statement?
       (if (or (and (looking-at "[ \t]*comment")
                    (setq first (point)))
-              ;; (See `reduce-font-lock-extend-region-for-comment-statement'.)
+              ;; (See ‘reduce-font-lock-extend-region-for-comment-statement’.)
               (save-excursion
                 (and (re-search-backward "\\(comment\\)\\|\\(;\\)" nil t)
                      (match-beginning 1)
@@ -1581,7 +1549,7 @@ If JUSTIFY is non-nil (interactively, with prefix argument), justify as well."
         ;; If point is in a %-comment then find its prefix and fill it:
         (if (looking-at "[ \t]*%")
             (let (fill-prefix last)
-              ;; Code modified from `set-fill-prefix' in fill.el.
+              ;; Code modified from ‘set-fill-prefix’ in fill.el.
               (setq fill-prefix (buffer-substring
                                  (point)
                                  (progn (skip-chars-forward " \t%") (point))))
@@ -1608,9 +1576,9 @@ If JUSTIFY is non-nil (interactively, with prefix argument), justify as well."
 ;;;; ***************************
 
 (defun reduce-insert-if-then (&optional else)
-  "Insert `if ... then'; if ELSE then include `else'.
-Position point after `if'.
-With argument include a correctly indented `else' on a second line."
+  "Insert ‘if ... then’; if ELSE then include ‘else’.
+Position point after ‘if’.
+With argument include a correctly indented ‘else’ on a second line."
   (interactive "*P")            ; error if buffer read-only
   (insert "if ")
   (let ((finish (point)))
@@ -1625,27 +1593,27 @@ With argument include a correctly indented `else' on a second line."
     ))
 
 (defun reduce-insert-block (&optional nosplit)
-  "Insert and indent `begin ... end' block; if NOSPLIT then on same line.
+  "Insert and indent ‘begin ... end’ block; if NOSPLIT then on same line.
 Position point inside.
-With argument put `begin' and `end' on the same line
-\(see `reduce-insert-block-or-group')."
+With argument put ‘begin’ and ‘end’ on the same line
+\(see ‘reduce-insert-block-or-group’)."
   (interactive "*P")            ; error if buffer read-only
   (reduce-insert-block-or-group "begin" "end" t nosplit))
 
 (defun reduce-insert-group (&optional nosplit)
-  "Insert and indent `<<  >>' group; if NOSPLIT then on same line.
+  "Insert and indent ‘<<  >>’ group; if NOSPLIT then on same line.
 Position point inside.
-With argument put `<<' and `>>' on the same line
-\(see `reduce-insert-block-or-group')."
+With argument put ‘<<’ and ‘>>’ on the same line
+\(see ‘reduce-insert-block-or-group’)."
   (interactive "*P")            ; error if buffer read-only
   (reduce-insert-block-or-group "<<" ">>" nil nosplit))
 
 (defun reduce-insert-block-or-group (open close block nosplit)
-  "Insert and indent `open ... close' structure and position point inside.
+  "Insert and indent ‘open ... close’ structure and position point inside.
 If the mark is transient and active then enclose the region; otherwise
 if point is not at the end of the line then enclose the rest of the line.
 Leave the mark at the insertion point in the body of a block.
-If `nosplit' is true then put `open' and `close' on the same line."
+If ‘nosplit’ is true then put ‘open’ and ‘close’ on the same line."
   (let ((region-beginning (and transient-mark-mode mark-active
                    (region-beginning)))
     (region-end (and transient-mark-mode mark-active
@@ -1690,11 +1658,11 @@ If `nosplit' is true then put `open' and `close' on the same line."
 ;; provided solely to ignore any argument:
 
 (defun reduce-expand-if-then (&optional arg)
-  "Insert `if ... then' and position point inside, ignoring ARG."
+  "Insert ‘if ... then’ and position point inside, ignoring ARG."
   (reduce-insert-if-then))
 
 (defun reduce-expand-if-then-else (&optional arg)
-  "Insert `if ... then ... else' and position point after `if', ignoring ARG."
+  "Insert ‘if ... then ... else’ and position point after ‘if’, ignoring ARG."
   (reduce-insert-if-then 'else))
 
 
@@ -1812,7 +1780,7 @@ With argument, do it that many times."
     (reduce-forward-procedure 1)))
 
 (defun reduce-reposition-window ()
-  "See `reposition-window' for details."
+  "See ‘reposition-window’ for details."
   (interactive)
   (let ((beginning-of-defun (symbol-function 'beginning-of-defun))
     (end-of-defun (symbol-function 'end-of-defun)))
@@ -1833,7 +1801,7 @@ With argument, do it that many times."
 (defun reduce-complete-symbol (arg)
   "Perform completion on REDUCE symbol preceding point or region.
 Do this only if mark is transient and active.
-Compare that symbol against the elements of `reduce-completion-alist'.
+Compare that symbol against the elements of ‘reduce-completion-alist’.
 If a perfect match (only) has a cdr then delete the match and insert
 the cdr if it is a string or call it if it is a (nullary) function,
 passing on any prefix argument (in raw form)."
@@ -1894,7 +1862,7 @@ With prefix ARG, turn REDUCE Show Proc mode on if and only if ARG is positive.
 Returns the new status of REDUCE Show Proc mode (non-nil means on).
 
 When REDUCE Show Proc mode is enabled, display current procedure name
-in mode line after `reduce-show-proc-delay' seconds of Emacs idle time."
+in mode line after ‘reduce-show-proc-delay’ seconds of Emacs idle time."
   (interactive "P")
   (let ((on-p (if arg
           (> (prefix-numeric-value arg) 0)
@@ -1949,7 +1917,7 @@ If non-nil the string must end with /."
   :group 'reduce-interface)
 
 (defun reduce-tagify-dir (dir)
-  "Generate a REDUCE TAGS file for `*.red' files in directory DIR.
+  "Generate a REDUCE TAGS file for ‘*.red’ files in directory DIR.
 TAGS goes in DIR, which by default is the current directory."
   (interactive
    (list (read-directory-name
@@ -1960,7 +1928,7 @@ TAGS goes in DIR, which by default is the current directory."
   (setq dir (directory-file-name (expand-file-name dir)))
   (reduce--tagify
    dir (directory-files dir nil "\\.red\\'")
-   (message "Tagging files `%s/*.red'..." dir)))
+   (message "Tagging files ‘%s/*.red’..." dir)))
 
 (defun reduce--tagify (dir files msg)
   "Generate a REDUCE TAGS file in directory DIR for specified FILES.
@@ -1982,7 +1950,7 @@ MSG is the message displayed when the tagging process started."
       (message "etags failed with status: %s" value))))
 
 (defun reduce-tagify-dir-recursively (dir)
-  "Generate a REDUCE TAGS file for all `*.red' files under directory DIR.
+  "Generate a REDUCE TAGS file for all ‘*.red’ files under directory DIR.
 TAGS goes in DIR, which by default is the current directory."
   (interactive
    (list (read-directory-name
@@ -1992,20 +1960,20 @@ TAGS goes in DIR, which by default is the current directory."
           t)))                          ; MUSTMATCH
   (setq dir (directory-file-name (expand-file-name dir)))
   (let ((reduce--tagify-root dir))
-    ;; reduce--tagify-root required by `reduce--directory-files-recursively'.
+    ;; reduce--tagify-root required by ‘reduce--directory-files-recursively’.
     (reduce--tagify
      dir (reduce--directory-files-recursively dir)
-     (message "Tagging all files `%s/...*.red'..." dir))))
+     (message "Tagging all files ‘%s/...*.red’..." dir))))
 
 (defvar reduce--tagify-root)
 
 (defun reduce--directory-files-recursively (dir)
-  "Return a list of all `*.red' files under DIR.
+  "Return a list of all ‘*.red’ files under DIR.
 This function works recursively.  Files are returned in \"depth first\"
 order, and files from each directory are sorted in alphabetical order.
 Each file name appears in the returned list relative to directory
-`reduce--tagify-root', assumed to be bound locally in the caller."
-  ;; Modelled on `directory-files-recursively'.
+‘reduce--tagify-root’, assumed to be bound locally in the caller."
+  ;; Modelled on ‘directory-files-recursively’.
   (let (result
         files
         ;; When DIR is "/", remote file names like "/method:" could
@@ -2031,7 +1999,7 @@ Each file name appears in the returned list relative to directory
 
 ;;; Load Hook
 (defun require-reduce-run ()
-  "Require the library `reduce-run'.  Useful on `reduce-mode-load-hook'."
+  "Require REDUCE Run mode.  Useful on ‘reduce-mode-load-hook’."
   (require 'reduce-run))
 
 (provide 'reduce-mode)

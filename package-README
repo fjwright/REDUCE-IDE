@@ -1,15 +1,12 @@
-Major modes for editing and running REDUCE source code
-
 Website: https://reduce-algebra.sourceforge.io/reduce-ide/
 Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 
-REDUCE IDE is a package that provides an Integrated Development
-Environment for the REDUCE computer algebra system within the GNU
-Emacs editor.  It provides major modes for editing REDUCE source code
-and running a command-line version of REDUCE in an Emacs window.
-However, many of the facilities require that Emacs is running under a
-GUI such as Microsoft Windows or the X Window System under some
-flavour of UNIX or Linux.
+REDUCE IDE is an Integrated Development Environment for the REDUCE
+computer algebra system.  It provides major modes for editing REDUCE
+source code and running a command-line version of REDUCE in an Emacs
+window.  However, many of the facilities require that Emacs is running
+under a GUI such as Microsoft Windows or the X Window System under
+some flavour of UNIX or Linux.
 
 I currently use GNU Emacs 28 (on Microsoft Windows) for development
 and testing, and REDUCE IDE may not work correctly with older

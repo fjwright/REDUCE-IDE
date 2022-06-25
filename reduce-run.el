@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sourceforge.net/u/fjwright>
 ;; Created: late 1998
-;; Time-stamp: <2022-06-18 16:25:07 franc>
+;; Time-stamp: <2022-06-25 12:40:47 franc>
 ;; Keywords: languages, processes
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide
 ;; Package-Version: 1.6
@@ -49,21 +49,21 @@
 ;; Usage:
 
 ;; To install in GNU Emacs 24+, download this file to any convenient
-;; directory and run the Emacs command `package-install-file' on it.
+;; directory and run the Emacs command ‘package-install-file’ on it.
 
-;; REDUCE Run requires `reduce-mode.el' also available from the above
+;; REDUCE Run requires ‘reduce-mode.el’ also available from the above
 ;; URL, which must be installed first.
 
 ;; Brief manual installation instructions follow.
 
-;; Byte-compile this file, put it somewhere in your `load-path', and
-;; put the following in your `.emacs' file:
+;; Byte-compile this file, put it somewhere in your ‘load-path’, and
+;; put the following in your ‘.emacs’ file:
 
 ;; (autoload 'run-reduce "reduce-run" "Run a REDUCE process" t)
 
 ;; To have automatic access to REDUCE Run from REDUCE Mode, and make
 ;; REDUCE Mode customization always available, put the following
-;; (after `autoload') in your `.emacs' file:
+;; (after ‘autoload’) in your ‘.emacs’ file:
 
 ;; This can cause strange circular loading problems, especially if
 ;; placed here before (require 'reduce-mode):
@@ -88,7 +88,7 @@
 
 
 (defconst reduce-run-version
-  ;; Extract version from `package-version' in file header:
+  ;; Extract version from ‘package-version’ in file header:
   (eval-when-compile
     (require 'lisp-mnt)
     (save-excursion (lm-header "package-version")))
@@ -112,13 +112,13 @@
       (cdr (split-string
             (shell-command-to-string "wmic LogicalDisk get Caption"))))
   "On MS Windows, the list of drives to be searched for REDUCE.
-It is used only by `reduce-run-installation-directory'.
+It is used only by ‘reduce-run-installation-directory’.
 Defaults to all local drives, e.g. (\"C:\" \"D:\" \"E:\" \"F:\").
 nil on other platforms."
   ;; https://stackoverflow.com/questions/3652631/is-there-a-way-to-list-drive-letters-in-dired
   :type '(repeat
           (string
-           :match (lambda (widget value) (string-match "\\`[A-Z]:\\'" value))
+           :match (lambda (widget value) (string-match "\\‘[A-Z]:\\’" value))
            :type-error "Drive must be specified as X:, where X is a letter A-Z."))
   :group 'reduce-run
   :package-version '(reduce-ide . "1.6"))
@@ -163,7 +163,7 @@ Note that you can complete the directory name using \\[widget-complete]."
 
 (make-obsolete-variable
  'reduce-run-program
- "This variable has been replaced by `reduce-run-commands' with different syntax."
+ "This variable has been replaced by ‘reduce-run-commands’ with different syntax."
  "1.3")
 
 
@@ -215,7 +215,7 @@ of CSL and PSL REDUCE.  Each element has the form \"name
 . command\", where name and command are strings.  Name is
 arbitrary.  Command should be a relative or absolute pathname,
 and may include switches.  It must invoke a command-line version
-of REDUCE; a GUI version will not work!  The command `run-reduce'
+of REDUCE; a GUI version will not work!  The command ‘run-reduce’
 tries to run the first REDUCE command.  If that fails then it
 tries to run the second REDUCE command."
   :type '(alist :key-type (choice (const "CSL") (const "PSL")) :value-type string)
@@ -250,7 +250,7 @@ It is a good place to put keybindings."
   :type 'hook
   :group 'reduce-run)
 
-(defcustom reduce-input-filter "\\`\\([ \t;$]*\\|[ \t]*.[ \t]*\\)\\'"
+(defcustom reduce-input-filter "\\‘\\([ \t;$]*\\|[ \t]*.[ \t]*\\)\\’"
   "What not to save on REDUCE Run mode's input history.
 The value is a regexp.  The default matches any combination of zero or
 more whitespace characters and/or statement terminators, or any single
@@ -262,7 +262,7 @@ character (e.g. y or n) possibly surrounded by whitespace."
   "Used to determine if a buffer contains REDUCE source code.
 If a file is loaded into a buffer that is in one of the major
 modes in this list then it is considered to be a REDUCE source
-file by `reduce-input-file' and `reduce-fasl-file'.  Used by
+file by ‘reduce-input-file’ and ‘reduce-fasl-file’.  Used by
 these commands to determine defaults."
   :type '(repeat symbol)
   :group 'reduce-run)
@@ -362,10 +362,10 @@ send REDUCE input.")
   (cons "Run REDUCE" reduce-mode-run-menu) 'REDUCE)
 
 (defun reduce-run-install-letter-bindings ()
-  "Bind many REDUCE run commands to `C-c' <letter> bindings.
+  "Bind many REDUCE run commands to ‘C-c’ <letter> bindings.
 This makes them more accessible.  These bindings are reserved for
 the user and so are non-standard.  If you want to use them, you
-should have this function called by the `reduce-run-load-hook':
+should have this function called by the ‘reduce-run-load-hook’:
    (add-hook 'reduce-run-load-hook
              'reduce-run-install-letter-bindings)
 You can modify this function to install just the bindings you want."
@@ -399,15 +399,15 @@ You can modify this function to install just the bindings you want."
 (defun reduce-run-mode ()
   "Major mode for interacting with a REDUCE process -- part of REDUCE IDE.
 Author: Francis J. Wright <https://sourceforge.net/u/fjwright>
-Version: see `reduce-run-version'.
+Version: see ‘reduce-run-version’.
 Comments, suggestions, bug reports, etc., are welcome.
-Full texinfo documentation is provided in the file `reduce-ide.texinfo'.
+Full texinfo documentation is provided in the file ‘reduce-ide.texinfo’.
 
 Run REDUCE as a subprocess of Emacs, with I/O through an Emacs buffer.
 
-Customisation: Variables in the customization group `reduce-run'
-control this mode.  Entry to this mode runs `comint-mode-hook'
-and then `reduce-run-mode-hook'.
+Customisation: Variables in the customization group ‘reduce-run’
+control this mode.  Entry to this mode runs ‘comint-mode-hook’
+and then ‘reduce-run-mode-hook’.
 
 \\{reduce-run-mode-map}
 
@@ -415,11 +415,11 @@ There can be more than one buffer in REDUCE Run mode, in which
 case relevant commands allow you to choose which buffer to use,
 and you can send text to a selected REDUCE process from other
 buffers containing REDUCE source:
- * `switch-to-reduce' switches the current buffer to the selected
+ * ‘switch-to-reduce’ switches the current buffer to the selected
    REDUCE process buffer;
- * `reduce-eval-proc' sends the current procedure definition to
+ * ‘reduce-eval-proc’ sends the current procedure definition to
    the selected REDUCE process;
- * `reduce-eval-region' sends the current region to the selected
+ * ‘reduce-eval-region’ sends the current region to the selected
    REDUCE process.
 Prefixing the reduce-eval- commands with a \\[universal-argument]
 also switches to the selected REDUCE process buffer window.
@@ -432,7 +432,7 @@ Commands:
  * Delete converts tabs to spaces as it moves back.
  * \\[reduce-indent-line] indents for REDUCE; with argument,
    shifts rest of expression rigidly with the current line.
- * \\[reduce-indent-procedure] does `reduce-indent-line' on each
+ * \\[reduce-indent-procedure] does ‘reduce-indent-line’ on each
    line starting within following expression.
 Paragraphs are separated only by blank lines.  Percent signs start comments.
 If you accidentally suspend your process, use \\[comint-continue-subjob]
@@ -463,17 +463,17 @@ to continue it."
   (run-hooks 'reduce-run-mode-hook))
 
 (defun reduce-input-filter (str)
-  "True if STR does not match variable `reduce-input-filter'."
+  "True if STR does not match variable ‘reduce-input-filter’."
   (not (string-match reduce-input-filter str)))
 
 ;;;###autoload
 (defun run-reduce (&optional cmd)
   "Run CMD as a REDUCE process with input and output via a buffer.
 If CMD omitted or nil, use whichever REDUCE appears first in
-`reduce-run-commands'.  If `reduce-run-multiple' in non-nil then
+‘reduce-run-commands’.  If ‘reduce-run-multiple’ in non-nil then
 always start a new distinct REDUCE process, Otherwise, if there
 is a REDUCE process already running, just switch to it.  Runs the
-hooks from `reduce-run-mode-hook' (after the `comint-mode-hook' is run).
+hooks from ‘reduce-run-mode-hook’ (after the ‘comint-mode-hook’ is run).
 \(Type \\[describe-mode] in the process buffer for a list of commands.)"
   (interactive
    (let ((reduce-run-command (cdar reduce-run-commands)))
@@ -491,31 +491,31 @@ hooks from `reduce-run-mode-hook' (after the `comint-mode-hook' is run).
 
 ;;;###autoload
 (defun run-csl-reduce ()
-  "Run CSL REDUCE with I/O via a buffer with a name like `*CSL\ REDUCE*'.
-The appropriate command is taken from `reduce-run-commands'.  If
-`reduce-run-multiple' in non-nil then always start a new distinct
+  "Run CSL REDUCE with I/O via a buffer with a name like ‘*CSL\ REDUCE*’.
+The appropriate command is taken from ‘reduce-run-commands’.  If
+‘reduce-run-multiple’ in non-nil then always start a new distinct
 REDUCE process, Otherwise, if there is a CSL REDUCE process
 already running, just switch to it.  Runs the hooks from
-`reduce-run-mode-hook' (after the `comint-mode-hook' is run).
+‘reduce-run-mode-hook’ (after the ‘comint-mode-hook’ is run).
 \(Type \\[describe-mode] in the process buffer for a list of commands.)"
   (interactive)
   (reduce-run-reduce (cdr (assoc "CSL" reduce-run-commands)) "CSL"))
 
 ;;;###autoload
 (defun run-psl-reduce ()
-  "Run PSL REDUCe with I/O via a buffer with a name like `*PSL\ REDUCE*'.
-If `reduce-run-multiple' in non-nil then always start a new
+  "Run PSL REDUCe with I/O via a buffer with a name like ‘*PSL\ REDUCE*’.
+If ‘reduce-run-multiple’ in non-nil then always start a new
 distinct REDUCE process, Otherwise, if there is a PSL REDUCE
 process already running, just switch to it.  Runs the hooks from
-`reduce-run-mode-hook' (after the `comint-mode-hook' is run).
+‘reduce-run-mode-hook’ (after the ‘comint-mode-hook’ is run).
 \(Type \\[describe-mode] in the process buffer for a list of commands.)"
   (interactive)
   (reduce-run-reduce (cdr (assoc "PSL" reduce-run-commands)) "PSL"))
 
 (defun reduce-run-reduce (cmd xsl)
-  "Run CMD as an XSL REDUCE process with I/O via buffer `*XSL\ REDUCE*'.
+  "Run CMD as an XSL REDUCE process with I/O via buffer ‘*XSL\ REDUCE*’.
 If there is a process already running in that buffer, just switch to it.
-XSL must be one of the strings `\"CSL\"', `\"PSL\"' or `\"\"'.
+XSL must be one of the strings ‘\"CSL\"’, ‘\"PSL\"’ or ‘\"\"’.
 Return t if successful; nil otherwise."
   (let* ((proc-name (if (equal xsl "") "REDUCE" (concat xsl " REDUCE")))
          (buf-name (concat "*" proc-name "*"))
@@ -547,7 +547,7 @@ Return the process buffer if successful; nil otherwise."
       ;; Protected form:
       (let ((cmdlist (reduce-run-args-to-list cmd)))
         (set-buffer
-         ;; `apply' used below because last arg is &rest!
+         ;; ‘apply’ used below because last arg is &rest!
          (apply 'make-comint process-name (car cmdlist) nil (cdr cmdlist)))
         (reduce-run-mode)
         (pop-to-buffer buffer-name))
@@ -633,7 +633,7 @@ Used by all functions that send input to REDUCE."
     (setq region
           (replace-regexp-in-string "\\(%.*\\)?\n" " " region t t))
     ;; Hack sender to actually send region!  This ugly code is
-    ;; necessary (?) because `comint-input-sender' is a buffer local
+    ;; necessary (?) because ‘comint-input-sender’ is a buffer local
     ;; variable.
     (setq comint-input-sender
           (lambda (proc string)
@@ -692,20 +692,20 @@ Prefix argument SWITCH means also switch to the REDUCE window."
 (defun reduce-run-buffer-p (buf)
   "Return t if cons cell BUF represents an active REDUCE process buffer.
 To be applied to each element of the buffer-read completion list,
-which appears to have the form `buffer-name . buffer-object'."
+which appears to have the form ‘buffer-name . buffer-object’."
   (setq buf (car buf))
   (and (eq (aref buf 0) ?*)
        (get-buffer-process buf)
        (with-current-buffer buf (eq major-mode 'reduce-run-mode))))
 
 (defvar switch-to-reduce-default nil
-  "Default buffer used by `switch-to-reduce'.")
+  "Default buffer used by ‘switch-to-reduce’.")
 
 (defun switch-to-reduce (to-eob &optional no-mark switch)
   "Switch to REDUCE process buffer, at end if TO-EOB; if NO-MARK do not save mark.
 SWITCH means also switch to the REDUCE window; see
-`reduce-eval-region'.  With interactive argument, TO-EOB,
-position cursor at end of buffer.  If `reduce-run-autostart' is
+‘reduce-eval-region’.  With interactive argument, TO-EOB,
+position cursor at end of buffer.  If ‘reduce-run-autostart’ is
 non-nil then automatically start a new REDUCE process if
 necessary.  Return the window displaying the REDUCE process
 buffer."
@@ -769,14 +769,14 @@ buffer."
 
 (defvar reduce-prev-dir/file nil
   "Record last directory and file used in inputting or compiling.
-This holds a cons cell of the form `(DIRECTORY . FILE)' describing the
-last `reduce-input-file' or `reduce-fasl-file' command.")
+This holds a cons cell of the form ‘(DIRECTORY . FILE)’ describing the
+last ‘reduce-input-file’ or ‘reduce-fasl-file’ command.")
 
 (defvar reduce-prev-package nil
   "Name of last package loaded or compiled.")
 
 (defvar reduce-run-file-name-history nil
-     "A history list for `reduce-run' source file-name arguments.")
+     "A history list for ‘reduce-run’ source file-name arguments.")
 
 (defun reduce-run-get-source (prompt)
   "Get, check and save a REDUCE source file-name using prompt string PROMPT."
@@ -813,8 +813,8 @@ Assume the current buffer is a REDUCE process buffer!"
   ;;   (while (progn
   ;;             (goto-char (point-max))
   ;;             ;; (beginning-of-line)
-  ;;             ;; Unlike `beginning-of-line', forward-line ignores field
-  ;;             ;; boundaries (cf. `comint-bol')
+  ;;             ;; Unlike ‘beginning-of-line’, forward-line ignores field
+  ;;             ;; boundaries (cf. ‘comint-bol’)
   ;;             (forward-line 0)
   ;;             (not (looking-at reduce-run-prompt)))
   ;;     (sit-for 1)))
@@ -842,11 +842,11 @@ The user chooses whether to echo file input."
 ;;; ===================================
 
 (defvar reduce-package-completion-alist nil
-  "Alist of REDUCE packages used for completion by `reduce-load-package'.
-Not intended to be set directly but by customizing `reduce-packages-directory'.")
+  "Alist of REDUCE packages used for completion by ‘reduce-load-package’.
+Not intended to be set directly but by customizing ‘reduce-packages-directory’.")
 
 (defun reduce-set-package-completion-alist (dir)
-  "Assign `reduce-package-completion-alist' using directory DIR.
+  "Assign ‘reduce-package-completion-alist’ using directory DIR.
 Process the package.map file in directory DIR, assuming it is the
 REDUCE packages directory."
   (unless (file-accessible-directory-p dir)
@@ -875,10 +875,10 @@ REDUCE packages directory."
   "Directory of REDUCE packages, or nil if not set.
 It should be an absolute pathname ending with \".../packages/\"
 and should be set automatically.  Note that you can complete the
-directory name using `M-<TAB>'.  This directory is used for
-completion by `reduce-load-package'.  Customizing this variable
+directory name using ‘M-<TAB>’.  This directory is used for
+completion by ‘reduce-load-package’.  Customizing this variable
 assigns a REDUCE package completion alist to
-`reduce-package-completion-alist'; setting this variable directly
+‘reduce-package-completion-alist’; setting this variable directly
 has no effect."
   :type '(choice (const :tag "None" nil) directory)
   :group 'reduce-run
@@ -888,7 +888,7 @@ has no effect."
   :set-after '(reduce-run-installation-directory))
 
 (defvar reduce-load-package-history nil
-     "A history list for `reduce-load-package'.")
+     "A history list for ‘reduce-load-package’.")
 
 (defun reduce-load-package (package)
   "Load REDUCE package PACKAGE into the appropriate REDUCE process."
@@ -970,12 +970,12 @@ Start a new (default) REDUCE process named from file or buffer NAME
 ;;; ===================
 
 (defun reduce-send-bye (proc)
-  "Send PROC the string `bye;'."
+  "Send PROC the string ‘bye;’."
   (process-send-string proc "bye\;\n"))
 
 (defun reduce-kill-buffer-tidy-up ()
-  "Hang on `kill-buffer-hook' to terminate the REDUCE process tidily.
-Also remove the buffer from `reduce-run-buffer-alist'."
+  "Hang on ‘kill-buffer-hook’ to terminate the REDUCE process tidily.
+Also remove the buffer from ‘reduce-run-buffer-alist’."
   (if (eq major-mode 'reduce-run-mode)
       (let ((proc (get-buffer-process (current-buffer))))
         (if proc (reduce-send-bye proc))
@@ -991,10 +991,10 @@ Also remove the buffer from `reduce-run-buffer-alist'."
      (eq major-mode 'reduce-run-mode))))
 
 (defun reduce-kill-emacs-tidy-up ()
-  "Hang on `kill-emacs-hook' to terminate all REDUCE processes."
+  "Hang on ‘kill-emacs-hook’ to terminate all REDUCE processes."
   (mapcar (function
        (lambda (proc)
-         ;; If PROC is a REDUCE process then send it the string `bye;'
+         ;; If PROC is a REDUCE process then send it the string ‘bye;’
          ;; and pause to allow it to take effect (before Emacs dies).
          (cond ((reduce-process-p proc)
             (reduce-send-bye proc)

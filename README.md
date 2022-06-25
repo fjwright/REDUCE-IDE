@@ -3,7 +3,7 @@ GNU Emacs REDUCE Integrated Development Environment
 Major modes for editing and running REDUCE source code
 ------------------------------------------------------
 
-**[Francis Wright](https://sourceforge.net/u/fjwright)**
+**[Francis Wright](https://sites.google.com/site/fjwcentaur)**
 
 Version 1.6, June 2022
 
@@ -35,7 +35,7 @@ For brief manual installation instructions see the comments after *Usage* in the
 Documentation
 -------------
 
-The user's guide, generated from `reduce-ide.texinfo`, is available as a 32-page PDF document or a multi-page HTML document via the [REDUCE IDE home page](https://reduce-algebra.sourceforge.io/reduce-ide/).
+The user's guide, generated from `reduce-ide.texinfo`, is available as a PDF document or a multi-page HTML document via the [REDUCE IDE home page](https://reduce-algebra.sourceforge.io/reduce-ide/).
 
 You can also generate documentation yourself in various formats, including `info`, `HTML` and `PDF`, from `reduce-ide.texinfo`, but you need the [GNU Texinfo package](https://www.gnu.org/software/texinfo/).  The commands I used to generate the formats that I provide are listed at the end of `reduce-ide.texinfo`.  For further details, please read sections 20 to 22 of the [Texinfo manual](https://www.gnu.org/software/texinfo/manual/texinfo/) or this [quick summary](https://en.wikipedia.org/wiki/Texinfo).
 

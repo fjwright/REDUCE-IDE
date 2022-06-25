@@ -1,7 +1,6 @@
 *.elc
 *~
 reduce-packages
-.old.svn/
 REDUCE 3.3/
 REDUCE/
 packages/
