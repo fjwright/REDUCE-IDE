@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sourceforge.net/u/fjwright>
 ;; Created: late 1998
-;; Time-stamp: <2022-06-26 15:57:12 franc>
+;; Time-stamp: <2022-06-26 17:48:02 franc>
 ;; Keywords: languages, processes
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.61
@@ -457,7 +457,7 @@ to continue it.
   (not (string-match reduce-input-filter str)))
 
 ;;;###autoload
-(defun run-reduce (&optional cmd)
+(defun run-reduce-old (&optional cmd)
   "Run CMD as a REDUCE process with input and output via a buffer.
 If CMD omitted or nil, use whichever REDUCE appears first in
 ‘reduce-run-commands’.  If ‘reduce-run-multiple’ in non-nil then
@@ -478,6 +478,31 @@ hooks from ‘reduce-run-mode-hook’ (after the ‘comint-mode-hook’ is run).
     ;; Automatic mode:
     (or (reduce-run-reduce (cdar reduce-run-commands) (caar reduce-run-commands))
         (reduce-run-reduce (cdadr reduce-run-commands) (caadr reduce-run-commands)))))
+
+(defvar reduce-run-history nil
+  "Input history for the ‘run-reduce’ command.")
+
+;;;###autoload
+(defun run-reduce (cmd-name)
+  "Run REDUCE command named CMD-NAME with I/O via a buffer.
+If CMD-NAME omitted or nil, display a menu of command names.
+Prompt in mini-buffer for command name to run and ignore case.
+Look up command name in ‘reduce-run-commands’ and run command
+found.
+
+If ‘reduce-run-multiple’ in non-nil then always start a new
+distinct REDUCE process; otherwise, if there is a REDUCE process
+already running, just switch to it.  Runs the hooks from
+‘reduce-run-mode-hook’ (after the ‘comint-mode-hook’ is run).
+
+\(Type ‘\\[describe-mode]’ in the process buffer for a list of commands.)"
+  (interactive (list (read-string "REDUCE command name: " nil
+                                  'reduce-run-history)))
+  (let ((reduce-run-command (assoc-string cmd-name reduce-run-commands t)))
+    (if reduce-run-command
+        (reduce-run-reduce (cdr reduce-run-command) (car reduce-run-command))
+      (message "REDUCE command name \"%s\" not found!" cmd-name)) ; TEMPORARY!
+    ))
 
 ;;;###autoload
 (defun run-csl-reduce ()
