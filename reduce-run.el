@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sourceforge.net/u/fjwright>
 ;; Created: late 1998
-;; Time-stamp: <2022-06-25 16:31:25 franc>
+;; Time-stamp: <2022-06-26 15:16:03 franc>
 ;; Keywords: languages, processes
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.61
@@ -87,6 +87,7 @@
 (defcustom reduce-run-MSWin-drives
   (if (eq system-type 'windows-nt)
       (cdr (split-string
+            ;; Beware that WMIC is deprecated!
             (shell-command-to-string "wmic LogicalDisk get Caption"))))
   "On MS Windows, the list of drives to be searched for REDUCE.
 It is used only by ‘reduce-run-installation-directory’.
@@ -94,9 +95,20 @@ Defaults to all local drives, e.g. (\"C:\" \"D:\" \"E:\" \"F:\").
 nil on other platforms."
   ;; https://stackoverflow.com/questions/3652631/is-there-a-way-to-list-drive-letters-in-dired
   :type '(repeat
-          (string
-           :match (lambda (widget value) (string-match "\\‘[A-Z]:\\’" value))
-           :type-error "Drive must be specified as X:, where X is a letter A-Z."))
+          :validate
+          (lambda (widget)
+            ;; value should be a list of strings
+            (let ((value (widget-value widget)) invalid)
+              (while value
+                (if (string-match "\\`[A-Z]:\\'" (car value))
+                    (setq value (cdr value))
+                  (setq invalid (car value) value nil)))
+              (when invalid
+                (widget-put widget :error
+                            (format "Invalid drive: ‘%s’.  \
+Each drive must be specified as ‘X:’, where X is a letter A-Z." invalid))
+                widget)))
+          string)
   :group 'reduce-run
   :package-version '(reduce-ide . "1.6"))
 
@@ -227,7 +239,7 @@ It is a good place to put keybindings."
   :type 'hook
   :group 'reduce-run)
 
-(defcustom reduce-input-filter "\\‘\\([ \t;$]*\\|[ \t]*.[ \t]*\\)\\’"
+(defcustom reduce-input-filter "\\`\\([ \t;$]*\\|[ \t]*.[ \t]*\\)\\'"
   "What not to save on REDUCE Run mode's input history.
 The value is a regexp.  The default matches any combination of zero or
 more whitespace characters and/or statement terminators, or any single
@@ -393,24 +405,24 @@ There can be more than one buffer in REDUCE Run mode, in which
 case relevant commands allow you to choose which buffer to use,
 and you can send text to a selected REDUCE process from other
 buffers containing REDUCE source:
- * ‘switch-to-reduce’ switches the current buffer to the selected
+ • ‘switch-to-reduce’ switches the current buffer to the selected
    REDUCE process buffer;
- * ‘reduce-eval-proc’ sends the current procedure definition to
+ • ‘reduce-eval-proc’ sends the current procedure definition to
    the selected REDUCE process;
- * ‘reduce-eval-region’ sends the current region to the selected
+ • ‘reduce-eval-region’ sends the current region to the selected
    REDUCE process.
 Prefixing the reduce-eval- commands with a ‘\\[universal-argument]’
 also switches to the selected REDUCE process buffer window.
 
 Commands:
- * Return after the end of the process' output sends the text from the
+ • Return after the end of the process' output sends the text from the
    end of process to point.
- * Return before the end of the process' output copies the statement
+ • Return before the end of the process' output copies the statement
    ending at point to the end of the process' output, and sends it.
- * Delete converts tabs to spaces as it moves back.
- * ‘\\[reduce-indent-line]’ indents for REDUCE; with argument,
+ • Delete converts tabs to spaces as it moves back.
+ • ‘\\[reduce-indent-line]’ indents for REDUCE; with argument,
    shifts rest of expression rigidly with the current line.
- * ‘\\[reduce-indent-procedure]’ does ‘reduce-indent-line’ on each
+ • ‘\\[reduce-indent-procedure]’ does ‘reduce-indent-line’ on each
    line starting within following expression.
 Paragraphs are separated only by blank lines.  Percent signs start comments.
 If you accidentally suspend your process, use ‘\\[comint-continue-subjob]’
@@ -670,7 +682,7 @@ Prefix argument SWITCH means also switch to the REDUCE window."
 (defun reduce-run-buffer-p (buf)
   "Return t if cons cell BUF represents an active REDUCE process buffer.
 To be applied to each element of the buffer-read completion list,
-which appears to have the form ‘buffer-name . buffer-object’."
+which appears to have the form “buffer-name . buffer-object”."
   (setq buf (car buf))
   (and (eq (aref buf 0) ?*)
        (get-buffer-process buf)
@@ -747,14 +759,14 @@ buffer."
 
 (defvar reduce-prev-dir/file nil
   "Record last directory and file used in inputting or compiling.
-This holds a cons cell of the form ‘(DIRECTORY . FILE)’ describing the
+This holds a cons cell of the form “(DIRECTORY . FILE)” describing the
 last ‘reduce-input-file’ or ‘reduce-fasl-file’ command.")
 
 (defvar reduce-prev-package nil
   "Name of last package loaded or compiled.")
 
 (defvar reduce-run-file-name-history nil
-     "A history list for ‘reduce-run’ source file-name arguments.")
+     "A history list for REDUCE Run mode source file-name arguments.")
 
 (defun reduce-run-get-source (prompt)
   "Get, check and save a REDUCE source file-name using prompt string PROMPT."

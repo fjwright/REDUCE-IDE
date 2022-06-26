@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sourceforge.net/u/fjwright>
 ;; Created: late 1992
-;; Time-stamp: <2022-06-25 16:19:33 franc>
+;; Time-stamp: <2022-06-25 17:05:51 franc>
 ;; Keywords: languages
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.61
@@ -79,7 +79,7 @@
   :tag "REDUCE"
   :group 'languages
   :link '(custom-manual "(reduce-ide)Top")
-  :link '(url-link "https://reduce-algebra.sourceforge.io/reduce-ide")
+  :link '(url-link "https://reduce-algebra.sourceforge.io/reduce-ide/")
   ;; Include the REDUCE Run customization group:
   :load "reduce-run")
 
