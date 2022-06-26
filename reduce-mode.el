@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sourceforge.net/u/fjwright>
 ;; Created: late 1992
-;; Time-stamp: <2022-06-25 17:05:51 franc>
+;; Time-stamp: <2022-06-26 15:57:02 franc>
 ;; Keywords: languages
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.61
@@ -315,6 +315,9 @@ Website: URL ‘https://reduce-algebra.sourceforge.io/reduce-ide/’.
 Comments, suggestions, bug reports, etc. are welcome.
 Full documentation is provided in the info node ‘(reduce-ide)Top’.
 
+User options in the customization group ‘reduce’ control this
+mode.  Entry to this mode runs ‘reduce-mode-hook’ if non-nil.
+
 Commands are aware of REDUCE syntax, and syntax-directed commands
 ignore comments, strings and character case.  Standard indentation and
 comment commands are supported.  Modelled primarily on Lisp mode;
@@ -350,8 +353,7 @@ Delete converts tabs to spaces as it moves back.
 Blank lines separate paragraphs.  Percent signs start comments.
 REDUCE mode defines the following local key bindings:
 
-\\{reduce-mode-map}
-Entry to this mode calls the value of ‘reduce-mode-hook’ if non-nil."
+\\{reduce-mode-map}"
   (interactive)
   (kill-all-local-variables)
   (use-local-map reduce-mode-map)

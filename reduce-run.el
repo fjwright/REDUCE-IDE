@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sourceforge.net/u/fjwright>
 ;; Created: late 1998
-;; Time-stamp: <2022-06-26 15:16:03 franc>
+;; Time-stamp: <2022-06-26 15:57:12 franc>
 ;; Keywords: languages, processes
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.61
@@ -391,15 +391,13 @@ Version: see ‘reduce-run-version’.
 Author: Francis J. Wright (URL ‘https://sites.google.com/site/fjwcentaur’).
 Website: URL ‘https://reduce-algebra.sourceforge.io/reduce-ide/’.
 Comments, suggestions, bug reports, etc. are welcome.
-Full documentation is provided in the info node ‘(reduce-ide)Top’.
+Full documentation is provided in the info node ‘(reduce-ide)Run’.
 
 Run REDUCE as a subprocess of Emacs, with I/O through an Emacs buffer.
 
-Customisation: Variables in the customization group ‘reduce-run’
-control this mode.  Entry to this mode runs ‘comint-mode-hook’
-and then ‘reduce-run-mode-hook’.
-
-\\{reduce-run-mode-map}
+User options in the customization group ‘reduce-run’ control this
+mode.  Entry to this mode runs ‘comint-mode-hook’ and then
+‘reduce-run-mode-hook’ if non-nil.
 
 There can be more than one buffer in REDUCE Run mode, in which
 case relevant commands allow you to choose which buffer to use,
@@ -411,7 +409,7 @@ buffers containing REDUCE source:
    the selected REDUCE process;
  • ‘reduce-eval-region’ sends the current region to the selected
    REDUCE process.
-Prefixing the reduce-eval- commands with a ‘\\[universal-argument]’
+Prefixing the ‘reduce-eval-’ commands with a ‘\\[universal-argument]’
 also switches to the selected REDUCE process buffer window.
 
 Commands:
@@ -426,7 +424,9 @@ Commands:
    line starting within following expression.
 Paragraphs are separated only by blank lines.  Percent signs start comments.
 If you accidentally suspend your process, use ‘\\[comint-continue-subjob]’
-to continue it."
+to continue it.
+
+\\{reduce-run-mode-map}"
   (interactive)
   (kill-all-local-variables)
   (comint-mode)
@@ -461,7 +461,7 @@ to continue it."
   "Run CMD as a REDUCE process with input and output via a buffer.
 If CMD omitted or nil, use whichever REDUCE appears first in
 ‘reduce-run-commands’.  If ‘reduce-run-multiple’ in non-nil then
-always start a new distinct REDUCE process, Otherwise, if there
+always start a new distinct REDUCE process; otherwise, if there
 is a REDUCE process already running, just switch to it.  Runs the
 hooks from ‘reduce-run-mode-hook’ (after the ‘comint-mode-hook’ is run).
 \(Type ‘\\[describe-mode]’ in the process buffer for a list of commands.)"
