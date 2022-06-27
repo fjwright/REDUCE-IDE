@@ -2,7 +2,7 @@
 @c %**start of header
 @settitle GNU Emacs REDUCE Integrated Development Environment
 @c Manual last updated:
-@set UPDATED Time-stamp: <2022-06-18 12:38:45 franc>
+@set UPDATED Time-stamp: <2022-06-27 17:54:47 franc>
 @c Software version:
 @set VERSION 1.6
 @afourpaper
@@ -56,7 +56,7 @@ versions.
 @subtitle An Integrated Development Environment for REDUCE:
 @subtitle Major modes for editing and running REDUCE source code
 @subtitle Software version @value{VERSION}
-@author @uref{https://sourceforge.net/u/fjwright, Francis J. Wright}
+@author @uref{https://sites.google.com/site/fjwcentaur, Francis J. Wright}
 Manual last updated @value{UPDATED}
 
 @c The following two commands start the copyright page.
@@ -77,7 +77,7 @@ Manual last updated @value{UPDATED}
 @display
 This manual is for REDUCE IDE, version @value{VERSION}.
 GNU Emacs major modes for editing and running REDUCE source code
-@uref{https://sourceforge.net/u/fjwright, Francis J. Wright}
+@uref{https://sites.google.com/site/fjwcentaur, Francis J. Wright}
 Manual last updated @value{UPDATED}
 @end display
 @end ifnottex
@@ -1629,11 +1629,9 @@ allows you to run a command-line (as opposed to a GUI) version of
 REDUCE interactively in an Emacs window, with input from and output to
 that window.
 
-In fact, it allows you to run CSL and/or PSL REDUCE simultaneously and
-independently in multiple windows.  You specify your preferred REDUCE
-version, which is then used by default, but there are also commands to
-start CSL or PSL REDUCE specifically.  (The default order is
-alphabetic.)
+In fact, it allows you to run multiple versions of REDUCE
+simultaneously and independently in multiple windows.  By default, it
+runs the distributed versions of CSL and PSL REDUCE.
 
 You can also run a REDUCE source code file or an Emacs buffer
 containing REDUCE source code (in REDUCE mode) as a completed REDUCE
@@ -1694,15 +1692,12 @@ the full source code is free, and the package is documented and user
 customizable.
 @end itemize
 
-These facilities include most, if not all, of the facilities offered by
-any other REDUCE interface, with the notable exception of typeset
-quality display of mathematical output.  It may be possible to support
-this in some future version.
+These facilities include many of those offered by other REDUCE
+interfaces, with the notable exception of typeset quality display of
+mathematical output.  It may be possible to support this in future.
 
-REDUCE Run mode is provided as a separate library so that if you
-prefers another REDUCE interface you do not need to install it.  It is
-a subsidiary library to REDUCE edit mode and when loaded it hooks
-itself into and cooperates closely with REDUCE edit mode.
+REDUCE Run mode is a subsidiary library to REDUCE mode and when loaded
+it hooks itself into and cooperates closely with REDUCE mode.
 
 REDUCE Run mode is based closely on the standard library @file{inf-lisp}
 by @email{shivers@@cs.cmu.edu, Olin Shivers}.  @xref{External Lisp, ,
@@ -1772,9 +1767,9 @@ pathnames, but this will work only if you have added the REDUCE
 executable folder to your path yourself.
 
 If PSL REDUCE on Windows is run directly via the standard batch file
-@file{redpsl.bat}, it is unable to load any packages (or modules).
-The workaround that I use is to run PSL REDUCE indirectly via a batch
-file called @file{reduce-run-redpsl.bat}, which then runs
+@file{redpsl.bat} it is unable to load any packages (or modules).  The
+workaround that I use is to run PSL REDUCE indirectly via a batch file
+called @file{reduce-run-redpsl.bat}, which then runs
 @file{redpsl.bat}.  (I don't understand why this works, but it does!)
 When @file{reduce-run} is loaded, it attempts to create
 @file{reduce-run-redpsl.bat} in the same folder as @file{reduce-run},
@@ -1804,8 +1799,8 @@ remote drive then make that the sole entry in
 REDUCE Run mode provides a small amount of customization and the
 following user options can be changed using the standard Emacs
 customization facilities.  The main REDUCE customization group is
-called ``Reduce'', under which REDUCE Run mode provides a sub-group
-``Reduce Run'' that allows the following options to be customized.
+called ``REDUCE'', under which REDUCE Run mode provides a sub-group
+``REDUCE Run'' that allows the following options to be customized.
 
 @strong{The option @code{reduce-run-commands} must be set correctly
 otherwise REDUCE will not run correctly.  The settings of other user
@@ -1827,10 +1822,10 @@ If the directory cannot be found then this option will be set to nil.
 You can customize this variable to override the default setting.
 
 @item reduce-run-mswin-drives
-On Microsoft Windows, the list of drives to be searched for REDUCE;
-default value all local drives, e.g. @code{("C:" "D:" "E:" "F:")}.  It
-is nil on other platforms and is used only by
-@var{reduce-run-installation-directory}.
+On Microsoft Windows, this is the list of drives to be searched for
+REDUCE, which defaults to all local drives, e.g. @code{("C:" "D:" "E:"
+"F:")}.  It is nil on other platforms and is used only by
+@code{reduce-run-installation-directory}.
 
 @item reduce-run-autostart
 Default value @code{t}.  If non-nil then all commands that require a
@@ -1841,10 +1836,8 @@ running.
 Default value @code{(("CSL" . "redcsl --nogui") ("PSL" . "redpsl"))}
 except on Microsoft Windows.  The value of this variable is an
 association list with one element for each version of REDUCE, by
-default CSL and PSL.  The order of these elements determines the order
-in which commands that do not specify the REDUCE version try to run
-REDUCE versions; see below.  Each element is a ``dotted pair'' of
-strings, of which the first is either "CSL" or "PSL" and the second is
+default CSL and PSL.  Each element is a ``dotted pair'' of strings, of
+which the first defaults to either "CSL" or "PSL" and the second is
 the command to run that version of REDUCE using a command-line
 interface.  This can include any required options, as illustrated
 above by the default value for CSL REDUCE.
@@ -1885,11 +1878,6 @@ start REDUCE will always start a new REDUCE process in a new distinct
 buffer, even if REDUCE is already running.  Otherwise, they will
 re-use any appropriate running REDUCE process.
 
-@item reduce-run-program
-This variable is obsolete and has been replaced by
-@var{reduce-run-commands} with different value syntax, as described
-above.
-
 @item reduce-run-prompt
 Default value @code{"^\\(?:[0-9]+[:*] \\)+"}.  The regexp to recognise
 prompts in REDUCE Run mode.  This variable is used to initialize
@@ -1911,51 +1899,43 @@ these commands to determine defaults.
 @cindex Process Support, Multiple
 @cindex Support for Multiple Process
 
-The main commands for starting REDUCE are @command{run-reduce},
-@command{run-csl-reduce} and @command{run-psl-reduce}.  If the user
-option @var{reduce-run-multiple} is non-nil then they all start a new
-REDUCE process every time they are executed; successive REDUCE process
+The command to start REDUCE is @command{run-reduce}.  If the user
+option @code{reduce-run-multiple} is non-nil then it starts a new
+REDUCE process every time it is executed; successive REDUCE process
 buffers have successively higher numbers at the end of their names,
 e.g.@: @code{*CSL REDUCE*}, @code{*CSL REDUCE 1*}, @code{*CSL REDUCE
-2*}, @enddots{}  Otherwise they only start a new REDUCE process if
+2*}, @enddots{}  Otherwise it only starts a new REDUCE process if
 necessary---if an appropriate REDUCE process is already running then
-they simply switch to it.  Finally, these commands run the hooks from
-@var{reduce-run-mode-hook} (after the @var{comint-mode-hook} is run).
+it simply switches to it.  Finally, these commands run the hooks from
+@code{reduce-run-mode-hook} (after the @code{comint-mode-hook} is
+run).
 
 @deffn Command run-reduce
-By default, this command starts the default REDUCE version.  More
-precisely, it attempts to start the REDUCE version that appears first
-in @var{reduce-run-commands}, and if that fails then it attempts to
-start the REDUCE version that appears second in
-@var{reduce-run-commands}.  It names the REDUCE process buffer with
-the REDUCE version that it runs, e.g.@: @code{*CSL REDUCE*} or
-@code{*PSL REDUCE*}.
+This command prompts for the name of a REDUCE command in the
+minibuffer, using completion and ignoring case.  The REDUCE command
+names are as specified by the user option @code{reduce-run-commands}.
+If you don’t give a command name, i.e. you just hit @key{RET}, then a
+menu pops up at the current pointer location, from which you can
+select the name of the command you want to run.  The REDUCE process
+buffer is named using the name of the REDUCE command that it runs,
+e.g.@: @code{*CSL REDUCE*} or @code{*PSL REDUCE*}.
 
-If this command is executed with a prefix argument then it reads a
-command to run REDUCE from the minibuffer and runs that command.  In
-this case, it names the REDUCE process buffer without any REDUCE
-version, e.g.@: @code{*REDUCE*}.
+If this command is executed with a prefix argument then it reads an
+actual command to run REDUCE from the minibuffer and runs that
+command.  In this case, the REDUCE process buffer is named without any
+reference to the REDUCE command, e.g.@: @code{*REDUCE*}.
 @end deffn
 
-@deffn Command run-csl-reduce
-This command starts CSL REDUCE and names the REDUCE process buffers
-that it creates @code{*CSL REDUCE*}, @code{*CSL REDUCE 1*}, etc.
-@end deffn
-
-@deffn Command run-psl-reduce
-This command starts PSL REDUCE and names the REDUCE process buffers
-that it creates @code{*PSL REDUCE*}, @code{*PSL REDUCE 1*}, etc.
-@end deffn
-
-A couple of convenience commands allow a running REDUCE process to be
-re-started in the same buffer and switching from any buffer to a
+A couple of convenience commands allow you to re-start a running
+REDUCE process in the same buffer and switch from any buffer to a
 running REDUCE process buffer.
 
 @deffn Command re-run-reduce
 This command is only allowed in a REDUCE process buffer.  If REDUCE is
 running in the current buffer then it is terminated.  The command then
-reruns the version of REDUCE shown in the buffer name.  (This will not
-work if you entered the command to run REDUCE interactively.)
+reruns the REDUCE command whose name is shown in the buffer name.
+(This will not work if you entered the actual command to run REDUCE
+directly.)
 @end deffn
 
 @deffn Command switch-to-reduce
@@ -1965,7 +1945,7 @@ buffer.  If the current buffer is an active REDUCE process buffer then
 the command does nothing; if there is only one active REDUCE process
 buffer then the command switches to it; otherwise, the command reads
 the name of an active REDUCE process buffer from the minibuffer with
-completion.  This means that pressing the @kbd{tab} key will give a
+completion.  This means that pressing the @key{TAB} key will give a
 list of active REDUCE process buffers from which to select one.  It
 remembers the last buffer used and offers that as the default, making
 it easy to switch repeatedly to the same REDUCE process buffer.  This
@@ -1974,7 +1954,7 @@ fragments to a running REDUCE process.
 
 If REDUCE is not running then this command will start REDUCE
 automatically by calling @command{run-reduce} if the user option
-@var{reduce-run-autostart} is non-nil (which by default it is).
+@code{reduce-run-autostart} is non-nil (which by default it is).
 @end deffn
 
 @c -------------------------------------------------------------------
@@ -2183,23 +2163,23 @@ commands, and to echoing and highlighting control for REDUCE Run mode.
 @cindex Comments
 @cindex Contact
 
-Feedback to the author via SourceForge is welcome, including reports
-of errors or features that do not work well and suggestions for
-improvements or additional features.
+Feedback via my website is welcome, including reports of errors or
+features that do not work well and suggestions for improvements or
+additional features.
 
 If possible, please include details of the version of Emacs that you
 are using, the platform on which you are using it, and the version of
-REDUCE mode (and if relevant REDUCE Run) mode that you are using.
-(This information is essential if you are reporting a bug.)  An easy
-way to do this is to send me the Emacs and REDUCE IDE version strings.
-You can access the former from the standard Emacs @code{Help} menu and
-the latter from the REDUCE major mode menus, in all cases by selecting
-the @code{Show Version} menu option.  The version strings can also be
-accessed by running the commands @kbd{M-x emacs-version}, @kbd{M-x
-reduce-mode-version} and @kbd{M-x reduce-run-version}.  These menu
-options and commands will display the version string in the echo area
-at the bottom of the frame; it will also be recorded in the
-@code{*Messages*} buffer, from where it can easily be copied.
+REDUCE IDE that you are using.  (This information is essential if you
+are reporting a bug.)  An easy way to do this is to send me the Emacs
+and REDUCE IDE version strings.  You can access the former from the
+standard Emacs @code{Help} menu and the latter from the REDUCE major
+mode menus, in all cases by selecting the @code{Show Version} menu
+option.  The version strings can also be accessed by running the
+commands @kbd{M-x emacs-version}, @kbd{M-x reduce-mode-version} and
+@kbd{M-x reduce-run-version}.  These menu options and commands will
+display the version string in the echo area at the bottom of the
+frame; it will also be recorded in the @code{*Messages*} buffer, from
+where it can easily be copied.
 
 @c ===================================================================
 

@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sourceforge.net/u/fjwright>
 ;; Created: late 1998
-;; Time-stamp: <2022-06-27 16:10:55 franc>
+;; Time-stamp: <2022-06-27 16:36:03 franc>
 ;; Keywords: languages, processes
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.61
@@ -195,12 +195,12 @@ It must be in this directory; if it cannot be found then nil.")
     '(("CSL" . "redcsl --nogui") ("PSL" . "redpsl")))
   "Alist of commands to run different versions of REDUCE.
 By default, it should be appropriate for standard installations
-of CSL and PSL REDUCE.  Each element has the form “name
-. command”, where name and command are strings.  Name is
-arbitrary but typically relates to the underlying Lisp system.
-Command should be a relative or absolute pathname, and may
-include switches.  It must invoke a command-line version of
-REDUCE; a GUI version will not work!"
+of CSL and PSL REDUCE.  Each element has the form “name .
+command”, where name and command are strings.  Name is arbitrary
+but typically relates to the underlying Lisp system.  Command
+should be a relative or absolute pathname, and may include
+switches.  It must invoke a command-line version of REDUCE; a GUI
+version will not work!"
   :type '(alist :key-type (choice (const "CSL")
                                   (const "PSL")
                                   (string :tag "Other"))
