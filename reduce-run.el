@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sourceforge.net/u/fjwright>
 ;; Created: late 1998
-;; Time-stamp: <2022-06-26 18:17:55 franc>
+;; Time-stamp: <2022-06-27 15:06:10 franc>
 ;; Keywords: languages, processes
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.61
@@ -483,12 +483,12 @@ hooks from ‘reduce-run-mode-hook’ (after the ‘comint-mode-hook’ is run).
   "Input history for the ‘run-reduce’ command.")
 
 ;;;###autoload
-(defun run-reduce (cmd)
+(defun run-reduce (&optional cmd)
   "Run REDUCE command named CMD with I/O via a buffer.
-If CMD omitted or nil, display a menu of command names.
-Prompt with completion for command name and ignore case.  Look up
-command name in ‘reduce-run-commands’ and run command found.
-
+Interactively, prompt with completion for CMD, ignoring case.
+If CMD omitted, nil or not provided interactively, display a
+pop-up menu of command names.  Look up CMD in
+‘reduce-run-commands’ and run command found.
 With a prefix argument, CMD is the actual REDUCE command.
 
 If ‘reduce-run-multiple’ in non-nil then always start a new
@@ -508,11 +508,18 @@ already running, just switch to it.  Runs the hooks from
               'reduce-run-history)))))
   (if current-prefix-arg
       (reduce-run-reduce cmd "")        ; unknown REDUCE version
+    (when (or (null cmd) (zerop (length cmd)))
+      (setq cmd (x-popup-menu t `("REDUCE command name:"
+                                  (""
+                                   ,@(mapcar
+                                      (lambda (x)
+                                        (cons (car x) (car x)))
+                                      reduce-run-commands))))))
     (let ((reduce-run-command (assoc-string cmd reduce-run-commands t)))
       (if reduce-run-command
           (reduce-run-reduce (cdr reduce-run-command) (car reduce-run-command))
-        (message "REDUCE command name \"%s\" not found!" cmd)) ; TEMPORARY!
-      )))
+        (lwarn '(reduce-run) :warning
+               "REDUCE command name \"%s\" not found!" cmd)))))
 
 ;;;###autoload
 (defun run-csl-reduce ()
