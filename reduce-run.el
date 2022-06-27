@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sourceforge.net/u/fjwright>
 ;; Created: late 1998
-;; Time-stamp: <2022-06-26 17:48:02 franc>
+;; Time-stamp: <2022-06-26 18:17:55 franc>
 ;; Keywords: languages, processes
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.61
@@ -483,12 +483,13 @@ hooks from ‘reduce-run-mode-hook’ (after the ‘comint-mode-hook’ is run).
   "Input history for the ‘run-reduce’ command.")
 
 ;;;###autoload
-(defun run-reduce (cmd-name)
-  "Run REDUCE command named CMD-NAME with I/O via a buffer.
-If CMD-NAME omitted or nil, display a menu of command names.
-Prompt in mini-buffer for command name to run and ignore case.
-Look up command name in ‘reduce-run-commands’ and run command
-found.
+(defun run-reduce (cmd)
+  "Run REDUCE command named CMD with I/O via a buffer.
+If CMD omitted or nil, display a menu of command names.
+Prompt with completion for command name and ignore case.  Look up
+command name in ‘reduce-run-commands’ and run command found.
+
+With a prefix argument, CMD is the actual REDUCE command.
 
 If ‘reduce-run-multiple’ in non-nil then always start a new
 distinct REDUCE process; otherwise, if there is a REDUCE process
@@ -496,13 +497,22 @@ already running, just switch to it.  Runs the hooks from
 ‘reduce-run-mode-hook’ (after the ‘comint-mode-hook’ is run).
 
 \(Type ‘\\[describe-mode]’ in the process buffer for a list of commands.)"
-  (interactive (list (read-string "REDUCE command name: " nil
-                                  'reduce-run-history)))
-  (let ((reduce-run-command (assoc-string cmd-name reduce-run-commands t)))
-    (if reduce-run-command
-        (reduce-run-reduce (cdr reduce-run-command) (car reduce-run-command))
-      (message "REDUCE command name \"%s\" not found!" cmd-name)) ; TEMPORARY!
-    ))
+  (interactive
+   (list (if current-prefix-arg
+             (read-string "REDUCE command: " nil 'reduce-run-history)
+           (let ((completion-ignore-case t))
+             (completing-read
+              "REDUCE command name: "
+              reduce-run-commands
+              nil nil nil            ; predicate require-match initial
+              'reduce-run-history)))))
+  (if current-prefix-arg
+      (reduce-run-reduce cmd "")        ; unknown REDUCE version
+    (let ((reduce-run-command (assoc-string cmd reduce-run-commands t)))
+      (if reduce-run-command
+          (reduce-run-reduce (cdr reduce-run-command) (car reduce-run-command))
+        (message "REDUCE command name \"%s\" not found!" cmd)) ; TEMPORARY!
+      )))
 
 ;;;###autoload
 (defun run-csl-reduce ()
