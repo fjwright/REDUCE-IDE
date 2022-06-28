@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sourceforge.net/u/fjwright>
 ;; Created: late 1998
-;; Time-stamp: <2022-06-27 16:36:03 franc>
+;; Time-stamp: <2022-06-28 12:40:32 franc>
 ;; Keywords: languages, processes
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.61
@@ -83,34 +83,35 @@
   :tag "REDUCE Run"
   :group 'reduce)
 
-;; *** Should define and use this only on MS Win! ***
-(defcustom reduce-run-MSWin-drives
+;; Define this variable only on Microsoft Windows:
+(eval-and-compile
   (if (eq system-type 'windows-nt)
-      (cdr (split-string
-            ;; Beware that WMIC is deprecated!
-            (shell-command-to-string "wmic LogicalDisk get Caption"))))
-  "On MS Windows, the list of drives to be searched for REDUCE.
-It is used only by ‘reduce-run-installation-directory’.
-Defaults to all local drives, e.g. (\"C:\" \"D:\" \"E:\" \"F:\").
-nil on other platforms."
-  ;; https://stackoverflow.com/questions/3652631/is-there-a-way-to-list-drive-letters-in-dired
-  :type '(repeat
-          :validate
-          (lambda (widget)
-            ;; value should be a list of strings
-            (let ((value (widget-value widget)) invalid)
-              (while value
-                (if (string-match "\\`[A-Z]:\\'" (car value))
-                    (setq value (cdr value))
-                  (setq invalid (car value) value nil)))
-              (when invalid
-                (widget-put widget :error
-                            (format "Invalid drive: ‘%s’.  \
+      (defcustom reduce-run-MSWin-drives
+        (cdr (split-string
+              ;; Beware that WMIC is deprecated!
+              (shell-command-to-string "wmic LogicalDisk get Caption")))
+        "On MS Windows (only), the list of drives to be searched for REDUCE.
+Default is all local drives, e.g. (\"C:\" \"D:\" \"E:\" \"F:\").
+Used only by ‘reduce-run-installation-directory’.
+Not defined on other platforms."
+        ;; https://stackoverflow.com/questions/3652631/is-there-a-way-to-list-drive-letters-in-dired
+        :type '(repeat
+                :validate
+                (lambda (widget)
+                  ;; value should be a list of strings
+                  (let ((value (widget-value widget)) invalid)
+                    (while value
+                      (if (string-match "\\`[A-Z]:\\'" (car value))
+                          (setq value (cdr value))
+                        (setq invalid (car value) value nil)))
+                    (when invalid
+                      (widget-put widget :error
+                                  (format "Invalid drive: ‘%s’.  \
 Each drive must be specified as ‘X:’, where X is a letter A-Z." invalid))
-                widget)))
-          string)
-  :group 'reduce-run
-  :package-version '(reduce-ide . "1.6"))
+                      widget)))
+                string)
+        :group 'reduce-run
+        :package-version '(reduce-ide . "1.6"))))
 
 (defcustom reduce-run-installation-directory
   (if (eq system-type 'windows-nt)
@@ -125,13 +126,13 @@ Each drive must be specified as ‘X:’, where X is a letter A-Z." invalid))
         dir)
     "/usr/share/reduce/")
   "Absolute root directory of the REDUCE installation, or nil if not set.
-It is the directory containing the \"packages\" directory and, on
-MS Windows, the \"bin\" directory containing the user-executable
-batch files.  It defaults to \"X:/Program Files/Reduce/\" on MS
-Windows, where X is a letter A-Z, and to \"/usr/share/reduce/\"
-on other platforms.  On MS Windows, REDUCE Run Mode attempts to
-determine the correct value for this variable automatically.
-Note that you can complete the directory name using ‘\\[widget-complete]’."
+It is the directory containing the “packages” directory and, on
+Microsoft Windows, the “bin” directory containing the
+user-executable batch files.  On Microsoft Windows, it defaults
+to “X:/Program Files/Reduce/”, where X is a letter A-Z that
+REDUCE Run mode attempts to determine automatically.  On other
+platforms, it defaults to “/usr/share/reduce/”.  Note that you
+can complete the directory name using \\<widget-field-keymap>‘\\[widget-complete]’."
   :type  '(choice (const :tag "None" nil) directory)
   :group 'reduce-run
   :package-version '(reduce-ide . "1.6"))
@@ -860,13 +861,11 @@ REDUCE packages directory."
        (let ((dir (concat reduce-run-installation-directory "packages/")))
          (and (file-accessible-directory-p dir) dir)))
   "Directory of REDUCE packages, or nil if not set.
-It should be an absolute pathname ending with \".../packages/\"
-and should be set automatically.  Note that you can complete the
-directory name using ‘M-<TAB>’.  This directory is used for
-completion by ‘reduce-load-package’.  Customizing this variable
-assigns a REDUCE package completion alist to
-‘reduce-package-completion-alist’; setting this variable directly
-has no effect."
+It should be an absolute pathname ending with “…/packages/” and
+should be set automatically.  Note that you can complete the
+directory name using \\<widget-field-keymap>‘\\[widget-complete]’.
+Customizing this variable sets up completion for
+‘reduce-load-package’; setting it directly has no effect."
   :type '(choice (const :tag "None" nil) directory)
   :group 'reduce-run
   :set #'(lambda (symbol value)
