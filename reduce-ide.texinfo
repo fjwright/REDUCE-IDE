@@ -2,7 +2,7 @@
 @c %**start of header
 @settitle GNU Emacs REDUCE Integrated Development Environment
 @c Manual last updated:
-@set UPDATED Time-stamp: <2022-06-27 17:54:47 franc>
+@set UPDATED Time-stamp: <2022-06-28 12:50:36 franc>
 @c Software version:
 @set VERSION 1.6
 @afourpaper
@@ -1824,8 +1824,8 @@ You can customize this variable to override the default setting.
 @item reduce-run-mswin-drives
 On Microsoft Windows, this is the list of drives to be searched for
 REDUCE, which defaults to all local drives, e.g. @code{("C:" "D:" "E:"
-"F:")}.  It is nil on other platforms and is used only by
-@code{reduce-run-installation-directory}.
+"F:")}.  It is undefined on other platforms and is used only to set
+the default value of @code{reduce-run-installation-directory}.
 
 @item reduce-run-autostart
 Default value @code{t}.  If non-nil then all commands that require a

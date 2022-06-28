@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sourceforge.net/u/fjwright>
 ;; Created: late 1998
-;; Time-stamp: <2022-06-28 12:40:32 franc>
+;; Time-stamp: <2022-06-28 17:23:52 franc>
 ;; Keywords: languages, processes
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.61
@@ -136,20 +136,6 @@ can complete the directory name using \\<widget-field-keymap>‘\\[widget-comple
   :type  '(choice (const :tag "None" nil) directory)
   :group 'reduce-run
   :package-version '(reduce-ide . "1.6"))
-
-;; Use some of this code to find the reduce-run-installation-directory on Linux?
-
-;; (defun reduce-packages-directory-default ()
-;;   "Return the REDUCE packages directory or nil if it cannot be found."
-;;   ;; Find the REDUCE installation directory from the preferred REDUCE
-;;   ;; command. It must be either an absolute path name or a command on
-;;   ;; the search path.
-;;   (let ((dir (car (reduce-run-args-to-list (cdar reduce-run-commands)))))
-;;     ;; Convert to an absolute path name if necessary:
-;;     (unless (file-name-absolute-p dir) (setq dir (executable-find dir)))
-;;     ;; The parent directory should be the REDUCE directory:
-;;     (setq dir (expand-file-name (concat (file-name-directory dir) "../packages/")))
-;;     (and (file-accessible-directory-p dir) dir)))
 
 
 (defconst reduce-run--redpsl-bat-filename
@@ -464,7 +450,7 @@ Interactively, prompt with completion for CMD, ignoring case.
 If CMD omitted, nil or not provided interactively, display a
 pop-up menu of command names.  Look up CMD in
 ‘reduce-run-commands’ and run command found.
-The buffer is in REDUCE Run mode and named ‘*CMD\ REDUCE*’.
+The buffer is in REDUCE Run mode and named “*CMD REDUCE*”.
 
 With a prefix argument, CMD is the actual REDUCE command.
 
@@ -499,7 +485,7 @@ already running this command, switch to it.  Runs the hooks from
                "REDUCE command name \"%s\" not found!" cmd)))))
 
 (defun reduce-run-reduce (cmd xsl)
-  "Run CMD as an XSL REDUCE process with I/O via buffer ‘*XSL\ REDUCE*’.
+  "Run CMD as an XSL REDUCE process with I/O via buffer “*XSL REDUCE*”.
 XSL is the name of a REDUCE command in ’reduce-run-commands’ (by
 default \"CSL\" or \"PSL\") or \"\".  If there is a process
 already running this command name, just switch to it.
@@ -529,14 +515,15 @@ Return t if successful; nil otherwise."
                t)))))
 
 (defun reduce-run-reduce-1 (cmd process-name buffer-name)
-  "Run CMD as a REDUCE process PROCESS-NAME in buffer BUFFER-NAME.
+  "Run CMD as REDUCE process PROCESS-NAME in buffer BUFFER-NAME.
 Return the process buffer if successful; nil otherwise."
   (condition-case err
       ;; Protected form:
       (let ((cmdlist (reduce-run-args-to-list cmd)))
         (set-buffer
          ;; ‘apply’ used below because last arg is &rest!
-         (apply 'make-comint process-name (car cmdlist) nil (cdr cmdlist)))
+         (apply #'make-comint-in-buffer
+                process-name nil (car cmdlist) nil (cdr cmdlist)))
         (reduce-run-mode)
         (pop-to-buffer buffer-name))
     ;; Error handler:
@@ -546,7 +533,6 @@ Return the process buffer if successful; nil otherwise."
      (kill-buffer buffer-name)
      nil)))
 
-;;;###autoload
 (add-hook 'same-window-regexps "REDUCE") ; ??? Not sure about this! ???
 
 (defun reduce-run-args-to-list (cmd)
