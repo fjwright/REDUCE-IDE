@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sourceforge.net/u/fjwright>
 ;; Created: late 1998
-;; Time-stamp: <2022-06-28 17:23:52 franc>
+;; Time-stamp: <2022-06-29 16:30:00 franc>
 ;; Keywords: languages, processes
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.61
@@ -240,7 +240,7 @@ these commands to determine defaults."
   :type '(repeat symbol)
   :group 'reduce-run)
 
-
+
 ;;; Internal variables
 ;;; ==================
 
@@ -249,16 +249,15 @@ these commands to determine defaults."
 It is used to name new RPBs appropriately and decide where to
 send REDUCE input.")
 
-(defvar reduce-run-mode-map nil)
-(if reduce-run-mode-map ()
-  (setq reduce-run-mode-map (copy-keymap comint-mode-map))
-  (define-key reduce-run-mode-map "\C-x\C-e" 'reduce-eval-last-statement)
-  (define-key reduce-run-mode-map "\C-c\C-n" 'reduce-eval-line)
-  (define-key reduce-run-mode-map "\C-c\C-i" 'reduce-input-file)
-  (define-key reduce-run-mode-map "\C-c\C-l" 'reduce-load-package)
-  (define-key reduce-run-mode-map "\C-c\C-f" 'reduce-fasl-file)
-  (define-key reduce-run-mode-map "\e\t" 'reduce-complete-symbol)
-  )
+(defvar reduce-run-mode-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map "\C-x\C-e" 'reduce-eval-last-statement)
+    (define-key map "\C-c\C-n" 'reduce-eval-line)
+    (define-key map "\C-c\C-i" 'reduce-input-file)
+    (define-key map "\C-c\C-l" 'reduce-load-package)
+    (define-key map "\C-c\C-f" 'reduce-fasl-file)
+    (define-key map "\e\t" 'reduce-complete-symbol)
+    map))
 
 ;; These commands augment REDUCE mode, so you can process REDUCE
 ;; code in file editing buffers.
@@ -362,14 +361,11 @@ You can modify this function to install just the bindings you want."
     ("^\\(Entering .*\\| *Arg[0-9]+:\\|Value = \\)" . font-lock-warning-face))
   "Syntax highlighting for running REDUCE.")
 
-;; Prevent new buffers inheriting this mode:
-(put 'reduce-run-mode 'mode-class 'special)
-
 
 ;;; Functions to run REDUCE in a buffer
 ;;; ===================================
 
-(defun reduce-run-mode ()
+(define-derived-mode reduce-run-mode comint-mode "REDUCE Run"
   "Major mode for interacting with a REDUCE process − part of REDUCE IDE.
 Version: see ‘reduce-run-version’.
 Author: Francis J. Wright (URL ‘https://sites.google.com/site/fjwcentaur’).
@@ -380,8 +376,7 @@ Full documentation is provided in the info node ‘(reduce-ide)Run’.
 Run REDUCE as a subprocess of Emacs, with I/O through an Emacs buffer.
 
 User options in the customization group ‘reduce-run’ control this
-mode.  Entry to this mode runs ‘comint-mode-hook’ and then
-‘reduce-run-mode-hook’ if non-nil.
+mode.
 
 There can be more than one buffer in REDUCE Run mode, in which
 case relevant commands allow you to choose which buffer to use,
@@ -410,20 +405,18 @@ Paragraphs are separated only by blank lines.  Percent signs start comments.
 If you accidentally suspend your process, use ‘\\[comint-continue-subjob]’
 to continue it.
 
-\\{reduce-run-mode-map}"
-  (interactive)
-  (kill-all-local-variables)
-  (comint-mode)
+\\{reduce-run-mode-map}
+
+Entry to this mode runs the hooks on `comint-mode-hook' and then
+‘reduce-run-mode-hook’."
+  :group 'reduce-run
   (set (make-local-variable 'comint-use-prompt-regexp) nil)
-  (setq major-mode 'reduce-run-mode)
-  (setq mode-name "REDUCE Run")
   (setq mode-line-process '(":%s"))
   (reduce-mode-variables)
   (set (make-local-variable 'font-lock-defaults)
        '(reduce-run-font-lock-keywords  ; KEYWORDS
      t                                  ; KEYWORDS-ONLY
      ))
-  (use-local-map reduce-run-mode-map)
   (setq comint-input-filter (function reduce-input-filter))
   (setq comint-input-ignoredups t)
   ;; ansi-color-process-output causes an error when CSL is terminated
@@ -433,8 +426,7 @@ to continue it.
   ;; Try to ensure graceful shutdown. In particular, PSL REDUCE on
   ;; Windows seems to object to being killed!
   (add-hook 'kill-buffer-hook 'reduce-kill-buffer-tidy-up)
-  (add-hook 'kill-emacs-hook 'reduce-kill-emacs-tidy-up)
-  (run-hooks 'reduce-run-mode-hook))
+  (add-hook 'kill-emacs-hook 'reduce-kill-emacs-tidy-up))
 
 (defun reduce-input-filter (str)
   "True if STR does not match variable ‘reduce-input-filter’."
