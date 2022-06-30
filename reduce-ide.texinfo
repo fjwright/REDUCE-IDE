@@ -2,7 +2,7 @@
 @c %**start of header
 @settitle GNU Emacs REDUCE Integrated Development Environment
 @c Manual last updated:
-@set UPDATED Time-stamp: <2022-06-30 14:53:03 franc>
+@set UPDATED Time-stamp: <2022-06-30 15:03:57 franc>
 @c Software version:
 @set VERSION 1.6
 @afourpaper
@@ -1722,7 +1722,7 @@ changed.  This can be particularly disconcerting when deleting
 erroneous input ``back to the prompt'' because, by default, the prompt
 itself can also be deleted.  This can be prevented by customizing the
 option @code{comint-prompt-read-only}.  The @code{comint}
-customization group can be accessed via a link in the @{reduce-run}
+customization group can be accessed via a link in the REDUCE Run
 customization group.
 
 @c -------------------------------------------------------------------
@@ -1819,7 +1819,7 @@ options are less critical.}
 
 REDUCE Run inherits from comint, so comint options also affects this
 mode.  The @code{comint} customization group can be accessed via a
-link in the @{reduce-run} customization group.
+link in the REDUCE Run customization group.
 
 @vtable @code
 @item reduce-input-filter
