@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sourceforge.net/u/fjwright>
 ;; Created: late 1998
-;; Time-stamp: <2022-06-29 16:30:00 franc>
+;; Time-stamp: <2022-06-30 12:17:21 franc>
 ;; Keywords: languages, processes
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.61
@@ -79,9 +79,11 @@
 ;;; =========================
 
 (defgroup reduce-run nil
-  "Support for running REDUCE code."
+  "Support for running REDUCE code.
+Note that REDUCE Run inherits from comint."
   :tag "REDUCE Run"
-  :group 'reduce)
+  :group 'reduce
+  :link '(custom-group-link comint))
 
 ;; Define this variable only on Microsoft Windows:
 (eval-and-compile
@@ -94,7 +96,8 @@
 Default is all local drives, e.g. (\"C:\" \"D:\" \"E:\" \"F:\").
 Used only by ‘reduce-run-installation-directory’.
 Not defined on other platforms."
-        ;; https://stackoverflow.com/questions/3652631/is-there-a-way-to-list-drive-letters-in-dired
+        ;; https://stackoverflow.com/questions/3652631/
+        ;; is-there-a-way-to-list-drive-letters-in-dired
         :type '(repeat
                 :validate
                 (lambda (widget)
@@ -375,8 +378,9 @@ Full documentation is provided in the info node ‘(reduce-ide)Run’.
 
 Run REDUCE as a subprocess of Emacs, with I/O through an Emacs buffer.
 
-User options in the customization group ‘reduce-run’ control this
-mode.
+The customization group ‘reduce-run’ affects this mode.  REDUCE
+Run inherits from comint, so the customization group ‘comint’
+also affects this mode.
 
 There can be more than one buffer in REDUCE Run mode, in which
 case relevant commands allow you to choose which buffer to use,
@@ -407,22 +411,19 @@ to continue it.
 
 \\{reduce-run-mode-map}
 
-Entry to this mode runs the hooks on `comint-mode-hook' and then
-‘reduce-run-mode-hook’."
+Entry to this mode runs the hooks on `comint-mode-hook' and
+‘reduce-run-mode-hook’ (in that order)."
   :group 'reduce-run
-  (set (make-local-variable 'comint-use-prompt-regexp) nil)
-  (setq mode-line-process '(":%s"))
   (reduce-mode-variables)
-  (set (make-local-variable 'font-lock-defaults)
-       '(reduce-run-font-lock-keywords  ; KEYWORDS
-     t                                  ; KEYWORDS-ONLY
-     ))
-  (setq comint-input-filter (function reduce-input-filter))
-  (setq comint-input-ignoredups t)
+  (setq font-lock-defaults              ; auto buffer-local
+        '(reduce-run-font-lock-keywords ; KEYWORDS
+          t))                           ; KEYWORDS-ONLY
+  (setq comint-input-filter #'reduce-input-filter) ; buffer-local
+  (setq comint-input-ignoredups t)      ; buffer-local
   ;; ansi-color-process-output causes an error when CSL is terminated
   ;; and is probably irrelevant anyway, so ...
-  (set (make-local-variable 'comint-output-filter-functions)
-       (delq 'ansi-color-process-output comint-output-filter-functions))
+  (remove-hook (make-local-variable 'comint-output-filter-functions)
+               'ansi-color-process-output t) ; remove locally!
   ;; Try to ensure graceful shutdown. In particular, PSL REDUCE on
   ;; Windows seems to object to being killed!
   (add-hook 'kill-buffer-hook 'reduce-kill-buffer-tidy-up)
