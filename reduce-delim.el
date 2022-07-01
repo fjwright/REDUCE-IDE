@@ -4,10 +4,10 @@
 
 ;; Author: Francis J. Wright <https://sourceforge.net/u/fjwright>
 ;; Created: 22 March 2018
-;; Time-stamp: <2022-06-25 16:36:49 franc>
+;; Time-stamp: <2022-07-01 15:56:52 franc>
 ;; Keywords: languages, faces
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
-;; Package-Version: 1.61
+;; Package-Version: 1.7alpha
 ;; Package-Requires: ((reduce-mode "1.54"))
 
 ;; This file is part of REDUCE IDE.

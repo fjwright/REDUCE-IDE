@@ -2,9 +2,9 @@
 @c %**start of header
 @settitle GNU Emacs REDUCE Integrated Development Environment
 @c Manual last updated:
-@set UPDATED Time-stamp: <2022-06-30 15:03:57 franc>
+@set UPDATED Time-stamp: <2022-07-01 16:35:29 franc>
 @c Software version:
-@set VERSION 1.6
+@set VERSION 1.7alpha
 @afourpaper
 @c With different size paper the printed page breaks will need attention!
 @c Look for @page and @need commands.
@@ -1929,7 +1929,7 @@ run).
 This command prompts for the name of a REDUCE command in the
 minibuffer, using completion and ignoring case.  The REDUCE command
 names are as specified by the option @code{reduce-run-commands}.  If
-you don’t give a command name, i.e. you just hit @key{RET}, then a
+you don’t give a command name, i.e.@: you just hit @key{RET}, then a
 menu pops up at the current pointer location, from which you can
 select the name of the command you want to run.  The REDUCE process
 buffer is named using the name of the REDUCE command that it runs,
@@ -2064,6 +2064,15 @@ usual way, such as by clicking on a package name with the mouse.
 @section Run mode key bindings and menu
 @cindex Key bindings
 @cindex Menu
+
+Pressing @key{RET} at the end of a line of input sends it to REDUCE,
+as with the standard REDUCE interfaces.  However, if there is no
+terminator at the end of the line then a @code{;} is automatically
+inserted, unless there is a @code{?} before point in the input line
+(implying that the input is the response to a user query, which must
+not be followed by a terminator).  You can avoid this automatic
+behaviour completely by holding down the @key{SHIFT} key, i.e.@: by
+pressing @key{SHIFT}-@key{RET}.
 
 If the option @code{reduce-run-autostart} is non-nil (which it is by
 default) then all commands that require a REDUCE process automatically

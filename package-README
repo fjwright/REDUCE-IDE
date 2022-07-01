@@ -12,7 +12,7 @@ I currently use GNU Emacs 28 (on Microsoft Windows) for development
 and testing, and REDUCE IDE may not work correctly with older
 versions.
 
-The user's guide is installed automatically as part of this package as
-an info document, which should appear at the top of your info
+The manual guide is installed automatically as part of this package as
+an Info document, which should appear at the top of your Info
 directory.  It is also available as a PDF document or a multi-page
 HTML document via the website.

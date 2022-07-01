@@ -4,10 +4,10 @@
 
 ;; Author: Francis J. Wright <https://sourceforge.net/u/fjwright>
 ;; Created: late 1998
-;; Time-stamp: <2022-07-01 14:52:05 franc>
+;; Time-stamp: <2022-07-01 16:39:15 franc>
 ;; Keywords: languages, processes
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
-;; Package-Version: 1.61
+;; Package-Version: 1.7alpha
 ;; Package-Requires: ((reduce-mode "1.5"))
 
 ;; This file is part of REDUCE IDE.
@@ -330,7 +330,7 @@ send REDUCE input.")
 (defun reduce-run-show-version ()
   "Echo version information for REDUCE Run mode."
   (interactive)
-  (message "REDUCE Run mode − REDUCE IDE Package-Version: %s" reduce-run-version))
+  (message "REDUCE Run mode − REDUCE IDE Package Version: %s" reduce-run-version))
 
 ;; Put the Run REDUCE menu on the menu bar AFTER the REDUCE menu:
 (define-key-after

@@ -4,10 +4,10 @@
 
 ;; Author: Francis J. Wright <https://sourceforge.net/u/fjwright>
 ;; Created: late 1992
-;; Time-stamp: <2022-06-26 15:57:02 franc>
+;; Time-stamp: <2022-07-01 16:39:32 franc>
 ;; Keywords: languages
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
-;; Package-Version: 1.61
+;; Package-Version: 1.7alpha
 
 ;; This file is part of REDUCE IDE.
 
@@ -546,7 +546,7 @@ REDUCE mode defines the following local key bindings:
 (defun reduce-mode-show-version ()
   "Echo version information for REDUCE mode."
   (interactive)
-  (message "REDUCE mode − REDUCE IDE Package-Version: %s" reduce-mode-version))
+  (message "REDUCE mode − REDUCE IDE Package Version: %s" reduce-mode-version))
 
 
 ;;;; ************
