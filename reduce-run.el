@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sourceforge.net/u/fjwright>
 ;; Created: late 1998
-;; Time-stamp: <2022-06-30 12:17:21 franc>
+;; Time-stamp: <2022-07-01 14:52:05 franc>
 ;; Keywords: languages, processes
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.61
@@ -254,12 +254,14 @@ send REDUCE input.")
 
 (defvar reduce-run-mode-map
   (let ((map (make-sparse-keymap)))
-    (define-key map "\C-x\C-e" 'reduce-eval-last-statement)
-    (define-key map "\C-c\C-n" 'reduce-eval-line)
-    (define-key map "\C-c\C-i" 'reduce-input-file)
-    (define-key map "\C-c\C-l" 'reduce-load-package)
-    (define-key map "\C-c\C-f" 'reduce-fasl-file)
-    (define-key map "\e\t" 'reduce-complete-symbol)
+    (define-key map "\C-m" 'reduce-run-send-input)
+    (define-key map [(shift return)] 'comint-send-input)
+    (define-key map [?\C-x ?\C-e] 'reduce-eval-last-statement)
+    (define-key map [?\C-c ?\C-n] 'reduce-eval-line)
+    (define-key map [?\C-c ?\C-i] 'reduce-input-file)
+    (define-key map [?\C-c ?\C-l] 'reduce-load-package)
+    (define-key map [?\C-c ?\C-f] 'reduce-fasl-file)
+    (define-key map [(meta tab)] 'reduce-complete-symbol)
     map))
 
 ;; These commands augment REDUCE mode, so you can process REDUCE
@@ -556,6 +558,16 @@ argument with whitespace, as in cmd = \"-ab +c -x 'you lose'\"."
                    ()
                  (reduce-run-args-to-list-1
                   (substring cmd pos))))))))
+
+(defun reduce-run-send-input ()
+  "Send input to REDUCE.
+Add a final ’;’ unless there is already a final terminator or a
+’?’ in the line preceding point.  Then call ‘comint-send-input’.
+\\<reduce-run-mode-map>Note that ‘\\[comint-send-input]’ calls ‘comint-send-input’ directly."
+  (interactive)
+  (if (and (eobp) (not (looking-back "[;$]\\s-*\\|\\?.*")))
+      (insert ?\;))
+  (comint-send-input))
 
 
 ;;; Functions to send code to REDUCE running in a buffer
