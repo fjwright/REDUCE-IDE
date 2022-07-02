@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sourceforge.net/u/fjwright>
 ;; Created: late 1998
-;; Time-stamp: <2022-07-01 16:39:15 franc>
+;; Time-stamp: <2022-07-01 18:07:16 franc>
 ;; Keywords: languages, processes
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.7alpha
@@ -187,10 +187,11 @@ It must be in this directory; if it cannot be found then nil.")
 By default, it should be appropriate for standard installations
 of CSL and PSL REDUCE.  Each element has the form “name .
 command”, where name and command are strings.  Name is arbitrary
-but typically relates to the underlying Lisp system.  Command
-should be a relative or absolute pathname, and may include
-switches.  It must invoke a command-line version of REDUCE; a GUI
-version will not work!"
+but typically relates to the underlying Lisp system.  The string
+\" REDUCE\" is appended to it to name the interaction buffer.
+Command should be a relative or absolute pathname, and may
+include switches.  It must invoke a command-line version of
+REDUCE; a GUI version will not work!"
   :type '(alist :key-type (choice (const "CSL")
                                   (const "PSL")
                                   (string :tag "Other"))
@@ -462,7 +463,7 @@ already running this command, switch to it.  Runs the hooks from
              (completing-read
               "REDUCE command name: "
               reduce-run-commands
-              nil nil nil            ; predicate require-match initial
+              nil t nil              ; predicate require-match initial
               'reduce-run-history)))))
   (if current-prefix-arg
       (reduce-run-reduce cmd "")        ; unknown REDUCE version
@@ -562,9 +563,10 @@ argument with whitespace, as in cmd = \"-ab +c -x 'you lose'\"."
 (defun reduce-run-send-input ()
   "Send input to REDUCE.
 Add a final ’;’ unless there is already a final terminator or a
-’?’ in the line preceding point.  Then call ‘comint-send-input’.
+’?’ in the current line.  Then call ‘comint-send-input’.
 \\<reduce-run-mode-map>Note that ‘\\[comint-send-input]’ calls ‘comint-send-input’ directly."
   (interactive)
+  (end-of-line)
   (if (and (eobp) (not (looking-back "[;$]\\s-*\\|\\?.*")))
       (insert ?\;))
   (comint-send-input))
