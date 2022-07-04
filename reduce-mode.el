@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sourceforge.net/u/fjwright>
 ;; Created: late 1992
-;; Time-stamp: <2022-07-01 16:39:32 franc>
+;; Time-stamp: <2022-07-04 18:15:43 franc>
 ;; Keywords: languages
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.7alpha
@@ -370,46 +370,45 @@ REDUCE mode defines the following local key bindings:
        (reduce-show-delim-mode))
   (if reduce-auto-indent-mode (reduce-auto-indent-mode t))
   ;; For reduce-show-proc-mode:
-  (set (make-local-variable 'which-func-mode) nil)
-  (set (make-local-variable 'which-func-format) 'reduce-show-proc-string)
+  (set-local 'which-func-mode nil)
+  (set-local 'which-func-format 'reduce-show-proc-string)
   (if reduce-show-proc-mode (reduce-show-proc-mode t))
   ;; This seems to be obsolete in Emacs 26!
   ;; Experimental support for outline minor mode (cf. lisp-mode.el)
   ;; ‘outline-regexp’ must match ‘heading’ from beginning of line;
   ;; length of match determines level:
-  ;; (set (make-local-variable 'outline-regexp) "[^ \t\n]")
+  ;; (set-local 'outline-regexp "[^ \t\n]")
   ;; Imenu support:
-  (set (make-local-variable 'imenu-generic-expression)
-       ;; ‘make-local-variable’ in case imenu not yet loaded!
-       reduce-imenu-generic-expression)
-  (set (make-local-variable 'imenu-space-replacement) " ")
+  (set-local 'imenu-generic-expression
+             ;; ‘make-local-variable’ in case imenu not yet loaded!
+             reduce-imenu-generic-expression)
+  (set-local 'imenu-space-replacement " ")
   ;; Necessary to avoid re-installing the same imenu:
   (setq reduce-imenu-done nil)
   (if reduce-imenu (reduce-imenu-add-to-menubar))
   ;; ChangeLog support:
-  (set (make-local-variable 'add-log-current-defun-function)
-       'reduce-current-proc)
+  (set-local 'add-log-current-defun-function
+             'reduce-current-proc)
   (run-hooks 'reduce-mode-hook))
 
 (defun reduce-mode-variables ()
   "Define REDUCE mode local variables."
   (set-syntax-table reduce-mode-syntax-table)
-  ;; (set (make-local-variable 'paragraph-start)
+  ;; (set-local 'paragraph-start
   ;;      (concat "^$\\|" page-delimiter))
-  (set (make-local-variable 'paragraph-separate)
-       ;; paragraph-start)
-       (concat paragraph-start "\\|^%")) ; RS
+  (set-local 'paragraph-separate
+             ;; paragraph-start)
+             (concat paragraph-start "\\|^%")) ; RS
   ;; so that comments at beginning of a line do not disturb reformatting.
-  (set (make-local-variable 'paragraph-ignore-fill-prefix) t)
-  (set (make-local-variable 'indent-line-function) 'reduce-indent-line)
-  (set (make-local-variable 'comment-start) "% ")
-  (set (make-local-variable 'comment-start-skip)
-       "\\(^\\|[^!]\\)%+ *")        ; "%+ *" but not !%
-  (set (make-local-variable 'comment-column) 40)
-  (set (make-local-variable 'comment-indent-function)
-       'reduce-comment-indent)
+  (set-local 'paragraph-ignore-fill-prefix t)
+  (set-local 'indent-line-function 'reduce-indent-line)
+  (set-local 'comment-start "% ")
+  (set-local 'comment-start-skip
+             "\\(?:^\\|[^!]\\)%+ *")    ; "%+ *" but not !%
+  (set-local 'comment-column 40)
+  (set-local 'comment-indent-function 'reduce-comment-indent)
   ;; (setq fill-prefix "% ")        ; buffer local
-  (set (make-local-variable 'parse-sexp-ignore-comments) t) ; RS
+  (set-local 'parse-sexp-ignore-comments t) ; RS
  )
 
 (defun reduce-imenu-add-to-menubar (&optional redraw)
