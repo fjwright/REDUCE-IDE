@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sourceforge.net/u/fjwright>
 ;; Created: late 1992
-;; Time-stamp: <2022-07-04 18:15:43 franc>
+;; Time-stamp: <2022-07-05 17:16:51 franc>
 ;; Keywords: languages
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.7alpha
@@ -292,143 +292,12 @@ Update after ‘reduce-show-proc-delay’ seconds of Emacs idle time."
   "Buffer-local: set to true if ‘reduce-imenu-add-to-menubar’ has been called.")
 (make-variable-buffer-local 'reduce-imenu-done)
 
-(defvar reduce-mode-map nil
-  "Keymap for REDUCE mode.")
-
-(defvar reduce-mode-syntax-table nil
-  "Syntax table for REDUCE mode.")
-
-
-;;;; *****************
-;;;; REDUCE major mode
-;;;; *****************
-
-(declare-function reduce-font-lock-mode "reduce-font-lock" ())
-(declare-function reduce-show-delim-mode "reduce-delim" ())
-
-;;;###autoload
-(defun reduce-mode ()
-  "Major mode for editing REDUCE source code − part of REDUCE IDE.
-Version: see ‘reduce-mode-version’.
-Author: Francis J. Wright (URL ‘https://sites.google.com/site/fjwcentaur’).
-Website: URL ‘https://reduce-algebra.sourceforge.io/reduce-ide/’.
-Comments, suggestions, bug reports, etc. are welcome.
-Full documentation is provided in the info node ‘(reduce-ide)Top’.
-
-User options in the customization group ‘reduce’ control this
-mode.  Entry to this mode runs ‘reduce-mode-hook’ if non-nil.
-
-Commands are aware of REDUCE syntax, and syntax-directed commands
-ignore comments, strings and character case.  Standard indentation and
-comment commands are supported.  Modelled primarily on Lisp mode;
-comment commands follow Lisp conventions.
-
-“<<...>>” and “begin...end” are treated as bracketed or
-symbolic expressions for motion, delimiter matching, etc.
-\\<reduce-mode-map>
-The command ‘\\[reduce-indent-line]’ indents in a fixed style (mine!).
-If re-run immediately after itself or ‘\\[reindent-then-newline-and-indent]’
-or ‘\\[newline-and-indent]’ it indents further.
-The indentation increment is the value of the variable ‘reduce-indentation’.
-
-Structure template commands are provided to insert and indent
-if-then (‘\\[reduce-insert-if-then]’), block (‘\\[reduce-insert-block]’) and group (‘\\[reduce-insert-group]’) constructs,
-the latter optionally on a single line.
-
-The command ‘\\[reduce-complete-symbol]’ performs REDUCE
-keyword/phrase/structure completion.
-
-Text highlighting is supported via the command ‘font-lock-mode’, and
-the style of highlighting may be controlled by setting
-‘font-lock-maximum-decoration’ to one of:
-
-  0, nil : basic keyword highlighting;
-  1      : algebraic-mode highlighting;
-  2      : symbolic-mode highlighting;
-  3, t   : full highlighting − of almost everything!
-
-Text highlighting may also be controlled using the REDUCE menu.
-
-Delete converts tabs to spaces as it moves back.
-Blank lines separate paragraphs.  Percent signs start comments.
-REDUCE mode defines the following local key bindings:
-
-\\{reduce-mode-map}"
-  (interactive)
-  (kill-all-local-variables)
-  (use-local-map reduce-mode-map)
-  (setq major-mode 'reduce-mode)
-  (setq mode-name "REDUCE")
-  (reduce-mode-variables)
-  ;; Optionally set up font-lock mode:
-  (and reduce-font-lock-mode-on
-       (require 'reduce-font-lock "reduce-font-lock" t)
-       (reduce-font-lock-mode))
-  ;; Optionally turn on REDUCE minor modes:
-  (and reduce-show-delim-mode-on
-       (require 'reduce-delim "reduce-delim" t)
-       (reduce-show-delim-mode))
-  (if reduce-auto-indent-mode (reduce-auto-indent-mode t))
-  ;; For reduce-show-proc-mode:
-  (set-local 'which-func-mode nil)
-  (set-local 'which-func-format 'reduce-show-proc-string)
-  (if reduce-show-proc-mode (reduce-show-proc-mode t))
-  ;; This seems to be obsolete in Emacs 26!
-  ;; Experimental support for outline minor mode (cf. lisp-mode.el)
-  ;; ‘outline-regexp’ must match ‘heading’ from beginning of line;
-  ;; length of match determines level:
-  ;; (set-local 'outline-regexp "[^ \t\n]")
-  ;; Imenu support:
-  (set-local 'imenu-generic-expression
-             ;; ‘make-local-variable’ in case imenu not yet loaded!
-             reduce-imenu-generic-expression)
-  (set-local 'imenu-space-replacement " ")
-  ;; Necessary to avoid re-installing the same imenu:
-  (setq reduce-imenu-done nil)
-  (if reduce-imenu (reduce-imenu-add-to-menubar))
-  ;; ChangeLog support:
-  (set-local 'add-log-current-defun-function
-             'reduce-current-proc)
-  (run-hooks 'reduce-mode-hook))
-
-(defun reduce-mode-variables ()
-  "Define REDUCE mode local variables."
-  (set-syntax-table reduce-mode-syntax-table)
-  ;; (set-local 'paragraph-start
-  ;;      (concat "^$\\|" page-delimiter))
-  (set-local 'paragraph-separate
-             ;; paragraph-start)
-             (concat paragraph-start "\\|^%")) ; RS
-  ;; so that comments at beginning of a line do not disturb reformatting.
-  (set-local 'paragraph-ignore-fill-prefix t)
-  (set-local 'indent-line-function 'reduce-indent-line)
-  (set-local 'comment-start "% ")
-  (set-local 'comment-start-skip
-             "\\(?:^\\|[^!]\\)%+ *")    ; "%+ *" but not !%
-  (set-local 'comment-column 40)
-  (set-local 'comment-indent-function 'reduce-comment-indent)
-  ;; (setq fill-prefix "% ")        ; buffer local
-  (set-local 'parse-sexp-ignore-comments t) ; RS
- )
-
-(defun reduce-imenu-add-to-menubar (&optional redraw)
-  "Add \"Contents\" menu to menubar; if REDRAW force update."
-  (interactive)
-  (if reduce-imenu-done
-      ;; This is PRIMARILY to avoid a bug in imenu-add-to-menubar that
-      ;; causes it to corrupt the menu bar if it is run more than once
-      ;; in the same buffer.
-      ()
-    (setq reduce-imenu-done t)
-    (imenu-add-to-menubar reduce-imenu-title)
-    (if redraw (force-mode-line-update))))
-
 
 ;;;; **********************
 ;;;; Keyboard and menu maps
 ;;;; **********************
 
-(if reduce-mode-map ()
+(defvar reduce-mode-map
   (let ((map (make-sparse-keymap)))
     ;; (define-key map ">" 'reduce-self-insert-and-blink-matching-group-open)
     ;; (define-key map "\t" 'reduce-indent-line)
@@ -459,7 +328,8 @@ REDUCE mode defines the following local key bindings:
     (define-key map "\C-c<" 'reduce-insert-group)
     (define-key map "\e\C-l" 'reduce-reposition-window)
     (define-key map "\e\t" 'reduce-complete-symbol)
-    (setq reduce-mode-map map)))
+    map)
+  "Keymap for REDUCE mode.")
 
 ;; REDUCE-mode menu bar and pop-up menu
 (easy-menu-define           ; (symbol maps doc menu)
@@ -552,33 +422,149 @@ REDUCE mode defines the following local key bindings:
 ;;;; Syntax table
 ;;;; ************
 
-(if reduce-mode-syntax-table ()
+(defvar reduce-mode-syntax-table
   (let ((table (make-syntax-table)))
-    (modify-syntax-entry ?_ "_" table)
+    (modify-syntax-entry ?\n ">" table) ; comment ender
     (modify-syntax-entry ?! "/" table)  ; single character quote
-    (modify-syntax-entry ?\\ "." table)
-    (modify-syntax-entry ?{ "(}" table)
-    (modify-syntax-entry ?} "){" table)
-    (modify-syntax-entry ?\( "()" table)
-    (modify-syntax-entry ?\) ")(" table)
-    (modify-syntax-entry ?\[ "(]" table)
-    (modify-syntax-entry ?\] ")[" table)
-    (modify-syntax-entry ?< "." table)
-    (modify-syntax-entry ?> "." table)
-    (modify-syntax-entry ?* "." table)
-    (modify-syntax-entry ?/ "." table)
+    (modify-syntax-entry ?# "'" table)  ; expression prefix
+    (modify-syntax-entry ?$ "." table)  ; punctuation (RS)
+    (modify-syntax-entry ?% "<" table)  ; comment starter
+    (modify-syntax-entry ?& "." table)  ; punctuation
+    (modify-syntax-entry ?' "'" table)  ; expression prefix
+    (modify-syntax-entry ?* ". 23" table) ; C-style comment
     (modify-syntax-entry ?+ "." table)
     (modify-syntax-entry ?- "." table)
+    (modify-syntax-entry ?/ ". 14" table) ; C-style comment
+    (modify-syntax-entry ?< "." table)
     (modify-syntax-entry ?= "." table)
-    (modify-syntax-entry ?% "<" table)
-    (modify-syntax-entry ?\n ">" table)
-    (modify-syntax-entry ?& "." table)
+    (modify-syntax-entry ?> "." table)
+    (modify-syntax-entry ?\\ "." table)
     (modify-syntax-entry ?| "." table)
-    (modify-syntax-entry ?' "'" table)
-    (modify-syntax-entry ?\" "\"" table)
-    (modify-syntax-entry ?$ "." table)  ; RS
-    (setq reduce-mode-syntax-table table))
-  )
+    table)
+  "Syntax table for REDUCE mode.")
+
+
+;;;; *****************
+;;;; REDUCE major mode
+;;;; *****************
+
+(declare-function reduce-font-lock-mode "reduce-font-lock" ())
+(declare-function reduce-show-delim-mode "reduce-delim" ())
+
+;;;###autoload
+(defun reduce-mode ()
+  "Major mode for editing REDUCE source code − part of REDUCE IDE.
+Version: see ‘reduce-mode-version’.
+Author: Francis J. Wright (URL ‘https://sites.google.com/site/fjwcentaur’).
+Website: URL ‘https://reduce-algebra.sourceforge.io/reduce-ide/’.
+Comments, suggestions, bug reports, etc. are welcome.
+Full documentation is provided in the info node ‘(reduce-ide)Top’.
+
+User options in the customization group ‘reduce’ control this
+mode.  Entry to this mode runs ‘reduce-mode-hook’ if non-nil.
+
+Commands are aware of REDUCE syntax, and syntax-directed commands
+ignore comments, strings and character case.  Standard indentation and
+comment commands are supported.  Modelled primarily on Lisp mode;
+comment commands follow Lisp conventions.
+
+“<<...>>” and “begin...end” are treated as bracketed or
+symbolic expressions for motion, delimiter matching, etc.
+\\<reduce-mode-map>
+The command ‘\\[reduce-indent-line]’ indents in a fixed style (mine!).
+If re-run immediately after itself or ‘\\[reindent-then-newline-and-indent]’
+or ‘\\[newline-and-indent]’ it indents further.
+The indentation increment is the value of the variable ‘reduce-indentation’.
+
+Structure template commands are provided to insert and indent
+if-then (‘\\[reduce-insert-if-then]’), block (‘\\[reduce-insert-block]’) and group (‘\\[reduce-insert-group]’) constructs,
+the latter optionally on a single line.
+
+The command ‘\\[reduce-complete-symbol]’ performs REDUCE
+keyword/phrase/structure completion.
+
+Text highlighting is supported via the command ‘font-lock-mode’, and
+the style of highlighting may be controlled by setting
+‘font-lock-maximum-decoration’ to one of:
+
+  0, nil : basic keyword highlighting;
+  1      : algebraic-mode highlighting;
+  2      : symbolic-mode highlighting;
+  3, t   : full highlighting − of almost everything!
+
+Text highlighting may also be controlled using the REDUCE menu.
+
+Delete converts tabs to spaces as it moves back.
+Blank lines separate paragraphs.  Percent signs start comments.
+REDUCE mode defines the following local key bindings:
+
+\\{reduce-mode-map}"
+  (interactive)
+  (kill-all-local-variables)
+  (use-local-map reduce-mode-map)
+  (setq major-mode 'reduce-mode)
+  (setq mode-name "REDUCE")
+  (reduce-mode-variables)
+  ;; Optionally set up font-lock mode:
+  (and reduce-font-lock-mode-on
+       (require 'reduce-font-lock "reduce-font-lock" t)
+       (reduce-font-lock-mode))
+  ;; Optionally turn on REDUCE minor modes:
+  (and reduce-show-delim-mode-on
+       (require 'reduce-delim "reduce-delim" t)
+       (reduce-show-delim-mode))
+  (if reduce-auto-indent-mode (reduce-auto-indent-mode t))
+  ;; For reduce-show-proc-mode:
+  (setq which-func-mode nil)           ; auto buffer local
+  (setq-local which-func-format 'reduce-show-proc-string)
+  (if reduce-show-proc-mode (reduce-show-proc-mode t))
+  ;; This seems to be obsolete in Emacs 26!
+  ;; Experimental support for outline minor mode (cf. lisp-mode.el)
+  ;; ‘outline-regexp’ must match ‘heading’ from beginning of line;
+  ;; length of match determines level:
+  ;; (setq-local outline-regexp "[^ \t\n]")
+  ;; Imenu support:
+  (setq imenu-generic-expression       ; auto buffer local
+        reduce-imenu-generic-expression)
+  (setq-local imenu-space-replacement " ")
+  ;; Necessary to avoid re-installing the same imenu:
+  (setq reduce-imenu-done nil)
+  (if reduce-imenu (reduce-imenu-add-to-menubar))
+  ;; ChangeLog support:
+  (setq-local add-log-current-defun-function
+              #'reduce-current-proc)
+  (run-hooks 'reduce-mode-hook))
+
+(defun reduce-mode-variables ()
+  "Define REDUCE mode local variables."
+  (set-syntax-table reduce-mode-syntax-table)
+  ;; (setq-local paragraph-start (concat "^$\\|" page-delimiter))
+  (setq-local paragraph-separate
+              ;; paragraph-start)
+              (concat paragraph-start "\\|^%")) ; RS
+  ;; so that comments at beginning of a line do not disturb reformatting.
+  (setq-local paragraph-ignore-fill-prefix t)
+  (setq-local indent-line-function 'reduce-indent-line)
+  (setq-local comment-start "% ")
+  (setq-local comment-start-skip
+              "\\(?:^\\|[^!]\\)%+ *")   ; "%+ *" but not !%
+  (setq comment-column 40)              ; auto buffer local
+  (setq-local comment-indent-function #'reduce-comment-indent)
+  ;; (setq fill-prefix "% ")        ; buffer local
+  (setq-local parse-sexp-ignore-comments t) ; RS
+ )
+
+(defun reduce-imenu-add-to-menubar (&optional redraw)
+  "Add \"Contents\" menu to menubar; if REDRAW force update."
+  (interactive)
+  (if reduce-imenu-done
+      ;; This is PRIMARILY to avoid a bug in imenu-add-to-menubar that
+      ;; causes it to corrupt the menu bar if it is run more than once
+      ;; in the same buffer.
+      ()
+    (setq reduce-imenu-done t)
+    (imenu-add-to-menubar reduce-imenu-title)
+    (if redraw (force-mode-line-update))))
 
 
 ;;;; ********************

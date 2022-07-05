@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sourceforge.net/u/fjwright>
 ;; Created: 6 June 2022 as a separate file (was part of reduce-mode.el)
-;; Time-stamp: <2022-07-01 15:57:01 franc>
+;; Time-stamp: <2022-07-05 17:24:38 franc>
 ;; Keywords: languages, faces
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.7alpha
@@ -303,7 +303,7 @@ No variables are fontified.")
 ;;;;; Algebraic fontification
 
 (defconst reduce-font-lock--keywords-algebraic
-  ‘(;; Operator declarations of the form `type op1, op2, ...’
+  `(;; Operator declarations of the form ‘type op1, op2, ...’
     (,(concat "\\_<\\(?:"
               (mapconcat #'identity
                          '("even" "odd"
@@ -466,7 +466,7 @@ representations of 32.")
 (defsubst reduce-font-lock--match-procedure (num)
   "Return non-nil if ‘(match-string NUM)’ is 'procedure'."
   (string-match-p                   ; avoids modifying the match data.
-   "\\‘procedure\\’"
+   "\\`procedure\\'"
    (match-string num)))
 
 (defconst entire-reduce-functional-keyword-regexp

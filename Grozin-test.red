@@ -64,3 +64,9 @@ begin begin end end;  begin begin end;  beginning begin noend end;
 /* This is a C-style comment! */
 
 Comment The above line seems to break this comment!
+
+procedure foo; bar;
+
+procedure /* breaks fontification! */ foo; bar;
+
+procedure foo; /* OK */ bar;
