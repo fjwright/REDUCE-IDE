@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sourceforge.net/u/fjwright>
 ;; Created: late 1998
-;; Time-stamp: <2022-07-01 18:07:16 franc>
+;; Time-stamp: <2022-07-07 12:46:12 franc>
 ;; Keywords: languages, processes
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.7alpha
@@ -57,7 +57,6 @@
 ;; Declare variables and functions defined in reduce-mode.el to avoid
 ;; compiler warnings:
 (defvar reduce-mode-map)
-(declare-function reduce-mode-variables "reduce-mode")
 (declare-function reduce-backward-statement "reduce-mode")
 (declare-function reduce-forward-procedure "reduce-mode")
 (declare-function reduce-backward-procedure "reduce-mode")
@@ -373,17 +372,13 @@ You can modify this function to install just the bindings you want."
 
 (define-derived-mode reduce-run-mode comint-mode "REDUCE Run"
   "Major mode for interacting with a REDUCE process − part of REDUCE IDE.
-Version: see ‘reduce-run-version’.
+Version: see ‘reduce-run-version’.\\<reduce-run-mode-map>
 Author: Francis J. Wright (URL ‘https://sites.google.com/site/fjwcentaur’).
 Website: URL ‘https://reduce-algebra.sourceforge.io/reduce-ide/’.
 Comments, suggestions, bug reports, etc. are welcome.
-Full documentation is provided in the info node ‘(reduce-ide)Run’.
+Full documentation is provided in the Info node ‘(reduce-ide)Run’.
 
 Run REDUCE as a subprocess of Emacs, with I/O through an Emacs buffer.
-
-The customization group ‘reduce-run’ affects this mode.  REDUCE
-Run inherits from comint, so the customization group ‘comint’
-also affects this mode.
 
 There can be more than one buffer in REDUCE Run mode, in which
 case relevant commands allow you to choose which buffer to use,
@@ -413,11 +408,12 @@ If you accidentally suspend your process, use ‘\\[comint-continue-subjob]’
 to continue it.
 
 \\{reduce-run-mode-map}
-
-Entry to this mode runs the hooks on `comint-mode-hook' and
-‘reduce-run-mode-hook’ (in that order)."
+The customization group ‘reduce-run’ affects this mode.  REDUCE
+Run inherits from comint, so the customization group ‘comint’
+also affects this mode.  Entry to this mode runs the hooks on
+`comint-mode-hook' and ‘reduce-run-mode-hook’ (in that order)."
+  :syntax-table reduce-mode-syntax-table
   :group 'reduce-run
-  (reduce-mode-variables)
   (setq font-lock-defaults              ; auto buffer-local
         '(reduce-run-font-lock-keywords ; KEYWORDS
           t))                           ; KEYWORDS-ONLY
@@ -567,7 +563,7 @@ Add a final ’;’ unless there is already a final terminator or a
 \\<reduce-run-mode-map>Note that ‘\\[comint-send-input]’ calls ‘comint-send-input’ directly."
   (interactive)
   (end-of-line)
-  (if (and (eobp) (not (looking-back "[;$]\\s-*\\|\\?.*")))
+  (if (and (eobp) (not (looking-back "[;$]\\s-*\\|\\?.*" nil)))
       (insert ?\;))
   (comint-send-input))
 

@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sourceforge.net/u/fjwright>
 ;; Created: late 1992
-;; Time-stamp: <2022-07-05 17:16:51 franc>
+;; Time-stamp: <2022-07-07 12:43:02 franc>
 ;; Keywords: languages
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.7alpha
@@ -452,16 +452,13 @@ Update after ‘reduce-show-proc-delay’ seconds of Emacs idle time."
 (declare-function reduce-show-delim-mode "reduce-delim" ())
 
 ;;;###autoload
-(defun reduce-mode ()
+(define-derived-mode reduce-mode prog-mode "REDUCE"
   "Major mode for editing REDUCE source code − part of REDUCE IDE.
-Version: see ‘reduce-mode-version’.
+Version: see ‘reduce-mode-version’.\\<reduce-mode-map>
 Author: Francis J. Wright (URL ‘https://sites.google.com/site/fjwcentaur’).
 Website: URL ‘https://reduce-algebra.sourceforge.io/reduce-ide/’.
 Comments, suggestions, bug reports, etc. are welcome.
-Full documentation is provided in the info node ‘(reduce-ide)Top’.
-
-User options in the customization group ‘reduce’ control this
-mode.  Entry to this mode runs ‘reduce-mode-hook’ if non-nil.
+Full documentation is provided in the Info node ‘(reduce-ide)Top’.
 
 Commands are aware of REDUCE syntax, and syntax-directed commands
 ignore comments, strings and character case.  Standard indentation and
@@ -470,7 +467,7 @@ comment commands follow Lisp conventions.
 
 “<<...>>” and “begin...end” are treated as bracketed or
 symbolic expressions for motion, delimiter matching, etc.
-\\<reduce-mode-map>
+
 The command ‘\\[reduce-indent-line]’ indents in a fixed style (mine!).
 If re-run immediately after itself or ‘\\[reindent-then-newline-and-indent]’
 or ‘\\[newline-and-indent]’ it indents further.
@@ -498,13 +495,10 @@ Delete converts tabs to spaces as it moves back.
 Blank lines separate paragraphs.  Percent signs start comments.
 REDUCE mode defines the following local key bindings:
 
-\\{reduce-mode-map}"
-  (interactive)
-  (kill-all-local-variables)
-  (use-local-map reduce-mode-map)
-  (setq major-mode 'reduce-mode)
-  (setq mode-name "REDUCE")
-  (reduce-mode-variables)
+\\{reduce-mode-map}
+User options in the customization group ‘reduce’ control this
+mode.  Entry to this mode runs ‘reduce-mode-hook’ if non-nil."
+  :group 'reduce
   ;; Optionally set up font-lock mode:
   (and reduce-font-lock-mode-on
        (require 'reduce-font-lock "reduce-font-lock" t)
@@ -533,11 +527,6 @@ REDUCE mode defines the following local key bindings:
   ;; ChangeLog support:
   (setq-local add-log-current-defun-function
               #'reduce-current-proc)
-  (run-hooks 'reduce-mode-hook))
-
-(defun reduce-mode-variables ()
-  "Define REDUCE mode local variables."
-  (set-syntax-table reduce-mode-syntax-table)
   ;; (setq-local paragraph-start (concat "^$\\|" page-delimiter))
   (setq-local paragraph-separate
               ;; paragraph-start)
@@ -551,7 +540,6 @@ REDUCE mode defines the following local key bindings:
   (setq comment-column 40)              ; auto buffer local
   (setq-local comment-indent-function #'reduce-comment-indent)
   ;; (setq fill-prefix "% ")        ; buffer local
-  (setq-local parse-sexp-ignore-comments t) ; RS
  )
 
 (defun reduce-imenu-add-to-menubar (&optional redraw)
