@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sourceforge.net/u/fjwright>
 ;; Created: late 1998
-;; Time-stamp: <2022-07-07 12:46:12 franc>
+;; Time-stamp: <2022-07-07 16:04:31 franc>
 ;; Keywords: languages, processes
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.7alpha
@@ -330,7 +330,7 @@ send REDUCE input.")
 (defun reduce-run-show-version ()
   "Echo version information for REDUCE Run mode."
   (interactive)
-  (message "REDUCE Run mode − REDUCE IDE Package Version: %s" reduce-run-version))
+  (message "REDUCE Run mode – REDUCE IDE Package Version: %s" reduce-run-version))
 
 ;; Put the Run REDUCE menu on the menu bar AFTER the REDUCE menu:
 (define-key-after
@@ -371,7 +371,7 @@ You can modify this function to install just the bindings you want."
 ;;; ===================================
 
 (define-derived-mode reduce-run-mode comint-mode "REDUCE Run"
-  "Major mode for interacting with a REDUCE process − part of REDUCE IDE.
+  "Major mode for interacting with a REDUCE process – part of REDUCE IDE.
 Version: see ‘reduce-run-version’.\\<reduce-run-mode-map>
 Author: Francis J. Wright (URL ‘https://sites.google.com/site/fjwcentaur’).
 Website: URL ‘https://reduce-algebra.sourceforge.io/reduce-ide/’.
