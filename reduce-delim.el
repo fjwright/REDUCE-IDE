@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sourceforge.net/u/fjwright>
 ;; Created: 22 March 2018
-;; Time-stamp: <2022-07-08 18:07:09 franc>
+;; Time-stamp: <2022-07-11 17:27:36 franc>
 ;; Keywords: languages, faces
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.7alpha
@@ -255,13 +255,13 @@ OUTSIDE is the buffer position of the outside of the delimiter.
   "Move forwards to end of group immediately following POS.
 Return t if successful; otherwise move as far as possible and return nil."
   (goto-char (+ pos 2))
-  (reduce-forward-group))
+  (reduce--forward-group))
 
 (defun reduce-show-delim-skip-group-backward (pos)
   "Move backwards to start of group immediately preceding POS.
 Return t if successful; otherwise move as far as possible and return nil."
   (goto-char (- pos 2))
-  (reduce-backward-group))
+  (reduce--backward-group))
 
 (defun reduce-show-delim-skip-block-forward (pos)
   "Move forwards to end of block immediately following POS.

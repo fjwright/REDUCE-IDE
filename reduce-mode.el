@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sourceforge.net/u/fjwright>
 ;; Created: late 1992
-;; Time-stamp: <2022-07-11 16:29:04 franc>
+;; Time-stamp: <2022-07-11 17:27:27 franc>
 ;; Keywords: languages
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.7alpha
@@ -670,9 +670,9 @@ of the construct; otherwise return nil."
      ((looking-at "\\<end\\>")
       (reduce--backward-block) (current-indentation))
      ((looking-at ">>")
-      (reduce-backward-group) (current-indentation))
+      (reduce--backward-group) (current-indentation))
      ;; ((looking-at "#\\<endif\\>")
-     ;;  (reduce-backward-group) 0)
+     ;;  (reduce--backward-group) 0)
      ((looking-at "#\\(\\<define\\>\\|\\<if\\>\\|\\<\\elif\\>\\|\\<\\else\\>\\|\\<endif\\>\\)")
       0))))
 
@@ -688,7 +688,7 @@ of the construct; otherwise return nil."
       ((looking-at "else")      ; nested conditional
        (reduce-find-matching-if) (reduce-find-matching-if))
       ((= (following-char) ?>)  ; end of group
-       (reduce-backward-group) (reduce-find-matching-if))
+       (reduce--backward-group) (reduce-find-matching-if))
       ((looking-at "end")       ; end of block
        (reduce--backward-block) (reduce-find-matching-if))
       ((= (char-syntax (following-char)) ?\) )
@@ -1066,7 +1066,7 @@ move over it after ‘reduce-max-up-tries’ consecutive interactive tries."
       (setq reduce-forward-statement-found (point))
       (backward-char 3) (skip-chars-backward " \t\n") t)
      ((= (preceding-char) ?<)
-      (reduce-forward-group) (reduce-forward-statement1 pattern))
+      (reduce--forward-group) (reduce-forward-statement1 pattern))
      ((memq (preceding-char) '(?n ?N))
       (reduce--forward-block) (reduce-forward-statement1 pattern))
      ((= (char-syntax (preceding-char)) ?\( )
@@ -1133,7 +1133,7 @@ Return t if successful, nil if reaches beginning of buffer."
   (if (reduce-re-search-backward pattern 'move)
       (cond
        ((= (following-char) ?>)     ; end of group
-    (reduce-backward-group) (reduce-backward-statement1 pattern not-eof))
+    (reduce--backward-group) (reduce-backward-statement1 pattern not-eof))
        ((memq (following-char) '(?e ?E)) ; end of block (or file)
     (if not-eof
         (progn (reduce--backward-block) (setq not-eof nil)))
@@ -1198,7 +1198,7 @@ negative argument means move forward instead of backward."
   "Move backward to beginning of block or group containing point."
   (if (reduce-re-search-backward "\\<begin\\>\\|<<\\|\\<end\\>\\|>>")
       (cond ((= (following-char) ?>)
-         (reduce-backward-group)
+         (reduce--backward-group)
          (reduce-backward-block-or-group))
         ((memq (following-char) '(?e ?E))
          (reduce--backward-block)
@@ -1210,7 +1210,7 @@ negative argument means move forward instead of backward."
   "Move forward to end of block or group containing point."
   (if (reduce-re-search-forward "\\<end\\>\\|>>\\|\\<begin\\>\\|<<")
       (cond ((= (preceding-char) ?<)
-         (reduce-forward-group)
+         (reduce--forward-group)
          (reduce-forward-block-or-group))
         ((memq (preceding-char) '(?n ?N))
          (reduce--forward-block)
@@ -1259,12 +1259,11 @@ negative argument means move backward instead of forward."
   "Move forwards to end of block containing point.
 Return t if successful; otherwise move as far as possible and return nil."
   (let (found)
-    (while
-        (and
-         (setq found (reduce-re-search-forward
-                      "\\_<end\\_>\\|\\(\\_<begin\\_>\\)" 'move))
-         (reduce--check-match-0-unquoted-&-distinct)
-         (match-beginning 1))
+    (while (and
+            (setq found (reduce-re-search-forward
+                         "\\_<end\\_>\\|\\(\\_<begin\\_>\\)" 'move))
+            (reduce--match-0-unquoted-&-distinct-p)
+            (match-beginning 1))
       (reduce--forward-block))
     ;; If ‘found’ is true here then ‘(match-beginning 1)’ is false, so
     ;; we have found ‘end’.
@@ -1274,18 +1273,17 @@ Return t if successful; otherwise move as far as possible and return nil."
   "Move backwards to start of block containing point.
 Return t if successful; otherwise move as far as possible and return nil."
   (let (found)
-    (while
-        (and
-         (setq found (reduce-re-search-backward
-                      "\\_<begin\\_>\\|\\(\\_<end\\_>\\)" 'move))
-         (reduce--check-match-0-unquoted-&-distinct)
-         (match-beginning 1))
+    (while (and
+            (setq found (reduce-re-search-backward
+                         "\\_<begin\\_>\\|\\(\\_<end\\_>\\)" 'move))
+            (reduce--match-0-unquoted-&-distinct-p)
+            (match-beginning 1))
       (reduce--backward-block))
     ;; If ‘found’ is true here then ‘(match-beginning 1)’ is false, so
     ;; we have found ‘begin’.
     found))
 
-(defun reduce--check-match-0-unquoted-&-distinct ()
+(defun reduce--match-0-unquoted-&-distinct-p ()
   "Return t if last symbol matched is unquoted and distinct.
 Assume the symbol was the entire match, i.e. group 0.
 Check preceding character is not a single quote or an escaped
@@ -1305,23 +1303,36 @@ character, and that the following character is not an escape."
       (and (setq char (char-after (setq pos (match-end 0))))
            (eq char ?!))))))
 
-(defun reduce-forward-group ()
+(defun reduce--forward-group ()
   "Move forwards to end of group containing point.
 Return t if successful; otherwise move as far as possible and return nil."
-  (let (return)
-    (while (and (setq return (reduce-re-search-forward ">>\\|<<" 'move))
-        (= (preceding-char) ?<))
-      (reduce-forward-group))
-    return))
+  (let (found)
+    (while (and
+            (setq found (reduce-re-search-forward ">>\\|<<" 'move))
+            ;; Match may be preceded only by an odd number of escapes:
+            (save-excursion
+              (goto-char (match-beginning 0))
+              ;; (logand x 1) = lowest order bit of x = 0 if x is even;
+              ;; see Emacs paren.el --- highlight matching paren
+              (= (logand (skip-syntax-backward "/") 1) 0))
+            (= (char-before) ?<))
+      (reduce--forward-group))
+    found))
 
-(defun reduce-backward-group ()
+(defun reduce--backward-group ()
   "Move backwards to start of group containing point.
 Return t if successful; otherwise move as far as possible and return nil."
-  (let (return)
-    (while (and (setq return (reduce-re-search-backward "<<\\|>>" 'move))
-        (= (following-char) ?>))
-      (reduce-backward-group))
-    return))
+  (let (found)
+    (while (and
+            (setq found (reduce-re-search-backward "<<\\|>>" 'move))
+            ;; Match may be preceded only by an odd number of escapes:
+            (save-excursion
+              ;; (logand x 1) = lowest order bit of x = 0 if x is even;
+              ;; see Emacs paren.el --- highlight matching paren
+              (= (logand (skip-syntax-backward "/") 1) 0))
+            (= (char-after) ?>))
+      (reduce--backward-group))
+    found))
 
 
 ;;;; *****************************************************************
@@ -1685,7 +1696,7 @@ With argument, do it that many times."
     (skip-chars-forward " \t\n;$")
     (cond
      ((= (char-syntax (following-char)) ?\( ) (forward-sexp))
-     ((looking-at "<<") (forward-char 2) (reduce-forward-group))
+     ((looking-at "<<") (forward-char 2) (reduce--forward-group))
      ((looking-at "begin") (forward-char 5) (reduce--forward-block))
      ((looking-at ">>") (forward-char 2))
      (t (forward-sexp))
@@ -1703,7 +1714,7 @@ With argument, do it that many times."
     (let ((case-fold-search t) (start (point)))
       (skip-chars-backward ">>end<<")
       (cond
-       ((looking-at ">>") (reduce-backward-group))
+       ((looking-at ">>") (reduce--backward-group))
        ((looking-at "end") (reduce--backward-block))
        ((looking-at "<<"))
        (t (goto-char start) (backward-sexp)))))
@@ -1731,7 +1742,7 @@ With argument, do it that many times."
              (- (point) blink-matching-paren-distance))
         (point)))
        (backward-char 2)
-       (reduce-backward-group)
+       (reduce--backward-group)
        )
      (if (looking-at "<<")
          (blink-point)
