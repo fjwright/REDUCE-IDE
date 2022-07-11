@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sourceforge.net/u/fjwright>
 ;; Created: late 1992
-;; Time-stamp: <2022-07-08 18:13:25 franc>
+;; Time-stamp: <2022-07-11 16:29:04 franc>
 ;; Keywords: languages
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.7alpha
@@ -1262,11 +1262,12 @@ Return t if successful; otherwise move as far as possible and return nil."
     (while
         (and
          (setq found (reduce-re-search-forward
-                      "[^!][^']\\(?:\\_<end\\_>\\|\\(\\_<begin\\_>\\)\\)[^!]" 'move))
+                      "\\_<end\\_>\\|\\(\\_<begin\\_>\\)" 'move))
+         (reduce--check-match-0-unquoted-&-distinct)
          (match-beginning 1))
       (reduce--forward-block))
-    ;; Unless ‘end’ is at EOB, we have found ‘..end.’, so...
-    (unless (= (char-after) ?d) (backward-char))
+    ;; If ‘found’ is true here then ‘(match-beginning 1)’ is false, so
+    ;; we have found ‘end’.
     found))
 
 (defun reduce--backward-block ()
@@ -1276,23 +1277,33 @@ Return t if successful; otherwise move as far as possible and return nil."
     (while
         (and
          (setq found (reduce-re-search-backward
-                       "\\_<begin\\_>\\|\\([^!][^']\\_<end\\_>\\)" 'move))
+                      "\\_<begin\\_>\\|\\(\\_<end\\_>\\)" 'move))
+         (reduce--check-match-0-unquoted-&-distinct)
          (match-beginning 1))
-      ;; Looking at "..end", so move forward one character to allow
-      ;; for the special (test) case of ‘begin end’:
-      (forward-char)
       (reduce--backward-block))
     ;; If ‘found’ is true here then ‘(match-beginning 1)’ is false, so
-    ;; we have found ‘...begin’.
-    (if (and found ;; (looking-back "[^!][^']"))
-             (or (bobp)
-                 (and (/= (char-before) ?')
-                      (save-excursion
-                        (backward-char)
-                        (or (bobp)
-                            (/= (char-before) ?!))))))
-        t                               ; found ‘begin’ keyword
-      (if (not (bobp)) (reduce--backward-block))))) ; try again
+    ;; we have found ‘begin’.
+    found))
+
+(defun reduce--check-match-0-unquoted-&-distinct ()
+  "Return t if last symbol matched is unquoted and distinct.
+Assume the symbol was the entire match, i.e. group 0.
+Check preceding character is not a single quote or an escaped
+character, and that the following character is not an escape."
+  ;; char-after and char-before return nil if the character is not
+  ;; available, e.g. at BOB or EOB.
+  (let (pos char)
+    (not
+     (or
+      ;; Preceded by single quote character?
+      (and (setq char (char-after (setq pos (1- (match-beginning 0)))))
+           (eq char ?\'))
+      ;; Preceded by escaped character?
+      (and char (setq char (char-before pos))
+           (eq char ?!))
+      ;; Followed by escape character?
+      (and (setq char (char-after (setq pos (match-end 0))))
+           (eq char ?!))))))
 
 (defun reduce-forward-group ()
   "Move forwards to end of group containing point.
