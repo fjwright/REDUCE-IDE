@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sourceforge.net/u/fjwright>
 ;; Created: 22 March 2018
-;; Time-stamp: <2022-07-01 15:56:52 franc>
+;; Time-stamp: <2022-07-08 18:07:09 franc>
 ;; Keywords: languages, faces
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.7alpha
@@ -144,6 +144,9 @@ highlighted, the cursor being regarded as adequate to mark its position."
   "Overlay used to highlight the delimiter at point.")
 
 
+(declare-function reduce--backward-block "reduce-mode" ())
+(declare-function reduce--forward-block "reduce-mode" ())
+
 ;;;###autoload
 (define-minor-mode reduce-show-delim-mode
   "Toggle visualization of matching delimiters (REDUCE Show Delim mode).
@@ -264,16 +267,13 @@ Return t if successful; otherwise move as far as possible and return nil."
   "Move forwards to end of block immediately following POS.
 Return t if successful; otherwise move as far as possible and return nil."
   (goto-char (+ pos 5))
-  (reduce-forward-block))
+  (reduce--forward-block))
 
-;; ***** Should reduce-backward-block also skip white space? *****
 (defun reduce-show-delim-skip-block-backward (pos)
   "Move backwards to start of block immediately preceding POS.
 Return t if successful; otherwise move as far as possible and return nil."
   (goto-char (- pos 3))
-  (when (reduce-backward-block)
-	(skip-chars-forward " \t\n")
-	t))
+  (reduce--backward-block))
 
 (defun reduce-show-delim-data-function ()
   "Find the opening/closing delimiter \"near\" point and its match.

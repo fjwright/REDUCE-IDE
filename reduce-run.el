@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sourceforge.net/u/fjwright>
 ;; Created: late 1998
-;; Time-stamp: <2022-07-07 16:04:31 franc>
+;; Time-stamp: <2022-07-07 17:00:06 franc>
 ;; Keywords: languages, processes
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.7alpha
@@ -411,7 +411,7 @@ to continue it.
 The customization group ‘reduce-run’ affects this mode.  REDUCE
 Run inherits from comint, so the customization group ‘comint’
 also affects this mode.  Entry to this mode runs the hooks on
-`comint-mode-hook' and ‘reduce-run-mode-hook’ (in that order)."
+‘comint-mode-hook’ and ‘reduce-run-mode-hook’ (in that order)."
   :syntax-table reduce-mode-syntax-table
   :group 'reduce-run
   (setq font-lock-defaults              ; auto buffer-local

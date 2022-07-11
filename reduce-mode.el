@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sourceforge.net/u/fjwright>
 ;; Created: late 1992
-;; Time-stamp: <2022-07-07 16:04:17 franc>
+;; Time-stamp: <2022-07-08 18:13:25 franc>
 ;; Keywords: languages
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.7alpha
@@ -301,33 +301,35 @@ Update after ‘reduce-show-proc-delay’ seconds of Emacs idle time."
   (let ((map (make-sparse-keymap)))
     ;; (define-key map ">" 'reduce-self-insert-and-blink-matching-group-open)
     ;; (define-key map "\t" 'reduce-indent-line)
-    (define-key map "\n" 'reindent-then-newline-and-indent)
-    (define-key map "\C-c\t" 'reduce-unindent-line) ; default
-    (define-key map [(shift tab)] 'reduce-unindent-line) ; backtab
-    (define-key map "\177" 'backward-delete-char-untabify) ; DEL
+    (define-key map "\C-j" 'reindent-then-newline-and-indent)
+    ;; (define-key map [(shift tab)] 'reduce-unindent-line) ; backtab
+    (define-key map [backtab] 'reduce-unindent-line)
+    (define-key map [del] 'backward-delete-char-untabify)
     (define-key map "\C-c\C-n" 'reduce-forward-statement)
     (define-key map "\C-c\C-p" 'reduce-backward-statement)
     (define-key map "\C-c\C-d" 'reduce-down-block-or-group)
     (define-key map "\C-c\C-u" 'reduce-up-block-or-group)
     (define-key map "\C-c\C-k" 'reduce-kill-statement)
-    (define-key map "\e\C-f" 'reduce-forward-sexp)
-    (define-key map "\e\C-b" 'reduce-backward-sexp)
-    (define-key map "\e\C-e" 'reduce-forward-procedure)
-    (define-key map "\e\C-a" 'reduce-backward-procedure)
-    (define-key map "\e\C-h" 'reduce-mark-procedure)
+    (define-key map "\C-\M-f" 'reduce-forward-sexp)
+    (define-key map "\C-\M-b" 'reduce-backward-sexp)
+    (define-key map "\C-\M-e" 'reduce-forward-procedure)
+    (define-key map "\C-\M-a" 'reduce-backward-procedure)
+    (define-key map "\C-\M-h" 'reduce-mark-procedure)
     (define-key map "\C-xnd" 'reduce-narrow-to-procedure)
     (define-key map "\C-ck" 'reduce-kill-procedure)
     ;; (define-key map "\e;" 'reduce-indent-comment) ; via global map
-    (define-key map "\e\C-\\" 'reduce-indent-region)
-    (define-key map "\e\C-q" 'reduce-indent-procedure)
+    (define-key map "\C-\M-\\" 'reduce-indent-region)
+    (define-key map "\C-\M-q" 'reduce-indent-procedure)
     (define-key map "\C-c;" 'reduce-comment-region)
     (define-key map "\C-c:" 'reduce-comment-procedure)
-    (define-key map "\eq" 'reduce-fill-comment)
+    (define-key map "\M-q" 'reduce-fill-comment)
     (define-key map "\C-ci" 'reduce-insert-if-then)
     (define-key map "\C-cb" 'reduce-insert-block)
     (define-key map "\C-c<" 'reduce-insert-group)
-    (define-key map "\e\C-l" 'reduce-reposition-window)
-    (define-key map "\e\t" 'reduce-complete-symbol)
+    (define-key map "\C-\M-l" 'reduce-reposition-window)
+    (define-key map "\C-\M-i" 'reduce-complete-symbol)
+    (define-key map "\C-c\t" 'reduce-complete-symbol)
+                                        ; since C-M-i used by flyspell
     map)
   "Keymap for REDUCE mode.")
 
@@ -496,8 +498,10 @@ Blank lines separate paragraphs.  Percent signs start comments.
 REDUCE mode defines the following local key bindings:
 
 \\{reduce-mode-map}
-User options in the customization group ‘reduce’ control this
-mode.  Entry to this mode runs ‘reduce-mode-hook’ if non-nil."
+The customization group ‘reduce’ affects this mode.  REDUCE mode
+inherits from Prog mode, so the customization group ‘prog-mode’
+also affects this mode.  Entry to this mode runs the hooks on
+‘prog-mode-hook’ and ‘reduce-mode-hook’ (in that order)."
   :group 'reduce
   ;; Optionally set up font-lock mode:
   (and reduce-font-lock-mode-on
@@ -658,13 +662,13 @@ of the construct; otherwise return nil."
     ))
      ((looking-at "\\w+[ \t]*:[^=]")    ; label
       ;; Indent to beginning of enclosing block:
-      (reduce-backward-block) (current-column))
+      (reduce--backward-block) (current-column))
      ;; *** Intermediate tokens *** :
      ((looking-at "\\<then\\>\\|\\<else\\>")
       (reduce-find-matching-if) (current-indentation))
      ;; *** Closing tokens *** :
      ((looking-at "\\<end\\>")
-      (reduce-backward-block) (current-indentation))
+      (reduce--backward-block) (current-indentation))
      ((looking-at ">>")
       (reduce-backward-group) (current-indentation))
      ;; ((looking-at "#\\<endif\\>")
@@ -686,7 +690,7 @@ of the construct; otherwise return nil."
       ((= (following-char) ?>)  ; end of group
        (reduce-backward-group) (reduce-find-matching-if))
       ((looking-at "end")       ; end of block
-       (reduce-backward-block) (reduce-find-matching-if))
+       (reduce--backward-block) (reduce-find-matching-if))
       ((= (char-syntax (following-char)) ?\) )
        (forward-char) (backward-list) ; skip balanced brackets
        (reduce-find-matching-if))))
@@ -1064,7 +1068,7 @@ move over it after ‘reduce-max-up-tries’ consecutive interactive tries."
      ((= (preceding-char) ?<)
       (reduce-forward-group) (reduce-forward-statement1 pattern))
      ((memq (preceding-char) '(?n ?N))
-      (reduce-forward-block) (reduce-forward-statement1 pattern))
+      (reduce--forward-block) (reduce-forward-statement1 pattern))
      ((= (char-syntax (preceding-char)) ?\( )
       (backward-char) (forward-list) ; skip balanced brackets
       (reduce-forward-statement1 pattern))
@@ -1132,7 +1136,7 @@ Return t if successful, nil if reaches beginning of buffer."
     (reduce-backward-group) (reduce-backward-statement1 pattern not-eof))
        ((memq (following-char) '(?e ?E)) ; end of block (or file)
     (if not-eof
-        (progn (reduce-backward-block) (setq not-eof nil)))
+        (progn (reduce--backward-block) (setq not-eof nil)))
     (reduce-backward-statement1 pattern not-eof))
        ((= (char-syntax (following-char)) ?\) )
     (forward-char) (backward-list) ; skip balanced brackets
@@ -1197,7 +1201,7 @@ negative argument means move forward instead of backward."
          (reduce-backward-group)
          (reduce-backward-block-or-group))
         ((memq (following-char) '(?e ?E))
-         (reduce-backward-block)
+         (reduce--backward-block)
          (reduce-backward-block-or-group))
         (t t)
         )))
@@ -1209,7 +1213,7 @@ negative argument means move forward instead of backward."
          (reduce-forward-group)
          (reduce-forward-block-or-group))
         ((memq (preceding-char) '(?n ?N))
-         (reduce-forward-block)
+         (reduce--forward-block)
          (reduce-forward-block-or-group))
         (t t)
         )))
@@ -1251,27 +1255,44 @@ negative argument means move backward instead of forward."
   (if (and arg (listp arg)) -1 (prefix-numeric-value arg)))
 
 
-(defun reduce-forward-block ()
+(defun reduce--forward-block ()
   "Move forwards to end of block containing point.
 Return t if successful; otherwise move as far as possible and return nil."
-  (let (return)
-    (while (and (setq return (reduce-re-search-forward
-                              "[^'\(]\\<end\\>\\|\\([^'\(]\\<begin\\>\\)" 'move))
-                (match-beginning 1))
-      (reduce-forward-block))
-    return))
+  (let (found)
+    (while
+        (and
+         (setq found (reduce-re-search-forward
+                      "[^!][^']\\(?:\\_<end\\_>\\|\\(\\_<begin\\_>\\)\\)[^!]" 'move))
+         (match-beginning 1))
+      (reduce--forward-block))
+    ;; Unless ‘end’ is at EOB, we have found ‘..end.’, so...
+    (unless (= (char-after) ?d) (backward-char))
+    found))
 
-;; ***** Should reduce-backward-block also skip white space,which it
-;; ***** seems to do? This is a problem for reduce-show-delim-mode.
-(defun reduce-backward-block ()
+(defun reduce--backward-block ()
   "Move backwards to start of block containing point.
 Return t if successful; otherwise move as far as possible and return nil."
-  (let (return)
-    (while (and (setq return (reduce-re-search-backward
-                              "[^'\(]\\<begin\\>\\|\\([^'\(]\\<end\\>\\)" 'move))
-                (match-beginning 1))
-      (reduce-backward-block))
-    return))
+  (let (found)
+    (while
+        (and
+         (setq found (reduce-re-search-backward
+                       "\\_<begin\\_>\\|\\([^!][^']\\_<end\\_>\\)" 'move))
+         (match-beginning 1))
+      ;; Looking at "..end", so move forward one character to allow
+      ;; for the special (test) case of ‘begin end’:
+      (forward-char)
+      (reduce--backward-block))
+    ;; If ‘found’ is true here then ‘(match-beginning 1)’ is false, so
+    ;; we have found ‘...begin’.
+    (if (and found ;; (looking-back "[^!][^']"))
+             (or (bobp)
+                 (and (/= (char-before) ?')
+                      (save-excursion
+                        (backward-char)
+                        (or (bobp)
+                            (/= (char-before) ?!))))))
+        t                               ; found ‘begin’ keyword
+      (if (not (bobp)) (reduce--backward-block))))) ; try again
 
 (defun reduce-forward-group ()
   "Move forwards to end of group containing point.
@@ -1344,24 +1365,23 @@ Return t if match found, nil otherwise."
     )))
 
 
-(defun reduce-re-search-backward (regexp &optional MOVE)
+(defun reduce-re-search-backward (regexp &optional move)
   "Syntactic search backwards for REGEXP else if MOVE then move to start.
 Skip REDUCE comments and strings.  Return t if match found, nil otherwise."
   (let ((start (point))
-    (move (if MOVE 'move t)))
-    (if (reduce-re-search-backward1 regexp move)
-    t
-      (if (not MOVE) (goto-char start))
-      nil)
-    ))
+        (mv (if move 'move t)))
+    (if (reduce-re-search-backward1 regexp mv)
+        t
+      (if (not move) (goto-char start))
+      nil)))
 
 (defun reduce-re-search-backward1 (regexp move)
   "Sub-function of ‘reduce-re-search-backward’.
 Skip strings backwards."
   (if (reduce-re-search-backward2 regexp move)
       (if (reduce-in-string)        ; try again!
-      (reduce-re-search-backward1 regexp move)
-    t)
+          (reduce-re-search-backward1 regexp move)
+        t)
     nil))
 
 (defun reduce-re-search-backward2 (regexp move)
@@ -1655,7 +1675,7 @@ With argument, do it that many times."
     (cond
      ((= (char-syntax (following-char)) ?\( ) (forward-sexp))
      ((looking-at "<<") (forward-char 2) (reduce-forward-group))
-     ((looking-at "begin") (forward-char 5) (reduce-forward-block))
+     ((looking-at "begin") (forward-char 5) (reduce--forward-block))
      ((looking-at ">>") (forward-char 2))
      (t (forward-sexp))
      ))
@@ -1673,13 +1693,10 @@ With argument, do it that many times."
       (skip-chars-backward ">>end<<")
       (cond
        ((looking-at ">>") (reduce-backward-group))
-       ((looking-at "end") (reduce-backward-block))
+       ((looking-at "end") (reduce--backward-block))
        ((looking-at "<<"))
-       (t (goto-char start) (backward-sexp))
-       )
-      ))
-  (if (and arg (> arg 1)) (reduce-backward-sexp (1- arg)))
-  )
+       (t (goto-char start) (backward-sexp)))))
+  (if (and arg (> arg 1)) (reduce-backward-sexp (1- arg))))
 
 
 ;;;; *************************************
