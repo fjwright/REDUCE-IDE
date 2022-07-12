@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sourceforge.net/u/fjwright>
 ;; Created: late 1992
-;; Time-stamp: <2022-07-11 17:27:27 franc>
+;; Time-stamp: <2022-07-12 16:42:40 franc>
 ;; Keywords: languages
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.7alpha
@@ -1262,7 +1262,8 @@ Return t if successful; otherwise move as far as possible and return nil."
     (while (and
             (setq found (reduce-re-search-forward
                          "\\_<end\\_>\\|\\(\\_<begin\\_>\\)" 'move))
-            (reduce--match-0-unquoted-&-distinct-p)
+            (reduce--symbol-unquoted-&-distinct-p
+             (match-beginning 0) (match-end 0))
             (match-beginning 1))
       (reduce--forward-block))
     ;; If ‘found’ is true here then ‘(match-beginning 1)’ is false, so
@@ -1276,16 +1277,16 @@ Return t if successful; otherwise move as far as possible and return nil."
     (while (and
             (setq found (reduce-re-search-backward
                          "\\_<begin\\_>\\|\\(\\_<end\\_>\\)" 'move))
-            (reduce--match-0-unquoted-&-distinct-p)
+            (reduce--symbol-unquoted-&-distinct-p
+             (match-beginning 0) (match-end 0))
             (match-beginning 1))
       (reduce--backward-block))
     ;; If ‘found’ is true here then ‘(match-beginning 1)’ is false, so
     ;; we have found ‘begin’.
     found))
 
-(defun reduce--match-0-unquoted-&-distinct-p ()
-  "Return t if last symbol matched is unquoted and distinct.
-Assume the symbol was the entire match, i.e. group 0.
+(defun reduce--symbol-unquoted-&-distinct-p (beg end)
+  "Return t if symbol between BEG and END is unquoted and distinct.
 Check preceding character is not a single quote or an escaped
 character, and that the following character is not an escape."
   ;; char-after and char-before return nil if the character is not
@@ -1294,14 +1295,23 @@ character, and that the following character is not an escape."
     (not
      (or
       ;; Preceded by single quote character?
-      (and (setq char (char-after (setq pos (1- (match-beginning 0)))))
+      (and (setq char (char-after (setq pos (1- beg))))
            (eq char ?\'))
       ;; Preceded by escaped character?
       (and char (setq char (char-before pos))
            (eq char ?!))
       ;; Followed by escape character?
-      (and (setq char (char-after (setq pos (match-end 0))))
+      (and (setq char (char-after (setq pos end)))
            (eq char ?!))))))
+
+(defun reduce--unescaped-p (&optional pos)
+  "Return t if char at POS (defaults to point) is not escaped.
+It may be preceded only by an odd number of escape characters"
+  ;; (logand x 1) = lowest order bit of x = 0 if x is even;
+  ;; see Emacs paren.el --- highlight matching paren
+  (save-excursion
+    (if pos (goto-char pos))
+    (= (logand (skip-syntax-backward "/") 1) 0)))
 
 (defun reduce--forward-group ()
   "Move forwards to end of group containing point.
@@ -1309,12 +1319,7 @@ Return t if successful; otherwise move as far as possible and return nil."
   (let (found)
     (while (and
             (setq found (reduce-re-search-forward ">>\\|<<" 'move))
-            ;; Match may be preceded only by an odd number of escapes:
-            (save-excursion
-              (goto-char (match-beginning 0))
-              ;; (logand x 1) = lowest order bit of x = 0 if x is even;
-              ;; see Emacs paren.el --- highlight matching paren
-              (= (logand (skip-syntax-backward "/") 1) 0))
+            (reduce--unescaped-p (match-beginning 0))
             (= (char-before) ?<))
       (reduce--forward-group))
     found))
@@ -1325,11 +1330,7 @@ Return t if successful; otherwise move as far as possible and return nil."
   (let (found)
     (while (and
             (setq found (reduce-re-search-backward "<<\\|>>" 'move))
-            ;; Match may be preceded only by an odd number of escapes:
-            (save-excursion
-              ;; (logand x 1) = lowest order bit of x = 0 if x is even;
-              ;; see Emacs paren.el --- highlight matching paren
-              (= (logand (skip-syntax-backward "/") 1) 0))
+            (reduce--unescaped-p)
             (= (char-after) ?>))
       (reduce--backward-group))
     found))
@@ -1688,37 +1689,72 @@ If ‘nosplit’ is true then put ‘open’ and ‘close’ on the same line."
 ;;;; Balanced structure (sexp) commands
 ;;;; **********************************
 
-(defun reduce-forward-sexp (&optional arg)
-  "Move forward across one, or ARG, balanced expression(s).
-With argument, do it that many times."
+(defun reduce-forward-sexp (arg)
+  "Move forward across one balanced expression.
+With ARG, do it that many times.  Negative arg -N means move
+backward across N balanced expressions.  “Balanced expression”
+means a symbol, string, bracketed expression, block or group.  A
+symbol or bracketed expression may be quoted.  Skip any preceding
+or intervening white space or terminator characters.  This
+command assumes point is not in a string or comment.  It is
+modelled on ‘forward-sexp’.  If unable to move over a balanced
+expression, throw a user error."
   (interactive "p")
-  (let ((case-fold-search t))
-    (skip-chars-forward " \t\n;$")
-    (cond
-     ((= (char-syntax (following-char)) ?\( ) (forward-sexp))
-     ((looking-at "<<") (forward-char 2) (reduce--forward-group))
-     ((looking-at "begin") (forward-char 5) (reduce--forward-block))
-     ((looking-at ">>") (forward-char 2))
-     (t (forward-sexp))
-     ))
-  (if (and arg (> arg 1)) (reduce-forward-sexp (1- arg)))
-  )
-
-(defun reduce-backward-sexp (&optional arg)
-  "Move backward across one, or ARG, balanced expression(s).
-With argument, do it that many times."
-  (interactive "p")
-  (skip-chars-backward " \t\n;$")
-  (if (= (char-syntax (preceding-char)) ?\) )
-      (backward-sexp)
+  (if (< arg 0) (reduce-backward-sexp (- arg))
+  (skip-chars-forward " \t\r\n;$")
     (let ((case-fold-search t) (start (point)))
-      (skip-chars-backward ">>end<<")
       (cond
-       ((looking-at ">>") (reduce--backward-group))
-       ((looking-at "end") (reduce--backward-block))
-       ((looking-at "<<"))
-       (t (goto-char start) (backward-sexp)))))
-  (if (and arg (> arg 1)) (reduce-backward-sexp (1- arg))))
+       ((and (looking-at "<<") (reduce--unescaped-p))
+        (forward-char 2)
+        (unless (reduce--forward-group)
+          (reduce--move-error start "next")))
+       ((and (looking-at "\\_<begin\\_>")
+             (reduce--symbol-unquoted-&-distinct-p
+              (point) (+ (point) 5)))
+        (forward-char 5)
+        (unless (reduce--forward-block)
+          (reduce--move-error start "next")))
+       ((and (looking-at "\\s\(\\|\"") (reduce--unescaped-p))
+        (forward-sexp))
+       ((looking-at "'?\\_<\\|'\\s\(") (forward-sexp))
+       (t (reduce--move-error start "next")))
+      (if (> arg 1) (reduce-forward-sexp (1- arg))))))
+
+(defun reduce-backward-sexp (arg)
+  "Move backward across one balanced expression.
+With ARG, do it that many times.  Negative arg -N means move
+backward across N balanced expressions.  “Balanced expression”
+means a symbol, string, bracketed expression, block or group.  A
+symbol or bracketed expression may be quoted.  Skip any following
+or intervening white space or terminator characters.  This
+command assumes point is not in a string or comment.  It is
+modelled on ‘backward-sexp’.  If unable to move over a balanced
+expression, throw a user error."
+  (interactive "p")
+  (if (< arg 0) (reduce-forward-sexp (- arg))
+  (skip-chars-backward " \t\r\n;$")
+    (let ((case-fold-search t) (start (point)))
+      (cond
+       ((and (looking-back ">>" nil) (reduce--unescaped-p (- (point) 2)))
+        (backward-char 2)
+        (unless (reduce--backward-group)
+          (reduce--move-error start "previous")))
+       ((and (looking-back "\\_<end\\_>" nil)
+             (reduce--symbol-unquoted-&-distinct-p
+              (- (point) 3) (point)))
+        (backward-char 3)
+        (unless (reduce--backward-block)
+          (reduce--move-error start "previous")))
+       ((and (looking-back "\\s\)\\|\"" nil) (reduce--unescaped-p (1- (point))))
+        (backward-sexp))
+       ((looking-back "\\_>" nil) (backward-sexp))
+       (t (reduce--move-error start "previous")))
+      (if (> arg 1) (reduce-backward-sexp (1- arg))))))
+
+(defun reduce--move-error (start next-or-previous)
+  "Move to START and throw an error appropriate to NEXT-OR-PREVIOUS."
+  (goto-char start)
+  (user-error "No %s “balanced expression”" next-or-previous))
 
 
 ;;;; *************************************
@@ -1831,7 +1867,7 @@ passing on any prefix argument (in raw form)."
         (point)))
      (beg (unwind-protect
           (save-excursion
-            (reduce-backward-sexp)
+            (reduce-backward-sexp 1)
             ;; (while (= (char-syntax (following-char)) ?\')
               ;; (forward-char 1))
             (skip-syntax-forward "\'")

@@ -55,7 +55,7 @@ z**2+fac(4)-2*fac 2*y;
 
 Comment Delimiter Highlighting$
 
-( () );  ( ()
+( () { { } } );  ( ()
 << << >> >>;  << << >>;
 begin begin end end;  begin begin end;  beginning begin noend end;
 
