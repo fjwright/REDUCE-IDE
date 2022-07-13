@@ -56,3 +56,6 @@ Main Updates since REDUCE IDE 1.6 (see the manual for details)
 * The option `reduce-run-commands` now accepts arbitrary key strings and an arbitrary number of REDUCE versions.
 * Improved access to the `comint` customization group (since REDUCE Run inherits from comint).
 * `<RET>` in REDUCE Run mode now adds a `;` input terminator automatically as appropriate (whereas `S-<RET>` never adds a terminator).
+* REDUCE mode now inherits from `prog-mode`, so it runs `prog-mode-hook` and some `prog-mode` customizations are relevant.
+* Initial incomplete support for C-style comments.  They are highlighted as comments but no other explicit support.
+* Improved code relating to the commands `reduce-forward-sexp` and `reduce-backward-sexp`.
