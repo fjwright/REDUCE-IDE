@@ -2,7 +2,7 @@
 @c %**start of header
 @settitle GNU Emacs REDUCE Integrated Development Environment
 @c Manual last updated:
-@set UPDATED Time-stamp: <2022-07-13 14:33:56 franc>
+@set UPDATED Time-stamp: <2022-07-18 18:11:01 franc>
 @c Software version:
 @set VERSION 1.7alpha
 @afourpaper
@@ -126,17 +126,24 @@ a bit like a cross between Pascal and FORTRAN-77).
 
 I began development of REDUCE mode tentatively in late 1992 and
 seriously in early 1994, and I began development of REDUCE Run mode in
-late 1998.  I have continued development sporadically.  The latest
-versions of the software and documentation source code are available
-from
-@uref{https://sourceforge.net/p/reduce-algebra/code/HEAD/tree/trunk/generic/emacs/,
-SourceForge}.  Comments, suggestions, bug reports, etc.@: are welcome.
+late 1998.  I have continued development sporadically.  Comments,
+suggestions, bug reports, etc.@: are welcome; @ref{Feedback}.
 
-The current version of the REDUCE IDE is intended for use with GNU
-Emacs version 28 or later, which I will endeavour to support under
-recent versions of Microsoft Windows and Linux.  It might run under
-closely related versions of GNU Emacs but I cannot explicitly support
-other platforms.
+REDUCE IDE is released as an Emacs package; @ref{Installation,,
+Installation of REDUCE IDE}.  The latest development source code
+(which may not work!)@: is available from
+@uref{https://github.com/fjwright/REDUCE-IDE, GitHub}, where package
+release versions are tagged (e.g.@: @code{v1.7}) and are available as
+releases (e.g.@: @code{reduce-ide-1.7.tar}).  The source code (only)
+for the latest package release is also available from
+@uref{https://sourceforge.net/p/reduce-algebra/code/HEAD/tree/trunk/generic/emacs/,
+SourceForge}.
+
+The current version of REDUCE IDE is intended for use with GNU Emacs
+version 28 or later, which I will endeavour to support under recent
+versions of Microsoft Windows and Linux.  It should also run under
+closely related versions of GNU Emacs and on other platforms, but I
+may not be able to provide support.
 
 REDUCE IDE version 1.6 provides better syntactic highlighting
 (fontification) and better delimiter matching, which are provided by
@@ -179,11 +186,17 @@ select it in some buffer and then give the command @kbd{C-h m}
 @chapter Installation of REDUCE IDE
 @cindex Installation of REDUCE IDE
 
-It is probably best to use the GNU Emacs package manager to install
-the latest complete REDUCE IDE package as described in the
+I recommend that you use the GNU Emacs package manager to install the
+latest REDUCE IDE package as described in the
 @uref{https://reduce-algebra.sourceforge.io/reduce-ide/#installation,
-installation section of the main REDUCE IDE web page}.  None of the
-manual installation described below is then required.
+installation section of the main REDUCE IDE web page}.  Alternatively,
+releases as Emacs package (@code{.tar}) files are available from
+@uref{https://github.com/fjwright/REDUCE-IDE/releases, GitHub} and via
+the @uref{https://reduce-algebra.sourceforge.io/reduce-ide/, REDUCE
+IDE home page}.  You can download a package file to any convenient
+directory and run the Emacs command @kbd{M-x package-install-file} on
+it.  For further details, @ref{Packages,,, emacs}.  None of the manual
+installation described below is then required.
 
 The rest of this chapter, and the related section of the chapter on
 REDUCE Run mode, are for users who want to install and configure
@@ -245,7 +258,7 @@ file naming convention then make the appropriate change(s) to the above
 statement.  Emacs also provides other facilities that can be used for
 controlling major modes.
 
-Installation of REDUCE Run mode is documented separately.  @xref{Run, ,
+Installation of REDUCE Run mode is documented separately.  @xref{Run,,
 Running REDUCE in a buffer}.
 
 @c ===================================================================
@@ -551,7 +564,7 @@ rebound to a function to narrow to the current procedure.
 Make text outside the current procedure invisible.  The procedure
 visible is the one that contains point or follows point.  With a prefix
 argument, narrow to the following arg procedures including this one.
-@xref{Narrowing, , , emacs, The Emacs Editor}.
+@xref{Narrowing,,, emacs, The Emacs Editor}.
 @end table
 
 @c ===================================================================
@@ -852,7 +865,7 @@ sequence, so just try @kbd{Shift-@key{TAB}}, or ask Emacs what function
 is bound to @kbd{Shift-@key{TAB}} (by using @kbd{C-h k}).  A default key
 binding, which should work on all platforms, is provided as @kbd{C-c
 @key{TAB}}.  (However, currently this is rebound by REDUCE Run mode.
-@xref{Run Keys, , Run mode key bindings and menu}.)
+@xref{Run Keys,, Run mode key bindings and menu}.)
 
 With an argument, @code{reduce-unindent-line} rigidly unindents by one
 step the current line and the rest of the logical statement as an
@@ -1485,7 +1498,7 @@ font-lock variables (@pxref{Font-Lock,, Font-lock support for automatic
 font selection}).
 
 Customization of REDUCE Run mode is documented separately.  @xref{Run
-Customization, , Customization of REDUCE Run mode}.
+Customization,, Customization of REDUCE Run mode}.
 
 @menu
 * Hooks::                       REDUCE mode hooks
@@ -1673,16 +1686,27 @@ use.  If you try to send REDUCE code to REDUCE but REDUCE is not
 running, then REDUCE Run mode will (optionally) start REDUCE
 automatically.
 
+@cartouche
+@quotation
+Beware that version 1.7 introduces a significant incompatible change:
+the command @code{run-reduce} has changed (@ref{Run REDUCE,,
+Running@comma{} re-running and switching to REDUCE}); it is now the
+main command to run REDUCE and subsumes the commands
+@code{run-csl-reduce} and @code{run-psl-reduce}, which have been
+removed.
+@end quotation
+@end cartouche
+
 @menu
 * Run Introduction::            Introduction to REDUCE Run mode
 * Run Installation::            Installation of REDUCE Run mode
 * REDUCE on Windows::           Running REDUCE on Microsoft Windows
-* Run Customization::           Customization of REDUCE Run mode
 * Run REDUCE::                  Running, re-running and switching to REDUCE
 * Run REDUCE Program::          Running complete REDUCE programs
 * Evaluating Code::             Inputting code fragments to REDUCE
 * Processing REDUCE Files::     Inputting, compiling and loading REDUCE files
 * Run Keys::                    Run mode key bindings and menu
+* Run Customization::           Customization of REDUCE Run mode
 @end menu
 
 @c -------------------------------------------------------------------
@@ -1729,10 +1753,10 @@ command-interpreter-in-a-buffer (comint) mode and so shares a common
 base functionality and a common set of key bindings with all modes
 derived from comint mode.  This makes these modes easier to use.
 (Among these, shell mode is likely to be the most familiar.
-@xref{Interactive Shell, , Interactive Inferior Shell, emacs, The
+@xref{Interactive Shell,, Interactive Inferior Shell, emacs, The
 Emacs Editor}.  In fact, REDUCE Run mode is based on the standard
 library @file{inf-lisp} by @email{shivers@@cs.cmu.edu, Olin Shivers}.
-@xref{External Lisp, , Running an External Lisp, emacs, The Emacs
+@xref{External Lisp,, Running an External Lisp, emacs, The Emacs
 Editor}.)
 
 For further documentation on the functionality provided by comint mode
@@ -1756,10 +1780,9 @@ customization group.
 @cindex Installation of REDUCE Run mode
 
 It is probably best to use the GNU Emacs package manager to install
-the latest complete REDUCE IDE package as described in the
-@uref{https://reduce-algebra.sourceforge.io/reduce-ide/#installation,
-installation section of the REDUCE IDE web page}.  None of the manual
-installation described below is then required.
+the latest REDUCE IDE package; @ref{Installation,, Installation of
+REDUCE IDE}.  None of the manual installation described below is then
+required.
 
 But if you want to install by hand, or understand the details of the
 installation process, then read on.  (Please also @pxref{Installation,
@@ -1822,113 +1845,6 @@ You can customize the values of the options
 values are not correct.  For example, if REDUCE is installed on a
 remote drive then make that the sole entry in
 @code{reduce-run-MSWin-drives}.
-
-@c -------------------------------------------------------------------
-
-@node Run Customization
-@section Customization of REDUCE Run mode
-@cindex Customization
-@cindex Options
-@cindex Variables
-
-REDUCE Run mode provides a small amount of customization and the
-following options can be changed using the standard Emacs
-customization facilities.  The main REDUCE customization group is
-called ``REDUCE'', under which REDUCE Run mode provides a sub-group
-``REDUCE Run'' that allows the following options to be customized.
-
-@strong{The option @code{reduce-run-commands} must be set correctly
-otherwise REDUCE will not run correctly.  The settings of other
-options are less critical.}
-
-REDUCE Run inherits from comint, so comint options also affects this
-mode.  The @code{comint} customization group can be accessed via a
-link in the REDUCE Run customization group.
-
-@vtable @code
-@item reduce-input-filter
-Default value @code{"\\`\\([ \t;$]*\\|[ \t]*.[ \t]*\\)\\'"}.  What not
-to save on REDUCE Run mode's input history.  The value is a regular
-expression (regexp).  The default matches any combination of zero or
-more whitespace characters and/or statement terminators, or any single
-character (e.g.@: @kbd{y} or @kbd{n}) possibly surrounded by
-whitespace.
-
-@item reduce-packages-directory
-Absolute pathname of the directory containing REDUCE packages, or nil.
-This option should be set automatically when REDUCE Run mode loads.
-If the directory cannot be found then this option will be set to nil.
-You can customize this variable to override the default setting.
-
-@item reduce-run-mswin-drives
-On Microsoft Windows, this is the list of drives to be searched for
-REDUCE, which defaults to all local drives, e.g. @code{("C:" "D:" "E:"
-"F:")}.  It is undefined on other platforms and is used only to set
-the default value of @code{reduce-run-installation-directory}.
-
-@item reduce-run-autostart
-Default value @code{t}.  If non-nil then all commands that require a
-REDUCE process will automatically start a new one if none is already
-running.
-
-@item reduce-run-commands
-Default value @code{(("CSL" . "redcsl --nogui") ("PSL" . "redpsl"))}
-except on Microsoft Windows.  The value of this variable is an
-association list with one element for each version of REDUCE, by
-default CSL and PSL.  Each element is a ``dotted pair'' of strings, of
-which the first defaults to either "CSL" or "PSL" and the second is
-the command to run that version of REDUCE using a command-line
-interface.  This can include any required options, as illustrated
-above by the default value for CSL REDUCE.
-
-The command can be either the command name, as illustrated above, or
-it can be a full path name, which can contain spaces.  (But spaces are
-not allowed in the command options.)  If command names are used then
-those commands must be on your search path, which should be the case
-automatically on platforms other than Microsoft Windows.
-
-On Microsoft Windows, REDUCE Run mode uses full pathnames by default
-and moreover it uses a separate batch file to run PSL REDUCE, as
-described above (@pxref{REDUCE on Windows, Running REDUCE on Microsoft
-Windows}).
-
-@item reduce-run-installation-directory
-Default value @file{X:/Program Files/Reduce/} on Microsoft Windows,
-where X is a letter A-Z, and @file{/usr/share/reduce/} on other
-platforms.  Absolute root directory of the REDUCE installation, or nil
-if not set.  It is the directory containing the @file{packages}
-directory and, on Microsoft Windows, the @file{bin} directory
-containing the user-executable batch files.  On Microsoft Windows,
-REDUCE Run mode attempts to determine the correct value for this
-variable automatically.  Note that you can complete the directory name
-using @kbd{M-@key{TAB}}.
-
-@item reduce-run-load-hook
-Default value @code{nil}.  The hook run when REDUCE Run mode is
-loaded.  It is a good place to put key bindings.
-
-@item reduce-run-mode-hook
-Default value @code{nil}.  The main hook for customising REDUCE Run
-mode.
-
-@item reduce-run-multiple
-Default value @code{t}.  If non-nil then commands that explicitly
-start REDUCE will always start a new REDUCE process in a new distinct
-buffer, even if REDUCE is already running.  Otherwise, they will
-re-use any appropriate running REDUCE process.
-
-@item reduce-run-prompt
-Default value @code{"^\\(?:[0-9]+[:*] \\)+"}.  The regexp to recognise
-prompts in REDUCE Run mode.  This variable is used to initialize
-@code{comint-prompt-regexp} in the REDUCE run buffer.
-
-@item reduce-source-modes
-Default value @code{(reduce-mode)}.  Used to determine if a buffer
-contains REDUCE source code.  If a file is loaded into a buffer that is
-in one of these major modes then it is considered to be a REDUCE source
-file by @code{reduce-input-file} and @code{reduce-fasl-file}.  Used by
-these commands to determine defaults.
-@end vtable
 
 @c -------------------------------------------------------------------
 
@@ -2109,7 +2025,7 @@ appropriate; holding down the @key{SHIFT} key avoid this.
 
 If the option @code{reduce-run-autostart} is non-nil (which it is by
 default) then all commands that require a REDUCE process automatically
-start one if necessary.  @xref{Run Customization, , Customization of
+start one if necessary.  @xref{Run Customization,, Customization of
 REDUCE Run mode}.  Where appropriate, input commands have their own
 history lists, and if run in REDUCE mode then any input file defaults
 to the file being edited.
@@ -2212,6 +2128,113 @@ REDUCE mode.  These two menus provide appropriate access to all the
 above commands, and to echoing and highlighting control for REDUCE Run
 mode.
 
+@c -------------------------------------------------------------------
+
+@node Run Customization
+@section Customization of REDUCE Run mode
+@cindex Customization
+@cindex Options
+@cindex Variables
+
+REDUCE Run mode provides a small amount of customization and the
+following options can be changed using the standard Emacs
+customization facilities.  The main REDUCE customization group is
+called ``REDUCE'', under which REDUCE Run mode provides a sub-group
+``REDUCE Run'' that allows the following options to be customized.
+
+@strong{The option @code{reduce-run-commands} must be set correctly
+otherwise REDUCE will not run correctly.  The settings of other
+options are less critical.}
+
+REDUCE Run inherits from comint, so comint options also affects this
+mode.  The @code{comint} customization group can be accessed via a
+link in the REDUCE Run customization group.
+
+@vtable @code
+@item reduce-input-filter
+Default value @code{"\\`\\([ \t;$]*\\|[ \t]*.[ \t]*\\)\\'"}.  What not
+to save on REDUCE Run mode's input history.  The value is a regular
+expression (regexp).  The default matches any combination of zero or
+more whitespace characters and/or statement terminators, or any single
+character (e.g.@: @kbd{y} or @kbd{n}) possibly surrounded by
+whitespace.
+
+@item reduce-packages-directory
+Absolute pathname of the directory containing REDUCE packages, or nil.
+This option should be set automatically when REDUCE Run mode loads.
+If the directory cannot be found then this option will be set to nil.
+You can customize this variable to override the default setting.
+
+@item reduce-run-mswin-drives
+On Microsoft Windows, this is the list of drives to be searched for
+REDUCE, which defaults to all local drives, e.g. @code{("C:" "D:" "E:"
+"F:")}.  It is undefined on other platforms and is used only to set
+the default value of @code{reduce-run-installation-directory}.
+
+@item reduce-run-autostart
+Default value @code{t}.  If non-nil then all commands that require a
+REDUCE process will automatically start a new one if none is already
+running.
+
+@item reduce-run-commands
+Default value @code{(("CSL" . "redcsl --nogui") ("PSL" . "redpsl"))}
+except on Microsoft Windows.  The value of this variable is an
+association list with one element for each version of REDUCE, by
+default CSL and PSL.  Each element is a ``dotted pair'' of strings, of
+which the first defaults to either "CSL" or "PSL" and the second is
+the command to run that version of REDUCE using a command-line
+interface.  This can include any required options, as illustrated
+above by the default value for CSL REDUCE.
+
+The command can be either the command name, as illustrated above, or
+it can be a full path name, which can contain spaces.  (But spaces are
+not allowed in the command options.)  If command names are used then
+those commands must be on your search path, which should be the case
+automatically on platforms other than Microsoft Windows.
+
+On Microsoft Windows, REDUCE Run mode uses full pathnames by default
+and moreover it uses a separate batch file to run PSL REDUCE, as
+described above (@pxref{REDUCE on Windows, Running REDUCE on Microsoft
+Windows}).
+
+@item reduce-run-installation-directory
+Default value @file{X:/Program Files/Reduce/} on Microsoft Windows,
+where X is a letter A-Z, and @file{/usr/share/reduce/} on other
+platforms.  Absolute root directory of the REDUCE installation, or nil
+if not set.  It is the directory containing the @file{packages}
+directory and, on Microsoft Windows, the @file{bin} directory
+containing the user-executable batch files.  On Microsoft Windows,
+REDUCE Run mode attempts to determine the correct value for this
+variable automatically.  Note that you can complete the directory name
+using @kbd{M-@key{TAB}}.
+
+@item reduce-run-load-hook
+Default value @code{nil}.  The hook run when REDUCE Run mode is
+loaded.  It is a good place to put key bindings.
+
+@item reduce-run-mode-hook
+Default value @code{nil}.  The main hook for customising REDUCE Run
+mode.
+
+@item reduce-run-multiple
+Default value @code{t}.  If non-nil then commands that explicitly
+start REDUCE will always start a new REDUCE process in a new distinct
+buffer, even if REDUCE is already running.  Otherwise, they will
+re-use any appropriate running REDUCE process.
+
+@item reduce-run-prompt
+Default value @code{"^\\(?:[0-9]+[:*] \\)+"}.  The regexp to recognise
+prompts in REDUCE Run mode.  This variable is used to initialize
+@code{comint-prompt-regexp} in the REDUCE run buffer.
+
+@item reduce-source-modes
+Default value @code{(reduce-mode)}.  Used to determine if a buffer
+contains REDUCE source code.  If a file is loaded into a buffer that is
+in one of these major modes then it is considered to be a REDUCE source
+file by @code{reduce-input-file} and @code{reduce-fasl-file}.  Used by
+these commands to determine defaults.
+@end vtable
+
 @c ===================================================================
 
 @node Feedback
@@ -2222,9 +2245,23 @@ mode.
 @cindex Comments
 @cindex Contact
 
-Feedback via my website is welcome, including reports of errors or
-features that do not work well and suggestions for improvements or
-additional features.
+Feedback is welcome, including reports of errors or features that do
+not work well and suggestions for improvements or additional features.
+You can provide feedback in several ways:
+
+@itemize
+@item
+informally using email (or a web form) via
+@uref{https://sites.google.com/site/fjwcentaur/feedback, my website};
+
+@item
+via my @uref{https://github.com/fjwright/REDUCE-IDE/issues, GitHub
+issue tracker}, for which you must be logged in to GitHub;
+
+@item
+via the main @uref{https://sourceforge.net/p/reduce-algebra/bugs/,
+REDUCE bug tracker}, for which you must be logged in to SourceForge.
+@end itemize
 
 If possible, please include details of the version of Emacs that you
 are using, the platform on which you are using it, and the version of
