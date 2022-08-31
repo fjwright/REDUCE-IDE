@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sourceforge.net/u/fjwright>
 ;; Created: late 1998
-;; Time-stamp: <2022-07-07 17:00:06 franc>
+;; Time-stamp: <2022-08-31 15:14:07 franc>
 ;; Keywords: languages, processes
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.7alpha
@@ -438,11 +438,11 @@ also affects this mode.  Entry to this mode runs the hooks on
 ;;;###autoload
 (defun run-reduce (&optional cmd)
   "Run REDUCE command named CMD with I/O via a buffer.
-Interactively, prompt with completion for CMD, ignoring case.
-If CMD omitted, nil or not provided interactively, display a
-pop-up menu of command names.  Look up CMD in
-‘reduce-run-commands’ and run command found.
-The buffer is in REDUCE Run mode and named “*CMD REDUCE*”.
+Interactively, prompt with completion for CMD, ignoring case,
+which defaults to the last value used.  If CMD is omitted, nil or
+not provided, display a pop-up menu of command names.  Look up
+CMD in ‘reduce-run-commands’ and run command found.  The buffer
+is in REDUCE Run mode and named “*CMD REDUCE*”.
 
 With a prefix argument, CMD is the actual REDUCE command.
 
@@ -459,7 +459,7 @@ already running this command, switch to it.  Runs the hooks from
              (completing-read
               "REDUCE command name: "
               reduce-run-commands
-              nil t nil              ; predicate require-match initial
+              nil t (car reduce-run-history) ; predicate require-match initial
               'reduce-run-history)))))
   (if current-prefix-arg
       (reduce-run-reduce cmd "")        ; unknown REDUCE version
@@ -679,8 +679,9 @@ which appears to have the form “buffer-name . buffer-object”."
   "Default buffer used by ‘switch-to-reduce’.")
 
 (defun switch-to-reduce (to-eob &optional no-mark switch)
-  "Switch to REDUCE process buffer, at end if TO-EOB; if NO-MARK do not save mark.
-SWITCH means also switch to the REDUCE window; see
+  "Switch to REDUCE process buffer, at end if TO-EOB is non-nil.
+If NO-MARK is non-nil then do not save mark.  If SWITCH is
+non-nil then also switch to the REDUCE window; see
 ‘reduce-eval-region’.  With interactive argument, TO-EOB,
 position cursor at end of buffer.  If ‘reduce-run-autostart’ is
 non-nil then automatically start a new REDUCE process if
@@ -713,7 +714,7 @@ buffer."
              t)))
      ;; Start a new REDUCE process in a new window as appropriate:
      (reduce-run-autostart
-      (unless switch (split-window))
+      (unless switch (split-window nil nil t)) ; new window on the right
       (run-reduce)
       (reduce--wait-for-prompt)))
     ;; Go to the end of the buffer if required:
@@ -786,17 +787,14 @@ The user always chooses interactively whether to echo file input."
 (defun reduce--wait-for-prompt ()
   "Wait for REDUCE prompt in the current buffer.
 Assume the current buffer is a REDUCE process buffer!"
-  ;; (save-excursion
-  ;;   (while (progn
-  ;;             (goto-char (point-max))
-  ;;             ;; (beginning-of-line)
-  ;;             ;; Unlike ‘beginning-of-line’, forward-line ignores field
-  ;;             ;; boundaries (cf. ‘comint-bol’)
-  ;;             (forward-line 0)
-  ;;             (not (looking-at reduce-run-prompt)))
-  ;;     (sit-for 1)))
-  (while (not (looking-back reduce-run-prompt nil))
-    (sit-for 1)))
+  (save-excursion
+    (while (progn
+             (goto-char (point-max))
+             ;; Unlike ‘beginning-of-line’, forward-line ignores field
+             ;; boundaries (cf. ‘comint-bol’)
+             (forward-line 0)
+             (not (looking-at reduce-run-prompt)))
+      (sit-for 1))))
 
 (defalias 'reduce-compile-file 'reduce-fasl-file)
 
