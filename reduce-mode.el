@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sourceforge.net/u/fjwright>
 ;; Created: late 1992
-;; Time-stamp: <2022-07-12 16:42:40 franc>
+;; Time-stamp: <2022-09-01 11:47:15 franc>
 ;; Keywords: languages
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.7alpha
@@ -682,7 +682,7 @@ of the construct; otherwise return nil."
   ;; Detects a missing ‘if’ as early as possible as an unrecoverable error.
   (let ((pattern "\\<\\(if\\|else\\|end\\|begin\\)\\>\\|>>\\|\\s)\\|<<\\|\\s(\\|[^!][;$]"))
     (or (and
-     (reduce-re-search-backward pattern)
+     (reduce--re-search-backward pattern)
      (cond
       ((looking-at "if"))       ; found it – return t
       ((looking-at "else")      ; nested conditional
@@ -796,7 +796,7 @@ previous statement or element unless it is a first argument ..."
     (if second_arg
         (setq second_arg
           (save-excursion
-            (reduce-re-search-backward "[^ \t\f\n]")
+            (reduce--re-search-backward "[^ \t\f\n]")
             (not (looking-at "\\(,\\|\\s(\\)[ \t]*[%\n]"))
             )))
     (back-to-indentation)
@@ -931,7 +931,7 @@ current line if the text just typed matches ‘reduce-auto-indent-regexp’."
   "Move backward to next start of procedure.  With ARG, do it ARG times."
   (interactive "p")
   (let ((case-fold-search t) (count arg))
-    (while (and (> count 0) (reduce-re-search-backward procedure-regexp))
+    (while (and (> count 0) (reduce--re-search-backward procedure-regexp))
       (setq count (1- count)))
     (if (= count arg)
     ()
@@ -942,9 +942,9 @@ current line if the text just typed matches ‘reduce-auto-indent-regexp’."
              (not (backward-char 1))
              (= (preceding-char) ?!))))
       ;; If in %-comment then skip to its end:
-      (if (reduce-back-to-percent-comment-start) (end-of-line))
+      (if (reduce--back-to-percent-comment-start) (end-of-line))
       ;; Find actual start of procedure statement:
-      (if (reduce-re-search-forward "[a-zA-Z]") (backward-char 1))
+      (if (reduce--re-search-forward "[a-zA-Z]") (backward-char 1))
       )))
 
 (defun reduce-forward-procedure (arg)
@@ -952,14 +952,14 @@ current line if the text just typed matches ‘reduce-auto-indent-regexp’."
   (interactive "p")
   (let ((case-fold-search t) (start (point)) count)
     ;; Move to end of procedure starting before point:
-    (if (reduce-re-search-backward procedure-regexp)
+    (if (reduce--re-search-backward procedure-regexp)
         (reduce-forward-statement 2))
     ;; Now move forward by arg or arg-1 procedures
     ;; or stay put if at least one move not possible
     (unless (<= (point) start)
       (setq arg (1- arg)) (setq start (point)))
     (setq count arg)
-    (while (and (> count 0) (reduce-re-search-forward procedure-regexp))
+    (while (and (> count 0) (reduce--re-search-forward procedure-regexp))
       (setq count (1- count)))
     (if (< count arg)
         (reduce-forward-statement 2)
@@ -1025,8 +1025,8 @@ after reduce-max-up-tries repeated interactive attempts."
     (if (eq this-command 'reduce-forward-statement)
         ;; End of file marker needs special treatment:
         (progn
-          (reduce-re-search-forward "[;$]" 'move)
-          (if (reduce-re-search-forward "[^ \t\f\n]") (goto-char found)))
+          (reduce--re-search-forward "[;$]" 'move)
+          (if (reduce--re-search-forward "[^ \t\f\n]") (goto-char found)))
       ))
     (setq reduce-up-tries 1)))
 
@@ -1057,7 +1057,7 @@ move over it after ‘reduce-max-up-tries’ consecutive interactive tries."
   (if (looking-at "[;$]")
       ;; (forward-char 1)
       (not (forward-char 1))
-    (if (reduce-re-search-forward pattern)
+    (if (reduce--re-search-forward pattern)
     (cond
      ((= (preceding-char) ?>)
       (setq reduce-forward-statement-found (point))
@@ -1097,13 +1097,13 @@ Returns the count of statements left to move."
     ;; Check whether after end of file marker, ‘`end’'.
     ;; Assume it starts at the beginning of the line.
     (not-eof (save-excursion
-           (or (reduce-re-search-forward "[^ \t\f\n]")
+           (or (reduce--re-search-forward "[^ \t\f\n]")
                (not (progn
-                  (reduce-re-search-backward "[^ \t\f\n]")
+                  (reduce--re-search-backward "[^ \t\f\n]")
                   (beginning-of-line)
                   (looking-at "\\<end\\>")))
                ))))
-    (if (and (reduce-re-search-backward "[^ \t\f\n]")
+    (if (and (reduce--re-search-backward "[^ \t\f\n]")
          (not (or (memq (following-char) '(?\; ?$))
               ;; Skip an immediate opening bracket:
               (= (char-syntax (following-char)) ?\( ))))
@@ -1119,7 +1119,7 @@ Returns the count of statements left to move."
           (t (forward-char 1))
           ))
     ;; Move to actual start of statement:
-    (reduce-re-search-forward "[^ \t\f\n]") (backward-char 1)
+    (reduce--re-search-forward "[^ \t\f\n]") (backward-char 1)
     ;; Never move forwards:
     (if (> (point) start) (goto-char start))
     ;; Move over  <<  or  begin  on repeated interactive attempt:
@@ -1130,7 +1130,7 @@ Returns the count of statements left to move."
 (defun reduce-backward-statement1 (pattern not-eof)
   "Move backward to next statement beginning.
 Return t if successful, nil if reaches beginning of buffer."
-  (if (reduce-re-search-backward pattern 'move)
+  (if (reduce--re-search-backward pattern 'move)
       (cond
        ((= (following-char) ?>)     ; end of group
     (reduce--backward-group) (reduce-backward-statement1 pattern not-eof))
@@ -1196,7 +1196,7 @@ negative argument means move forward instead of backward."
 
 (defun reduce-backward-block-or-group ()
   "Move backward to beginning of block or group containing point."
-  (if (reduce-re-search-backward "\\<begin\\>\\|<<\\|\\<end\\>\\|>>")
+  (if (reduce--re-search-backward "\\<begin\\>\\|<<\\|\\<end\\>\\|>>")
       (cond ((= (following-char) ?>)
          (reduce--backward-group)
          (reduce-backward-block-or-group))
@@ -1208,7 +1208,7 @@ negative argument means move forward instead of backward."
 
 (defun reduce-forward-block-or-group ()
   "Move forward to end of block or group containing point."
-  (if (reduce-re-search-forward "\\<end\\>\\|>>\\|\\<begin\\>\\|<<")
+  (if (reduce--re-search-forward "\\<end\\>\\|>>\\|\\<begin\\>\\|<<")
       (cond ((= (preceding-char) ?<)
          (reduce--forward-group)
          (reduce-forward-block-or-group))
@@ -1239,10 +1239,10 @@ negative argument means move backward instead of forward."
     (if
     (if (> arg 0)
         (and
-         (reduce-re-search-forward "<<\\|\\<begin\\>\\|>>\\|\\<end\\>")
+         (reduce--re-search-forward "<<\\|\\<begin\\>\\|>>\\|\\<end\\>")
          (memq (preceding-char) '(?< ?n ?N)))
       (and
-       (reduce-re-search-backward ">>\\|\\<end\\>\\|<<\\|\\<begin\\>")
+       (reduce--re-search-backward ">>\\|\\<end\\>\\|<<\\|\\<begin\\>")
        (memq (following-char) '(?> ?e ?E)))
       )
     t
@@ -1260,7 +1260,7 @@ negative argument means move backward instead of forward."
 Return t if successful; otherwise move as far as possible and return nil."
   (let (found)
     (while (and
-            (setq found (reduce-re-search-forward
+            (setq found (reduce--re-search-forward
                          "\\_<end\\_>\\|\\(\\_<begin\\_>\\)" 'move))
             (reduce--symbol-unquoted-&-distinct-p
              (match-beginning 0) (match-end 0))
@@ -1275,7 +1275,7 @@ Return t if successful; otherwise move as far as possible and return nil."
 Return t if successful; otherwise move as far as possible and return nil."
   (let (found)
     (while (and
-            (setq found (reduce-re-search-backward
+            (setq found (reduce--re-search-backward
                          "\\_<begin\\_>\\|\\(\\_<end\\_>\\)" 'move))
             (reduce--symbol-unquoted-&-distinct-p
              (match-beginning 0) (match-end 0))
@@ -1318,7 +1318,7 @@ It may be preceded only by an odd number of escape characters"
 Return t if successful; otherwise move as far as possible and return nil."
   (let (found)
     (while (and
-            (setq found (reduce-re-search-forward ">>\\|<<" 'move))
+            (setq found (reduce--re-search-forward ">>\\|<<" 'move))
             (reduce--unescaped-p (match-beginning 0))
             (= (char-before) ?<))
       (reduce--forward-group))
@@ -1329,7 +1329,7 @@ Return t if successful; otherwise move as far as possible and return nil."
 Return t if successful; otherwise move as far as possible and return nil."
   (let (found)
     (while (and
-            (setq found (reduce-re-search-backward "<<\\|>>" 'move))
+            (setq found (reduce--re-search-backward "<<\\|>>" 'move))
             (reduce--unescaped-p)
             (= (char-after) ?>))
       (reduce--backward-group))
@@ -1340,112 +1340,109 @@ Return t if successful; otherwise move as far as possible and return nil."
 ;;;; Searching for syntactic elements ignoring comments, strings, etc.
 ;;;; *****************************************************************
 
-(defun reduce-re-search-forward (regexp &optional MOVE)
+(defun reduce--re-search-forward (regexp &optional MOVE)
   "Syntactic search forwards for REGEXP; if no match and MOVE then move to end.
 Skip comments, strings, escaped tokens, and quoted tokens other than ‘(’.
 Return t if match found, nil otherwise."
   (let ((start (point))
-    (pattern (concat regexp "\\|%\\|\\<comment\\>"))
-    (move (if MOVE 'move t)))
-    (if (reduce-re-search-forward1 pattern move)
-    t
+        (pattern (concat regexp "\\|%\\|\\<comment\\>"))
+        (move (if MOVE 'move t)))
+    (if (reduce--re-search-forward1 pattern move)
+        t
       (if (not MOVE) (goto-char start))
-      nil)
-    ))
+      nil)))
 
-(defun reduce-re-search-forward1 (pattern move)
+(defun reduce--re-search-forward1 (pattern move)
   "Skip strings."
-  (if (reduce-re-search-forward2 pattern move)
-      (if (reduce-in-string)        ; try again!
-      (reduce-re-search-forward1 pattern move)
-    t)
+  (if (reduce--re-search-forward2 pattern move)
+      (if (reduce--in-string)        ; try again!
+          (reduce--re-search-forward1 pattern move)
+        t)
     nil))
 
-(defun reduce-re-search-forward2 (pattern move)
+(defun reduce--re-search-forward2 (pattern move)
   "Skip escaped, quoted or commented text."
   (if (re-search-forward pattern nil move)
       (let ((match-data (match-data))
-        before)
-    (if (> (match-beginning 0) 0)
-        (setq before (char-after (1- (match-beginning 0)))))
-    (cond
-     ((and before
-           (or (= before ?!)      ; skip escaped text
-           (and (= before ?') ; skip quoted text except '(...)
-            (not (= (char-after (match-beginning 0)) ?\( )))))
-      (reduce-re-search-forward2 pattern move)) ; search again
-     ((= (preceding-char) ?%)           ; skip % comment
-      (forward-line 1)
-      (reduce-re-search-forward2 pattern move)) ; search again
-     ((string-match "^comment$"
-            ;; otherwise might fortuitously match only
-            ;; the beginning of the string "comment"
-            (buffer-substring
-             (match-beginning 0) (match-end 0)) )
-      (re-search-forward "[^!][;$]" nil move)   ; 'move ???
-      (reduce-re-search-forward2 pattern move)) ; search again
-     (t (store-match-data match-data) t))
-    )))
+            before)
+        (if (> (match-beginning 0) 0)
+            (setq before (char-after (1- (match-beginning 0)))))
+        (cond
+         ((and before
+               (or (= before ?!)      ; skip escaped text
+                   (and (= before ?') ; skip quoted text except '(...)
+                        (not (= (char-after (match-beginning 0)) ?\( )))))
+          (reduce--re-search-forward2 pattern move)) ; search again
+         ((= (preceding-char) ?%)           ; skip % comment
+          (forward-line 1)
+          (reduce--re-search-forward2 pattern move)) ; search again
+         ((string-match "^comment$"
+                        ;; otherwise might fortuitously match only
+                        ;; the beginning of the string "comment"
+                        (buffer-substring
+                         (match-beginning 0) (match-end 0)) )
+          (re-search-forward "[^!][;$]" nil move)   ; 'move ???
+          (reduce--re-search-forward2 pattern move)) ; search again
+         (t (store-match-data match-data) t)))))
 
 
-(defun reduce-re-search-backward (regexp &optional move)
+(defun reduce--re-search-backward (regexp &optional move)
   "Syntactic search backwards for REGEXP else if MOVE then move to start.
 Skip REDUCE comments and strings.  Return t if match found, nil otherwise."
   (let ((start (point))
         (mv (if move 'move t)))
-    (if (reduce-re-search-backward1 regexp mv)
+    (if (reduce--re-search-backward1 regexp mv)
         t
       (if (not move) (goto-char start))
       nil)))
 
-(defun reduce-re-search-backward1 (regexp move)
-  "Sub-function of ‘reduce-re-search-backward’.
+(defun reduce--re-search-backward1 (regexp move)
+  "Sub-function of ‘reduce--re-search-backward’.
 Skip strings backwards."
-  (if (reduce-re-search-backward2 regexp move)
-      (if (reduce-in-string)        ; try again!
-          (reduce-re-search-backward1 regexp move)
+  (if (reduce--re-search-backward2 regexp move)
+      (if (reduce--in-string)        ; try again!
+          (reduce--re-search-backward1 regexp move)
         t)
     nil))
 
-(defun reduce-re-search-backward2 (regexp move)
+(defun reduce--re-search-backward2 (regexp move)
   "Skip escaped, quoted or commented text backwards."
   (if (re-search-backward regexp nil move)
       (let ((match-data (match-data)))
-    (if (or (= (preceding-char) ?!) ; escaped
-        (and (= (preceding-char) ?') ; quoted (maybe)
-             (not (= (char-after (- (point) 2)) ?!)))
-        (reduce-back-to-comment-start)) ; in comment
-        (reduce-re-search-backward2 regexp move) ; search again
-      ;; Restore finally accepted match data:
-      (store-match-data match-data)
-      t)
-    )))
+        (if (or (= (preceding-char) ?!) ; escaped
+                (and (= (preceding-char) ?') ; quoted (maybe)
+                     (not (= (char-after (- (point) 2)) ?!)))
+                (reduce--back-to-comment-start)) ; in comment
+            (reduce--re-search-backward2 regexp move) ; search again
+          ;; Restore finally accepted match data:
+          (store-match-data match-data)
+          t))))
 
 
-(defun reduce-back-to-comment-start ()
+(defun reduce--back-to-comment-start ()
   "If point is in a comment then move to its start and return t.
 Otherwise do not move and return nil."
   (or
    ;; Check whether in % comment:
-   (reduce-back-to-percent-comment-start)
+   (reduce--back-to-percent-comment-start)
    ;; Check whether in comment statement:
    (let ((start (point)) posn
          (pattern "[^!][;$]\\|\\<comment\\>"))
      (cond
-      ((setq posn (reduce-back-to-comment-statement-start pattern))
+      ((setq posn (reduce--back-to-comment-statement-start pattern))
        ;; in comment statement – go to its true beginning
        (goto-char posn) t)
       (t (goto-char start) nil))        ; not in comment statement
      )))
 
-(defun reduce-back-to-comment-statement-start (pattern)
+(defun reduce--back-to-comment-statement-start (pattern)
   "Move backwards to the nearest ‘comment’ keyword or separator.
 If it is ‘comment’ then return its start position; otherwise return nil."
   (while (and (re-search-backward pattern nil 'move)
-              (reduce-back-to-percent-comment-start)))
+              (reduce--back-to-percent-comment-start)))
   (if (looking-at "comment") (point)))
 
-(defun reduce-back-to-percent-comment-start ()
+(defun reduce--back-to-percent-comment-start ()
   "If point is in a percent comment then move to its start and return t.
 Otherwise do not move and return nil."
 ;;;  (re-search-backward
@@ -1454,22 +1451,21 @@ Otherwise do not move and return nil."
   (let ((start (point)))
     (beginning-of-line)
     (prog1
-    (re-search-forward "^%\\|[^!]%" (1+ start) 'move)
-      (backward-char)
-      )))
+        (re-search-forward "^%\\|[^!]%" (1+ start) 'move)
+      (backward-char))))
 
-(defun reduce-in-string ()
+(defun reduce--in-string ()
   "Return t if point is within a string, assuming no multi-line strings."
   (let ((start (point)) (in-string nil))
     (beginning-of-line)
     (while (< (point) start)
       (if (= (following-char) ?\")
-      (if in-string
-          ;; Cannot include a \" within a string
-          (setq in-string nil)  ; found end of string
-        (if (not(= (preceding-char) ?!))
-        (setq in-string t)) ; found beginning of string
-        ))
+          (if in-string
+              ;; Cannot include a \" within a string
+              (setq in-string nil)  ; found end of string
+            (if (not(= (preceding-char) ?!))
+                (setq in-string t)) ; found beginning of string
+            ))
       (forward-char 1))
     in-string))
 
