@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sourceforge.net/u/fjwright>
 ;; Created: late 1992
-;; Time-stamp: <2022-09-02 13:20:32 franc>
+;; Time-stamp: <2022-09-02 16:05:51 franc>
 ;; Keywords: languages
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.7alpha
@@ -1345,11 +1345,11 @@ Return t if successful; otherwise move as far as possible and return nil."
 
 (defun reduce--re-search-forward (regexp &optional MOVE)
   "Syntactic search forwards for REGEXP.
-If no match and MOVE is non-nil then move to end.  Skip comments,
-strings, escaped tokens, and quoted tokens other than Lisp lists.
+If no match and MOVE is non-nil then move to end.
+Skip comments, strings, escaped and quoted tokens.
 Return t if match found, nil otherwise."
   (let ((start (point))
-        (pattern (concat regexp "\\|\\(?100:%\\|/\\*\\)\\|\\(?101:\\_<comment\\_>\\)\\|\\(?102:\"\\)"))
+        (pattern (concat regexp "\\|\\(?100:\"\\)\\|\\(?101:%\\|/\\*\\)\\|\\(?102:\\_<comment\\_>\\)"))
         (move (if MOVE 'move t)))
     (if (reduce--re-search-forward1 pattern move)
         t
@@ -1363,55 +1363,49 @@ Process match to skip comments, strings, etc.
 Return t if match found, nil otherwise."
   (if (re-search-forward pattern nil move)
       (if (cond                     ; check match -- t => search again
-           ((and (> (match-beginning 0) 0)
-                 (let ((before (char-before (match-beginning 0))))
-                   (or (= before ?!)      ; skip escaped text
-                       (and (= before ?') ; skip quoted text except '(...)
-                            (/= (char-after (match-beginning 0)) ?\( ))))))
-           ((match-beginning 100) ; skip % or /*...*/ comment & white space
+           ((memq (char-before (match-beginning 0)) '(?! ?'))) ; escaped or quoted
+           ((match-beginning 100)       ; string
             (goto-char (match-beginning 100))
+            (forward-sexp) t)
+           ((match-beginning 101)       ; % or /*...*/ comment
+            (goto-char (match-beginning 101))
             (forward-comment 1) t)
-           ((match-beginning 101)       ; skip comment statement
-            (re-search-forward "[;$]" nil 'move) t)
-           ((match-beginning 102)       ; skip string
-            (goto-char (match-beginning 102))
-            (forward-sexp) t))
+           ((match-beginning 102)       ; comment statement
+            (re-search-forward "[;$]" nil 'move) t))
           (reduce--re-search-forward1 pattern move) ; search again
         t)))                         ; match for original regexp found
 
 
-(defun reduce--re-search-backward (regexp &optional move)
-  "Syntactic search backwards for REGEXP else if MOVE then move to start.
-Skip REDUCE comments and strings.  Return t if match found, nil otherwise."
+(defun reduce--re-search-backward (regexp &optional MOVE)
+  "Syntactic search backwards for REGEXP.
+If no match and MOVE is non-nil then move to end.
+Skip comments, strings, escaped and quoted tokens.
+Return t if match found, nil otherwise."
   (let ((start (point))
-        (mv (if move 'move t)))
-    (if (reduce--re-search-backward1 regexp mv)
+        (pattern (concat regexp "\\|\\(?100:\"\\)\\|\\(?101:\\*/\\)"))
+        (move (if MOVE 'move t)))
+    (if (reduce--re-search-backward1 pattern move)
         t
-      (if (not move) (goto-char start))
+      (unless MOVE (goto-char start))
       nil)))
 
-(defun reduce--re-search-backward1 (regexp move)
-  "Sub-function of ‘reduce--re-search-backward’.
-Skip strings backwards."
-  (if (reduce--re-search-backward2 regexp move)
-      (if (reduce--in-string)        ; try again!
-          (reduce--re-search-backward1 regexp move)
-        t)
-    nil))
-
-(defun reduce--re-search-backward2 (regexp move)
-  "Skip escaped, quoted or commented text backwards."
-  (if (re-search-backward regexp nil move)
-      (let ((match-data (match-data)))
-        (if (or (= (preceding-char) ?!) ; escaped
-                (and (= (preceding-char) ?') ; quoted (maybe)
-                     (not (= (char-after (- (point) 2)) ?!)))
-                (reduce--back-to-comment-start)) ; in comment
-            (reduce--re-search-backward2 regexp move) ; search again
-          ;; Restore finally accepted match data:
-          (store-match-data match-data)
-          t))))
-
+(defun reduce--re-search-backward1 (pattern move)
+  "Search backwards for PATTERN; if no match and MOVE then move to end.
+  Recursive sub-function of ‘reduce--re-search-backward’.
+Process match to skip comments, strings, etc.
+Return t if match found, nil otherwise."
+  (if (re-search-backward pattern nil move)
+      (if (cond                     ; check match -- t => search again
+           ((memq (preceding-char) '(?! ?'))) ; escaped or quoted
+           ((match-end 100)                   ; string
+            (goto-char (match-end 100))
+            (backward-sexp) t)
+           ((match-end 101)             ; /*...*/ comment
+            (goto-char (match-end 101))
+            (forward-comment -1) t)
+           ((reduce--back-to-comment-start) t)) ; % comment or comment statement
+          (reduce--re-search-backward1 pattern move) ; search again
+        t)))                         ; match for original regexp found
 
 (defun reduce--back-to-comment-start ()
   "If point is in a comment then move to its start and return t.
@@ -1447,21 +1441,6 @@ Otherwise do not move and return nil."
     (prog1
         (re-search-forward "^%\\|[^!]%" (1+ start) 'move)
       (backward-char))))
-
-(defun reduce--in-string ()
-  "Return t if point is within a string, assuming no multi-line strings."
-  (let ((start (point)) (in-string nil))
-    (beginning-of-line)
-    (while (< (point) start)
-      (if (= (following-char) ?\")
-          (if in-string
-              ;; Cannot include a \" within a string
-              (setq in-string nil)  ; found end of string
-            (if (not(= (preceding-char) ?!))
-                (setq in-string t)) ; found beginning of string
-            ))
-      (forward-char 1))
-    in-string))
 
 
 ;;;; ****************
