@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sourceforge.net/u/fjwright>
 ;; Created: late 1992
-;; Time-stamp: <2022-09-01 11:47:15 franc>
+;; Time-stamp: <2022-09-02 13:20:32 franc>
 ;; Keywords: languages
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.7alpha
@@ -1340,50 +1340,44 @@ Return t if successful; otherwise move as far as possible and return nil."
 ;;;; Searching for syntactic elements ignoring comments, strings, etc.
 ;;;; *****************************************************************
 
+;; This section updated September 2022.
+;; It now handles /*...*/ comments.
+
 (defun reduce--re-search-forward (regexp &optional MOVE)
-  "Syntactic search forwards for REGEXP; if no match and MOVE then move to end.
-Skip comments, strings, escaped tokens, and quoted tokens other than ‘(’.
+  "Syntactic search forwards for REGEXP.
+If no match and MOVE is non-nil then move to end.  Skip comments,
+strings, escaped tokens, and quoted tokens other than Lisp lists.
 Return t if match found, nil otherwise."
   (let ((start (point))
-        (pattern (concat regexp "\\|%\\|\\<comment\\>"))
+        (pattern (concat regexp "\\|\\(?100:%\\|/\\*\\)\\|\\(?101:\\_<comment\\_>\\)\\|\\(?102:\"\\)"))
         (move (if MOVE 'move t)))
     (if (reduce--re-search-forward1 pattern move)
         t
-      (if (not MOVE) (goto-char start))
+      (unless MOVE (goto-char start))
       nil)))
 
 (defun reduce--re-search-forward1 (pattern move)
-  "Skip strings."
-  (if (reduce--re-search-forward2 pattern move)
-      (if (reduce--in-string)        ; try again!
-          (reduce--re-search-forward1 pattern move)
-        t)
-    nil))
-
-(defun reduce--re-search-forward2 (pattern move)
-  "Skip escaped, quoted or commented text."
+  "Search forwards for PATTERN; if no match and MOVE then move to end.
+Recursive sub-function of ‘reduce--re-search-forward’.
+Process match to skip comments, strings, etc.
+Return t if match found, nil otherwise."
   (if (re-search-forward pattern nil move)
-      (let ((match-data (match-data))
-            before)
-        (if (> (match-beginning 0) 0)
-            (setq before (char-after (1- (match-beginning 0)))))
-        (cond
-         ((and before
-               (or (= before ?!)      ; skip escaped text
-                   (and (= before ?') ; skip quoted text except '(...)
-                        (not (= (char-after (match-beginning 0)) ?\( )))))
-          (reduce--re-search-forward2 pattern move)) ; search again
-         ((= (preceding-char) ?%)           ; skip % comment
-          (forward-line 1)
-          (reduce--re-search-forward2 pattern move)) ; search again
-         ((string-match "^comment$"
-                        ;; otherwise might fortuitously match only
-                        ;; the beginning of the string "comment"
-                        (buffer-substring
-                         (match-beginning 0) (match-end 0)) )
-          (re-search-forward "[^!][;$]" nil move)   ; 'move ???
-          (reduce--re-search-forward2 pattern move)) ; search again
-         (t (store-match-data match-data) t)))))
+      (if (cond                     ; check match -- t => search again
+           ((and (> (match-beginning 0) 0)
+                 (let ((before (char-before (match-beginning 0))))
+                   (or (= before ?!)      ; skip escaped text
+                       (and (= before ?') ; skip quoted text except '(...)
+                            (/= (char-after (match-beginning 0)) ?\( ))))))
+           ((match-beginning 100) ; skip % or /*...*/ comment & white space
+            (goto-char (match-beginning 100))
+            (forward-comment 1) t)
+           ((match-beginning 101)       ; skip comment statement
+            (re-search-forward "[;$]" nil 'move) t)
+           ((match-beginning 102)       ; skip string
+            (goto-char (match-beginning 102))
+            (forward-sexp) t))
+          (reduce--re-search-forward1 pattern move) ; search again
+        t)))                         ; match for original regexp found
 
 
 (defun reduce--re-search-backward (regexp &optional move)
