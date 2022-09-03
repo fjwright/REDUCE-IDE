@@ -37,7 +37,7 @@ array a 10, c 57;
 a 10, c 57;
 
 matrix x(2,1),y(3,4),z;
-matrix m; operator x; m := mat((x(1,1),x(1,2));
+matrix m; operator x; m := mat(x(1,1),x(1,2));
 
 vector p1,p2;
 
@@ -55,7 +55,7 @@ z**2+fac(4)-2*fac 2*y;
 
 Comment Delimiter Highlighting$
 
-( () { { } } );  ( ()
+( () { { } } );  ( ();
 << << >> >>;  << << >>;
 begin begin end end;  begin begin end;  beginning begin noend end;
 
@@ -63,10 +63,14 @@ begin begin end end;  begin begin end;  beginning begin noend end;
 
 /* This is a C-style comment! */
 
-Comment The above line seems to break this comment!
+Comment The above line seems to break this comment!$
 
 procedure foo; bar;
 
 procedure /* breaks fontification! */ foo; bar;
 
 procedure foo; /* OK */ bar;
+
+"This is a string containing keywords: comment, procedure, operator, lisp, algebraic.";
+
+procedure foo; bar;

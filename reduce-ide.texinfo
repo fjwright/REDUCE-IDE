@@ -2,7 +2,7 @@
 @c %**start of header
 @settitle GNU Emacs REDUCE Integrated Development Environment
 @c Manual last updated:
-@set UPDATED Time-stamp: <2022-07-18 18:11:01 franc>
+@set UPDATED Time-stamp: <2022-08-30 17:10:20 franc>
 @c Software version:
 @set VERSION 1.7alpha
 @afourpaper
@@ -1855,15 +1855,15 @@ remote drive then make that the sole entry in
 @cindex Support for Multiple Process
 
 The command to start REDUCE is @command{run-reduce}.  If the option
-@code{reduce-run-multiple} is non-nil then it starts a new REDUCE
-process every time it is executed; successive REDUCE process buffers
-have successively higher numbers at the end of their names, e.g.@:
-@code{*CSL REDUCE*}, @code{*CSL REDUCE 1*}, @code{*CSL REDUCE 2*},
-@enddots{}  Otherwise it only starts a new REDUCE process if
-necessary---if an appropriate REDUCE process is already running then
-it simply switches to it.  Finally, these commands run the hooks from
-@code{reduce-run-mode-hook} (after the @code{comint-mode-hook} is
-run).
+@code{reduce-run-multiple} is non-nil (which by default it is) then it
+starts a new REDUCE process every time it is executed; successive
+REDUCE process buffers have successively higher numbers at the end of
+their names, e.g.@: @code{*CSL REDUCE*}, @code{*CSL REDUCE 1*},
+@code{*CSL REDUCE 2*}, @enddots{}  Otherwise it only starts a new
+REDUCE process if necessary---if an appropriate REDUCE process is
+already running then it simply switches to it.  Finally, these
+commands run the hooks from @code{reduce-run-mode-hook} (after the
+@code{comint-mode-hook} is run).
 
 @deffn Command run-reduce
 This command prompts for the name of a REDUCE command in the

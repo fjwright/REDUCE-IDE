@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sourceforge.net/u/fjwright>
 ;; Created: late 1998
-;; Time-stamp: <2022-08-31 15:14:07 franc>
+;; Time-stamp: <2022-09-03 11:45:22 franc>
 ;; Keywords: languages, processes
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.7alpha
@@ -257,7 +257,7 @@ send REDUCE input.")
     (define-key map "\C-m" 'reduce-run-send-input)
     (define-key map [(shift return)] 'comint-send-input)
     (define-key map [?\C-x ?\C-e] 'reduce-eval-last-statement)
-    (define-key map [?\C-c ?\C-n] 'reduce-eval-line)
+    (define-key map [?\C-c ?\C-e] 'reduce-eval-line)
     (define-key map [?\C-c ?\C-i] 'reduce-input-file)
     (define-key map [?\C-c ?\C-l] 'reduce-load-package)
     (define-key map [?\C-c ?\C-f] 'reduce-fasl-file)
@@ -268,8 +268,7 @@ send REDUCE input.")
 ;; code in file editing buffers.
 (define-key reduce-mode-map "\M-\C-x"  'reduce-eval-proc) ; Emacs convention
 (define-key reduce-mode-map "\C-x\C-e" 'reduce-eval-last-statement) ; ditto
-(define-key reduce-mode-map "\C-c\C-n" 'reduce-eval-line)
-(define-key reduce-mode-map "\C-c\C-e" 'reduce-eval-proc)
+(define-key reduce-mode-map "\C-c\C-e" 'reduce-eval-line)
 (define-key reduce-mode-map "\C-c\C-r" 'reduce-eval-region)
 (define-key reduce-mode-map "\C-c\C-z" 'switch-to-reduce)
 (define-key reduce-mode-map "\C-c\C-i" 'reduce-input-file)
@@ -716,7 +715,8 @@ buffer."
      (reduce-run-autostart
       (unless switch (split-window nil nil t)) ; new window on the right
       (run-reduce)
-      (reduce--wait-for-prompt)))
+      ;; (reduce--wait-for-prompt) ; this seems to hang -- why?
+      ))
     ;; Go to the end of the buffer if required:
     (when (and to-eob (not (eobp)))
       (or no-mark (push-mark))

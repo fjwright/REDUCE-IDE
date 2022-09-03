@@ -5,7 +5,7 @@ Major modes for editing and running REDUCE source code
 
 **[Francis Wright](https://sites.google.com/site/fjwcentaur)**
 
-Version 1.7alpha, July 2022
+Version 1.7alpha, September 2022
 
 REDUCE IDE is a package that provides an Integrated Development Environment for the REDUCE computer algebra system within the GNU Emacs editor.  Its two major components are Emacs Lisp libraries that provide major modes for editing REDUCE source code and running a *command-line version* of REDUCE in an Emacs window.  It assumes that Emacs is running under a GUI such as Microsoft Windows or the X Window System under some flavour of UNIX or Linux, and displays Unicode character sets correctly.
 
@@ -48,11 +48,12 @@ To Do
 * Support C-style comments.
 * Further rationalise and perhaps simplify the font-lock support.
 * Maybe highlight nested function calls without ().
+* Fix switch-to-reduce, which may hang when starting a new REDUCE process.
 
 Main Updates since REDUCE IDE 1.6 (see the manual for details)
 --------------------------------------------------------------
 
-* **INCOMPATIBLE CHANGE** The command `run-reduce` is now the only way to run REDUCE and it prompts for the REDUCE version to run.
+* **INCOMPATIBLE CHANGE** The command `run-reduce` is now the only way to run REDUCE.  It prompts for the REDUCE command name to run, defaulting to the last one used.
 * The option `reduce-run-commands` now accepts arbitrary key strings and an arbitrary number of REDUCE versions.
 * Improved access to the `comint` customization group (since REDUCE Run inherits from comint).
 * `<RET>` in REDUCE Run mode now adds a `;` input terminator automatically as appropriate (whereas `S-<RET>` never adds a terminator).
