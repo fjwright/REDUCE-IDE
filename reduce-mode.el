@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sourceforge.net/u/fjwright>
 ;; Created: late 1992
-;; Time-stamp: <2022-09-02 16:05:51 franc>
+;; Time-stamp: <2022-09-02 17:17:26 franc>
 ;; Keywords: languages
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.7alpha
@@ -1408,27 +1408,23 @@ Return t if match found, nil otherwise."
         t)))                         ; match for original regexp found
 
 (defun reduce--back-to-comment-start ()
-  "If point is in a comment then move to its start and return t.
+  "If point is in a conventional comment, move to its start and return t.
 Otherwise do not move and return nil."
   (or
    ;; Check whether in % comment:
    (reduce--back-to-percent-comment-start)
    ;; Check whether in comment statement:
-   (let ((start (point)) posn
-         (pattern "[^!][;$]\\|\\<comment\\>"))
+   (let ((initial (point))
+         (pattern "\\(\\_<comment\\_>\\)\\|[;$]"))
+     ;; Move backwards to the nearest ‘comment’ keyword or terminator.
+     (while (and (re-search-backward pattern nil 'move)
+                 (reduce--back-to-percent-comment-start)))
+     ;; If it is ‘comment’ then return its start position; otherwise return nil.
      (cond
-      ((setq posn (reduce--back-to-comment-statement-start pattern))
-       ;; in comment statement – go to its true beginning
-       (goto-char posn) t)
-      (t (goto-char start) nil))        ; not in comment statement
-     )))
-
-(defun reduce--back-to-comment-statement-start (pattern)
-  "Move backwards to the nearest ‘comment’ keyword or separator.
-If it is ‘comment’ then return its start position; otherwise return nil."
-  (while (and (re-search-backward pattern nil 'move)
-              (reduce--back-to-percent-comment-start)))
-  (if (looking-at "comment") (point)))
+      ((match-beginning 1)
+       ;; In comment statement – go to its beginning:
+       (goto-char (match-beginning 1)) t)
+      (t (goto-char initial) nil)))))        ; not in comment statement
 
 (defun reduce--back-to-percent-comment-start ()
   "If point is in a percent comment then move to its start and return t.
