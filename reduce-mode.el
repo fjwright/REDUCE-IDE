@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sourceforge.net/u/fjwright>
 ;; Created: late 1992
-;; Time-stamp: <2022-09-02 17:17:26 franc>
+;; Time-stamp: <2022-09-04 15:49:01 franc>
 ;; Keywords: languages
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.7alpha
@@ -1011,36 +1011,38 @@ The procedure visible is the one that contains point or follows point."
 ;;;; Operations based on statements
 ;;;; ******************************
 
-(defvar reduce-up-tries 1
-  "Repeat count of reduce-forward/backward-statement at end of block or group.")
+;; Currently reviewing this section September 2022.
 
-(defun reduce-up-block-or-group-maybe (found start)
+(defvar reduce-up-tries 1
+  "Repeat count of reduce-forward/backward-statement calls inside a
+block or group at its beginning or end.")
+
+(defun reduce--up-block-or-group-maybe (found start)
   "Move over ‘<<’, ‘begin’, ‘>>’ or ‘end’ (including end-of-file marker)
 after reduce-max-up-tries repeated interactive attempts."
   (if (and found (= (point) start) (eq this-command last-command))
       (if (< reduce-up-tries reduce-max-up-tries)
-      (setq reduce-up-tries (1+ reduce-up-tries))
-    (setq reduce-up-tries 1)
-    (goto-char found)
-    (if (eq this-command 'reduce-forward-statement)
-        ;; End of file marker needs special treatment:
-        (progn
-          (reduce--re-search-forward "[;$]" 'move)
-          (if (reduce--re-search-forward "[^ \t\f\n]") (goto-char found)))
-      ))
+          (setq reduce-up-tries (1+ reduce-up-tries))
+        (setq reduce-up-tries 1)
+        (goto-char found))
     (setq reduce-up-tries 1)))
 
 (defvar reduce-forward-statement-found nil
-  "Free variable bound in ‘reduce-forward-statement’.")
+  "Position found immediately after a group or block from inside it,
+or after an end-of-file marker, by ‘reduce-forward-statement’,
+which binds this free variable, or nil.")
 ;; Consider replacing with lexical binding.
 
 (defun reduce-forward-statement (arg)
-  "Move forward to end of statement.  With ARG, do it ARG times.
-If looking at the end of a block or group, or the end-of-file marker,
-move over it after ‘reduce-max-up-tries’ consecutive interactive tries."
+  "Move forwards to the end of this or the following statement.
+With ARG, move that many times.  Ignore (skip) comment statements.
+If looking at the end of a block or group, or the end-of-file
+marker, move over it after ‘reduce-max-up-tries’ consecutive
+interactive tries."
   (interactive "p")
   (let ((case-fold-search t)
-        (pattern "[;$]\\|>>\\|\\<end\\>\\|<<\\|\\<begin\\>\\|\\s(\\|\\s)")
+        (pattern "\\([;$]\\)\\|\\(>>\\|\\_<end\\_>\\)\\|\
+\\(<<\\)\\|\\(\\_<begin\\_>\\)\\|\\(\\s(\\)\\|\\(\\s)\\)")
         (start (point))
         reduce-forward-statement-found)
     ;; Skip an immediate closing bracket:
@@ -1050,82 +1052,76 @@ move over it after ‘reduce-max-up-tries’ consecutive interactive tries."
     ;; Never move backwards:
     (if (< (point) start) (goto-char start))
     ;; Move over  >>  or  end  on repeated interactive attempt:
-    (reduce-up-block-or-group-maybe reduce-forward-statement-found start)))
+    (reduce--up-block-or-group-maybe reduce-forward-statement-found start)))
 
 (defun reduce-forward-statement1 (pattern)
-  "Move forward to next statement end and return t if successful."
-  (if (looking-at "[;$]")
-      ;; (forward-char 1)
-      (not (forward-char 1))
-    (if (reduce--re-search-forward pattern)
-    (cond
-     ((= (preceding-char) ?>)
-      (setq reduce-forward-statement-found (point))
-      (backward-char 2) (skip-chars-backward " \t\n") t)
-     ((memq (preceding-char) '(?d ?D))
-      (setq reduce-forward-statement-found (point))
-      (backward-char 3) (skip-chars-backward " \t\n") t)
-     ((= (preceding-char) ?<)
-      (reduce--forward-group) (reduce-forward-statement1 pattern))
-     ((memq (preceding-char) '(?n ?N))
-      (reduce--forward-block) (reduce-forward-statement1 pattern))
-     ((= (char-syntax (preceding-char)) ?\( )
-      (backward-char) (forward-list) ; skip balanced brackets
-      (reduce-forward-statement1 pattern))
-     ((= (char-syntax (preceding-char)) ?\) )
-      (if (save-excursion       ; quoted list does not
-        (backward-list)     ; contain REDUCE statements
-        (skip-chars-backward " \t\n")
-        (= (preceding-char) ?'))
-          (reduce-forward-statement1 pattern)
-        (backward-char) (skip-chars-backward " \t\n") t))
-     (t t))
-      )))
+  "Syntactic search forwards for PATTERN.
+Recursive sub-function of ‘reduce-forward-statement’.
+Return t if successful; nil otherwise."
+  (if (reduce--re-search-forward pattern)
+      (cond
+       ((match-beginning 1))            ; found end of this statement
+       ((match-beginning 2)             ; found end of group or block
+        (setq reduce-forward-statement-found (point))
+        (goto-char (match-beginning 2))
+        (skip-chars-backward " \t\n") t)
+       ((match-beginning 3)             ; found start of group
+        (reduce--forward-group) (reduce-forward-statement1 pattern))
+       ((match-beginning 4)             ; found start of block
+        (reduce--forward-block) (reduce-forward-statement1 pattern))
+       ((match-beginning 5)             ; found opening bracket
+        (backward-char) (forward-list)
+        (reduce-forward-statement1 pattern))
+       ((match-beginning 6)             ; found closing bracket
+        (if (save-excursion             ; quoted list does not
+              (backward-list)           ; contain REDUCE statements
+              (skip-chars-backward " \t\n")
+              (= (preceding-char) ?'))
+            (reduce-forward-statement1 pattern)
+          (backward-char) (skip-chars-backward " \t\n") t)))))
 
 
 (defun reduce-backward-statement (arg)
-  "Move backward to start of statement.  With ARG, do it ARG times.
-If looking at the beginning of a block or group move over it after
-‘reduce-max-up-tries’ consecutive interactive tries.
+  "Move backwards to the start of this or the preceding statement.
+With ARG, move that many times.  Ignore (skip) comment statements.
+If looking at the beginning of a block or group move over it
+after ‘reduce-max-up-tries’ consecutive interactive tries.
 The end-of-file marker is treated as a statement.
-Returns the count of statements left to move."
-;; Return count used by reduce-calculate-indent-proc.
+Return the count of statements left to move,
+which is used by ‘reduce-calculate-indent-proc’."
   (interactive "p")
   (let ((case-fold-search t)
-    (pattern "[;$]\\|<<\\|\\<begin\\>\\|>>\\|\\<end\\>\\|\\s)\\|\\s(")
-    (start (point)) (found t)
-    ;; Check whether after end of file marker, ‘`end’'.
-    ;; Assume it starts at the beginning of the line.
-    (not-eof (save-excursion
-           (or (reduce--re-search-forward "[^ \t\f\n]")
-               (not (progn
-                  (reduce--re-search-backward "[^ \t\f\n]")
-                  (beginning-of-line)
-                  (looking-at "\\<end\\>")))
-               ))))
+        (pattern "[;$]\\|<<\\|\\<begin\\>\\|>>\\|\\<end\\>\\|\\s)\\|\\s(")
+        (start (point)) (found t)
+        ;; Check whether after end of file marker, ‘end’.
+        ;; Assume it starts at the beginning of the line.
+        (not-eof (save-excursion
+                   (or (reduce--re-search-forward "[^ \t\f\n]")
+                       (not (progn
+                              (reduce--re-search-backward "[^ \t\f\n]")
+                              (beginning-of-line)
+                              (looking-at "\\<end\\>")))))))
     (if (and (reduce--re-search-backward "[^ \t\f\n]")
-         (not (or (memq (following-char) '(?\; ?$))
-              ;; Skip an immediate opening bracket:
-              (= (char-syntax (following-char)) ?\( ))))
-    (forward-char 1))
+             (not (or (memq (following-char) '(?\; ?$))
+                      ;; Skip an immediate opening bracket:
+                      (= (char-syntax (following-char)) ?\( ))))
+        (forward-char 1))
     (while (and (> arg 0) found)
       (setq found (reduce-backward-statement1 pattern not-eof))
       (setq arg (1- arg)))
     (if found
-    (cond ((= (following-char) ?<)
-           (setq found (point)) (forward-char 2))
-          ((memq (following-char) '(?b ?B))
-           (setq found (point)) (forward-char 5))
-          (t (forward-char 1))
-          ))
+        (cond ((= (following-char) ?<)
+               (setq found (point)) (forward-char 2))
+              ((memq (following-char) '(?b ?B))
+               (setq found (point)) (forward-char 5))
+              (t (forward-char 1))))
     ;; Move to actual start of statement:
     (reduce--re-search-forward "[^ \t\f\n]") (backward-char 1)
     ;; Never move forwards:
     (if (> (point) start) (goto-char start))
     ;; Move over  <<  or  begin  on repeated interactive attempt:
-    (reduce-up-block-or-group-maybe found start)
-    arg
-    ))
+    (reduce--up-block-or-group-maybe found start)
+    arg))
 
 (defun reduce-backward-statement1 (pattern not-eof)
   "Move backward to next statement beginning.
@@ -1133,18 +1129,17 @@ Return t if successful, nil if reaches beginning of buffer."
   (if (reduce--re-search-backward pattern 'move)
       (cond
        ((= (following-char) ?>)     ; end of group
-    (reduce--backward-group) (reduce-backward-statement1 pattern not-eof))
+        (reduce--backward-group) (reduce-backward-statement1 pattern not-eof))
        ((memq (following-char) '(?e ?E)) ; end of block (or file)
-    (if not-eof
-        (progn (reduce--backward-block) (setq not-eof nil)))
-    (reduce-backward-statement1 pattern not-eof))
+        (if not-eof
+            (progn (reduce--backward-block) (setq not-eof nil)))
+        (reduce-backward-statement1 pattern not-eof))
        ((= (char-syntax (following-char)) ?\) )
-    (forward-char) (backward-list) ; skip balanced brackets
-    (reduce-backward-statement1 pattern not-eof))
+        (forward-char) (backward-list) ; skip balanced brackets
+        (reduce-backward-statement1 pattern not-eof))
        ((= (char-syntax (following-char)) ?\( )
-    (forward-char) (skip-chars-forward " \t\n") (backward-char) t)
-       (t t))
-    ))
+        (forward-char) (skip-chars-forward " \t\n") (backward-char) t)
+       (t t))))
 
 
 (defun reduce-kill-statement (&optional arg)
@@ -1155,16 +1150,16 @@ Negative arguments kill complete statements backwards, cf. ‘kill-line’."
   ;; Based on kill-line in simple.el
   (interactive "*P")            ; error if buffer read-only
   (kill-region (point)
-           (progn
-         (if (and (null arg) (looking-at "[ \t]*$"))
-             (forward-line 1)
-           (setq arg (prefix-numeric-value arg))
-           (if (> arg 0)
                (progn
-             (reduce-forward-statement arg)
-             (skip-chars-forward " \t")) ; 2 Oct 1994
-             (reduce-backward-statement (- 1 arg))))
-         (point))))
+                 (if (and (null arg) (looking-at "[ \t]*$"))
+                     (forward-line 1)
+                   (setq arg (prefix-numeric-value arg))
+                   (if (> arg 0)
+                       (progn
+                         (reduce-forward-statement arg)
+                         (skip-chars-forward " \t")) ; 2 Oct 1994
+                     (reduce-backward-statement (- 1 arg))))
+                 (point))))
 
 
 ;;;; ************************
