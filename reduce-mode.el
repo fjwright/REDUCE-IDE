@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sourceforge.net/u/fjwright>
 ;; Created: late 1992
-;; Time-stamp: <2022-09-04 15:49:01 franc>
+;; Time-stamp: <2022-09-05 17:33:12 franc>
 ;; Keywords: languages
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.7alpha
@@ -1027,11 +1027,11 @@ after reduce-max-up-tries repeated interactive attempts."
         (goto-char found))
     (setq reduce-up-tries 1)))
 
-(defvar reduce-forward-statement-found nil
-  "Position found immediately after a group or block from inside it,
-or after an end-of-file marker, by ‘reduce-forward-statement’,
-which binds this free variable, or nil.")
-;; Consider replacing with lexical binding.
+(defvar reduce--outside-group-or-block nil
+  "Position found immediately outside a group or block from inside it,
+or after an end-of-file marker, by ‘reduce-forward-statement’ or
+‘reduce-backward-statement’, which bind this variable, or nil.")
+;; *** Consider replacing with lexical binding. ***
 
 (defun reduce-forward-statement (arg)
   "Move forwards to the end of this or the following statement.
@@ -1041,18 +1041,18 @@ marker, move over it after ‘reduce-max-up-tries’ consecutive
 interactive tries."
   (interactive "p")
   (let ((case-fold-search t)
-        (pattern "\\([;$]\\)\\|\\(>>\\|\\_<end\\_>\\)\\|\
-\\(<<\\)\\|\\(\\_<begin\\_>\\)\\|\\(\\s(\\)\\|\\(\\s)\\)")
         (start (point))
-        reduce-forward-statement-found)
+        (pattern "\\([\;$]\\)\\|\\(>>\\|\\_<end\\_>\\)\\|\
+\\(<<\\)\\|\\(\\_<begin\\_>\\)\\|\\(\\s\(\\)\\|\\(\\s\)\\)")
+        reduce--outside-group-or-block)
     ;; Skip an immediate closing bracket:
     (if (looking-at "[ \t\n]*\\s)") (goto-char (match-end 0)))
     (while (and (> arg 0) (reduce-forward-statement1 pattern))
       (setq arg (1- arg)))
+    ;; Move over  >>  or  end  on repeated interactive attempts:
+    (reduce--up-block-or-group-maybe reduce--outside-group-or-block start)
     ;; Never move backwards:
-    (if (< (point) start) (goto-char start))
-    ;; Move over  >>  or  end  on repeated interactive attempt:
-    (reduce--up-block-or-group-maybe reduce-forward-statement-found start)))
+    (if (< (point) start) (goto-char start))))
 
 (defun reduce-forward-statement1 (pattern)
   "Syntactic search forwards for PATTERN.
@@ -1060,9 +1060,9 @@ Recursive sub-function of ‘reduce-forward-statement’.
 Return t if successful; nil otherwise."
   (if (reduce--re-search-forward pattern)
       (cond
-       ((match-beginning 1))            ; found end of this statement
+       ((match-beginning 1))            ; found terminator
        ((match-beginning 2)             ; found end of group or block
-        (setq reduce-forward-statement-found (point))
+        (setq reduce--outside-group-or-block (point))
         (goto-char (match-beginning 2))
         (skip-chars-backward " \t\n") t)
        ((match-beginning 3)             ; found start of group
@@ -1091,55 +1091,68 @@ Return the count of statements left to move,
 which is used by ‘reduce-calculate-indent-proc’."
   (interactive "p")
   (let ((case-fold-search t)
-        (pattern "[;$]\\|<<\\|\\<begin\\>\\|>>\\|\\<end\\>\\|\\s)\\|\\s(")
-        (start (point)) (found t)
-        ;; Check whether after end of file marker, ‘end’.
+        (start (point))
+        (pattern "\\([\;$]\\)\\|\\(<<\\|\\_<begin\\_>\\)\
+\\|\\(>>\\)\\|\\(\\_<end\\_>\\)\\|\\(\\s\)\\)\\|\\(\\s\(\\)")
+        reduce--outside-group-or-block
+
+        ;; *** NEEDS REVIEW LATER -- IGNORE FOR NOW!!! ***
+        ;; Check whether after end of file marker, ‘end’,
+        ;; to avoid jumping to top of file!
         ;; Assume it starts at the beginning of the line.
-        (not-eof (save-excursion
-                   (or (reduce--re-search-forward "[^ \t\f\n]")
-                       (not (progn
-                              (reduce--re-search-backward "[^ \t\f\n]")
-                              (beginning-of-line)
-                              (looking-at "\\<end\\>")))))))
-    (if (and (reduce--re-search-backward "[^ \t\f\n]")
-             (not (or (memq (following-char) '(?\; ?$))
-                      ;; Skip an immediate opening bracket:
-                      (= (char-syntax (following-char)) ?\( ))))
-        (forward-char 1))
-    (while (and (> arg 0) found)
-      (setq found (reduce-backward-statement1 pattern not-eof))
-      (setq arg (1- arg)))
-    (if found
-        (cond ((= (following-char) ?<)
-               (setq found (point)) (forward-char 2))
-              ((memq (following-char) '(?b ?B))
-               (setq found (point)) (forward-char 5))
-              (t (forward-char 1))))
-    ;; Move to actual start of statement:
-    (reduce--re-search-forward "[^ \t\f\n]") (backward-char 1)
-    ;; Never move forwards:
-    (if (> (point) start) (goto-char start))
-    ;; Move over  <<  or  begin  on repeated interactive attempt:
-    (reduce--up-block-or-group-maybe found start)
-    arg))
+        (not-eof t
+         ;; (save-excursion
+         ;;           (or (reduce--re-search-forward "[[:graph:]]")
+         ;;               (not (progn
+         ;;                      (reduce--re-search-backward "[[:graph:]]")
+         ;;                      (beginning-of-line)
+         ;;                      (looking-at "\\<end\\>")))))
+                 ))
+
+    ;; Check whether point is within or at the end of a statement by
+    ;; finding the preceding syntactically relevant character and
+    ;; testing whether it is a terminator:
+    (when (reduce--re-search-backward "[[:graph:]]")
+      ;; (if (looking-at "[\;$]")
+      ;;     ;; Point was at the end of a statement, so now move to start
+      ;;     ;; of current statement.
+      ;;     ()
+      ;;   ;; Point was within a statement, so now move to its start:
+      ;;   (setq arg (1- arg)))
+      ;; Move to preceding terminator at the same syntactic level:
+      (while (and (> arg 0)
+                  (reduce-backward-statement1 pattern not-eof))
+        (setq arg (1- arg)))
+      ;; Move forwards to start of actual statement, skipping comments
+      ;; and white space:
+      (forward-comment (buffer-size)) ; *** BUT DOESN'T SKIP COMMENT STATEMENTS! ***
+      ;; Move over  <<  or  begin  on repeated interactive attempts:
+      (reduce--up-block-or-group-maybe reduce--outside-group-or-block start)
+      ;; Never move forwards:
+      (if (> (point) start) (goto-char start))
+      arg)))
 
 (defun reduce-backward-statement1 (pattern not-eof)
-  "Move backward to next statement beginning.
-Return t if successful, nil if reaches beginning of buffer."
+  "Syntactic search backwards for PATTERN.
+Recursive sub-function of ‘reduce-backward-statement’.
+Return t if successful; nil otherwise."
   (if (reduce--re-search-backward pattern 'move)
       (cond
-       ((= (following-char) ?>)     ; end of group
+       ((match-beginning 1)             ; found terminator
+        (forward-char) t)
+       ((match-beginning 2)            ; found start of group or block
+        (setq reduce--outside-group-or-block (point))
+        (goto-char (match-end 2)) t)
+       ((match-beginning 3)             ; found end of group
         (reduce--backward-group) (reduce-backward-statement1 pattern not-eof))
-       ((memq (following-char) '(?e ?E)) ; end of block (or file)
-        (if not-eof
-            (progn (reduce--backward-block) (setq not-eof nil)))
+       ((match-beginning 4)             ; found end of block (or file)
+        (if not-eof (reduce--backward-block))
+        (reduce-backward-statement1 pattern nil))
+       ((match-beginning 5)             ; found closing bracket
+        (forward-char) (backward-list)  ; skip balanced brackets
         (reduce-backward-statement1 pattern not-eof))
-       ((= (char-syntax (following-char)) ?\) )
-        (forward-char) (backward-list) ; skip balanced brackets
-        (reduce-backward-statement1 pattern not-eof))
-       ((= (char-syntax (following-char)) ?\( )
-        (forward-char) (skip-chars-forward " \t\n") (backward-char) t)
-       (t t))))
+       ((match-beginning 6)             ; found opening bracket
+        (forward-char) (skip-chars-forward " \t\n") (backward-char) t))))
 
 
 (defun reduce-kill-statement (&optional arg)
@@ -1409,17 +1422,18 @@ Otherwise do not move and return nil."
    ;; Check whether in % comment:
    (reduce--back-to-percent-comment-start)
    ;; Check whether in comment statement:
-   (let ((initial (point))
-         (pattern "\\(\\_<comment\\_>\\)\\|[;$]"))
-     ;; Move backwards to the nearest ‘comment’ keyword or terminator.
-     (while (and (re-search-backward pattern nil 'move)
-                 (reduce--back-to-percent-comment-start)))
-     ;; If it is ‘comment’ then return its start position; otherwise return nil.
-     (cond
-      ((match-beginning 1)
-       ;; In comment statement – go to its beginning:
-       (goto-char (match-beginning 1)) t)
-      (t (goto-char initial) nil)))))        ; not in comment statement
+   (save-match-data
+     (let ((initial (point))
+           (pattern "\\(\\_<comment\\_>\\)\\|[;$]"))
+       ;; Move backwards to the nearest ‘comment’ keyword or terminator.
+       (while (and (re-search-backward pattern nil 'move)
+                   (reduce--back-to-percent-comment-start)))
+       ;; If it is ‘comment’ then return its start position; otherwise return nil.
+       (cond
+        ((match-beginning 1)
+         ;; In comment statement – go to its beginning:
+         (goto-char (match-beginning 1)) t)
+        (t (goto-char initial) nil)))))) ; not in comment statement
 
 (defun reduce--back-to-percent-comment-start ()
   "If point is in a percent comment then move to its start and return t.
@@ -1427,11 +1441,12 @@ Otherwise do not move and return nil."
 ;;;  (re-search-backward
 ;;;   "^%\\|[^!]%" (save-excursion (beginning-of-line) (point)) t)
   ;; Note that a % may appear at the end of, or alone on, a line!
-  (let ((start (point)))
-    (beginning-of-line)
-    (prog1
-        (re-search-forward "^%\\|[^!]%" (1+ start) 'move)
-      (backward-char))))
+  (save-match-data
+    (let ((start (point)))
+      (beginning-of-line)
+      (prog1
+          (re-search-forward "^%\\|[^!]%" (1+ start) 'move)
+        (backward-char)))))
 
 
 ;;;; ****************
