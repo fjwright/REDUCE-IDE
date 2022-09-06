@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sourceforge.net/u/fjwright>
 ;; Created: late 1992
-;; Time-stamp: <2022-09-05 17:33:12 franc>
+;; Time-stamp: <2022-09-06 17:25:13 franc>
 ;; Keywords: languages
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.7alpha
@@ -1342,6 +1342,39 @@ Return t if successful; otherwise move as far as possible and return nil."
             (= (char-after) ?>))
       (reduce--backward-group))
     found))
+
+
+;;;; *****************
+;;;; Skipping comments
+;;;; *****************
+
+(defun reduce--skip-comments-forward ()
+  "Move forwards across comments and white space of all types."
+  (save-match-data
+    (let ((case-fold-search t))
+      (forward-comment (buffer-size)) ; syntactic comments & white space
+      (while (and (looking-at "comment")
+                  (re-search-forward "[\;$]" nil t))
+        (forward-comment (buffer-size))))))
+
+(defun reduce--skip-comments-backward ()
+  "Move backwards across comments and white space of all types.
+But does not skip a comment statement at the beginning of the
+buffer – should it?"
+  (save-match-data
+    (forward-comment (- (buffer-size))) ; syntactic comments & white space
+    (let ((start (point)) (case-fold-search t))
+      (when (re-search-backward "[\;$]\\=" nil t) ; at end of statement
+        ;; If comment statement then skip it:
+        (if (re-search-backward "^[^%]*[\;$]" nil t) ; avoiding % comments!
+            ;; *** ALSO NEED TO AVOID /*...*/ COMMENTS! ***
+            (progn
+              (goto-char (match-end 0)) ; at end of preceding statement
+              (forward-comment (buffer-size))
+              (if (looking-at "comment") ; comment statement skipped
+                  (reduce--skip-comments-backward)
+                (goto-char start)))
+          (goto-char start))))))
 
 
 ;;;; *****************************************************************
