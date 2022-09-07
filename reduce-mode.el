@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sourceforge.net/u/fjwright>
 ;; Created: late 1992
-;; Time-stamp: <2022-09-06 17:25:13 franc>
+;; Time-stamp: <2022-09-07 17:13:46 franc>
 ;; Keywords: languages
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.7alpha
@@ -1095,45 +1095,34 @@ which is used by ‘reduce-calculate-indent-proc’."
         (pattern "\\([\;$]\\)\\|\\(<<\\|\\_<begin\\_>\\)\
 \\|\\(>>\\)\\|\\(\\_<end\\_>\\)\\|\\(\\s\)\\)\\|\\(\\s\(\\)")
         reduce--outside-group-or-block
+        ;; Check whether after end in end-of-file marker, “;end;”, to
+        ;; avoid skipping a non-existent block to the top of the file!
+        (at-eof (save-excursion
+                   (re-search-forward "\\=[\;$]" nil t)
+                   (reduce--skip-comments-forward)
+                   (eobp))))
+    ;; Skip to the preceding syntactically relevant character:
+    (reduce--skip-comments-backward)
+    ;; If a terminator then skip it:
+    (re-search-backward "[\;$]\\=" nil t)
+    ;; Now within a statement or at the end of the preceding
+    ;; statement.  Skip arg statements backwards to immediately after
+    ;; the preceding terminator:
+    (while (and (> arg 0)
+                (reduce-backward-statement1 pattern at-eof))
+      (setq arg (1- arg)))
+    ;; Move forwards to start of actual statement, skipping comments
+    ;; and white space:
+    (reduce--skip-comments-forward)
+    ;; Move over  <<  or  begin  on repeated interactive attempts:
+    (reduce--up-block-or-group-maybe reduce--outside-group-or-block start)
+    ;; Never move forwards:
+    (if (> (point) start) (goto-char start))
+    arg))
 
-        ;; *** NEEDS REVIEW LATER -- IGNORE FOR NOW!!! ***
-        ;; Check whether after end of file marker, ‘end’,
-        ;; to avoid jumping to top of file!
-        ;; Assume it starts at the beginning of the line.
-        (not-eof t
-         ;; (save-excursion
-         ;;           (or (reduce--re-search-forward "[[:graph:]]")
-         ;;               (not (progn
-         ;;                      (reduce--re-search-backward "[[:graph:]]")
-         ;;                      (beginning-of-line)
-         ;;                      (looking-at "\\<end\\>")))))
-                 ))
-
-    ;; Check whether point is within or at the end of a statement by
-    ;; finding the preceding syntactically relevant character and
-    ;; testing whether it is a terminator:
-    (when (reduce--re-search-backward "[[:graph:]]")
-      ;; (if (looking-at "[\;$]")
-      ;;     ;; Point was at the end of a statement, so now move to start
-      ;;     ;; of current statement.
-      ;;     ()
-      ;;   ;; Point was within a statement, so now move to its start:
-      ;;   (setq arg (1- arg)))
-      ;; Move to preceding terminator at the same syntactic level:
-      (while (and (> arg 0)
-                  (reduce-backward-statement1 pattern not-eof))
-        (setq arg (1- arg)))
-      ;; Move forwards to start of actual statement, skipping comments
-      ;; and white space:
-      (forward-comment (buffer-size)) ; *** BUT DOESN'T SKIP COMMENT STATEMENTS! ***
-      ;; Move over  <<  or  begin  on repeated interactive attempts:
-      (reduce--up-block-or-group-maybe reduce--outside-group-or-block start)
-      ;; Never move forwards:
-      (if (> (point) start) (goto-char start))
-      arg)))
-
-(defun reduce-backward-statement1 (pattern not-eof)
+(defun reduce-backward-statement1 (pattern at-eof)
   "Syntactic search backwards for PATTERN.
+If AT-EOF is non-nil then after “end” in end-of-file marker, “;end;”.
 Recursive sub-function of ‘reduce-backward-statement’.
 Return t if successful; nil otherwise."
   (if (reduce--re-search-backward pattern 'move)
@@ -1144,13 +1133,13 @@ Return t if successful; nil otherwise."
         (setq reduce--outside-group-or-block (point))
         (goto-char (match-end 2)) t)
        ((match-beginning 3)             ; found end of group
-        (reduce--backward-group) (reduce-backward-statement1 pattern not-eof))
+        (reduce--backward-group) (reduce-backward-statement1 pattern at-eof))
        ((match-beginning 4)             ; found end of block (or file)
-        (if not-eof (reduce--backward-block))
+        (unless at-eof (reduce--backward-block))
         (reduce-backward-statement1 pattern nil))
        ((match-beginning 5)             ; found closing bracket
         (forward-char) (backward-list)  ; skip balanced brackets
-        (reduce-backward-statement1 pattern not-eof))
+        (reduce-backward-statement1 pattern at-eof))
        ((match-beginning 6)             ; found opening bracket
         (forward-char) (skip-chars-forward " \t\n") (backward-char) t))))
 
@@ -1459,6 +1448,7 @@ Otherwise do not move and return nil."
      (let ((initial (point))
            (pattern "\\(\\_<comment\\_>\\)\\|[;$]"))
        ;; Move backwards to the nearest ‘comment’ keyword or terminator.
+       ;; *** BUT THEY MUST NOT BE WITHIN A % OR /**/ COMMENT, OR A STRING! ***
        (while (and (re-search-backward pattern nil 'move)
                    (reduce--back-to-percent-comment-start)))
        ;; If it is ‘comment’ then return its start position; otherwise return nil.
