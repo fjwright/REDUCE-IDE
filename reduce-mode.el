@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sourceforge.net/u/fjwright>
 ;; Created: late 1992
-;; Time-stamp: <2022-09-07 17:13:46 franc>
+;; Time-stamp: <2022-09-07 17:54:58 franc>
 ;; Keywords: languages
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.7alpha
@@ -1106,13 +1106,14 @@ which is used by ‘reduce-calculate-indent-proc’."
     ;; If a terminator then skip it:
     (re-search-backward "[\;$]\\=" nil t)
     ;; Now within a statement or at the end of the preceding
-    ;; statement.  Skip arg statements backwards to immediately after
-    ;; the preceding terminator:
+    ;; statement.  Skip arg statements backwards to immediately before
+    ;; the preceding terminator or other delimiter:
     (while (and (> arg 0)
                 (reduce-backward-statement1 pattern at-eof))
       (setq arg (1- arg)))
-    ;; Move forwards to start of actual statement, skipping comments
-    ;; and white space:
+    ;; Move forwards to start of actual statement, skipping any
+    ;; terminator, comments and white space:
+    (re-search-forward "\\=[\;$]" nil t)
     (reduce--skip-comments-forward)
     ;; Move over  <<  or  begin  on repeated interactive attempts:
     (reduce--up-block-or-group-maybe reduce--outside-group-or-block start)
@@ -1127,8 +1128,7 @@ Recursive sub-function of ‘reduce-backward-statement’.
 Return t if successful; nil otherwise."
   (if (reduce--re-search-backward pattern 'move)
       (cond
-       ((match-beginning 1)             ; found terminator
-        (forward-char) t)
+       ((match-beginning 1))           ; found terminator
        ((match-beginning 2)            ; found start of group or block
         (setq reduce--outside-group-or-block (point))
         (goto-char (match-end 2)) t)

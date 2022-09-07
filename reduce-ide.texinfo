@@ -2,7 +2,7 @@
 @c %**start of header
 @settitle GNU Emacs REDUCE Integrated Development Environment
 @c Manual last updated:
-@set UPDATED Time-stamp: <2022-08-30 17:10:20 franc>
+@set UPDATED Time-stamp: <2022-09-03 15:11:38 franc>
 @c Software version:
 @set VERSION 1.7alpha
 @afourpaper
@@ -271,24 +271,23 @@ Running REDUCE in a buffer}.
 @findex reduce-mode
 REDUCE mode can be selected by giving the command @kbd{M-x
 reduce-mode}, although normally it will be selected automatically,
-probably via the filename extension (@pxref{Installation,,
-Installation of the REDUCE IDE}).
-
-REDUCE mode inherits from @code{prog-mode} and so shares some basic
-functionality common to all Emacs programming modes.
+probably via the filename extension (@ref{Installation,, Installation
+of the REDUCE IDE}).  REDUCE mode inherits from @code{prog-mode} and
+so shares some basic functionality common to all Emacs programming
+modes.
 
 The commands provided by REDUCE mode are aware of REDUCE syntax and
 ignore the contents of strings and the case of characters.  Except for
-the special comment commands (@pxref{Comments,, Support for REDUCE
+the special comment commands (@ref{Comments,, Support for REDUCE
 comments}), they also ignore comments.  The standard GNU Emacs
-indentation (@pxref{Indentation,, Indenting REDUCE code
-automatically}) and comment commands are supported, either via the
-general Emacs mechanisms or by re-binding the standard keys to REDUCE
-mode versions of standard commands.  The design of this mode is
-modelled primarily on Lisp mode and at present the comment conventions
-basically follow those of Lisp mode, except that comments are started
-by percent (@code{%}) signs or the keyword @code{comment}.  I have
-also taken some ideas from FORTRAN mode.
+indentation (@ref{Indentation,, Indenting REDUCE code automatically})
+and comment commands are supported, either via the general Emacs
+mechanisms or by re-binding the standard keys to REDUCE mode versions
+of standard commands.  The design of this mode is modelled primarily
+on Lisp mode and at present the comment conventions basically follow
+those of Lisp mode, except that comments are started by percent
+(@code{%}) signs or the keyword @code{comment}.  I have also taken
+some ideas from FORTRAN mode.
 
 The standard Emacs syntax tables have been modified to reflect REDUCE
 syntax, so that for example Emacs knows that the REDUCE escape character
@@ -336,17 +335,17 @@ facilities of REDUCE mode.
 @cindex Operations on Statements
 
 The most basic facility provided by REDUCE mode is the ability to move
-forward and backward by statement through a file of REDUCE source code.
-Moving by one statement means moving to the beginning or end of the
-@emph{logical} statement currently containing (or respectively preceding
-or following) point, which may involve skipping many actual statements
-that are contained within the current statement.  In particular, as
-Emacs looks for the beginning or end of a statement it will skip
-complete compound statements (@code{begin @dots{} end}), group
-statements (@code{<< @dots{} >>}), and bracketed expressions
-(@code{(@dots{})}, @code{@{@dots{}@}} and @code{[@dots{}]}, even though
-square brackets are not normally used in REDUCE).  Bracket skipping is
-controlled entirely by the Emacs syntax table.
+forwards and backwards by statements through a file of REDUCE source
+code.  Moving by one statement means moving to the beginning or end of
+the @emph{logical} statement currently containing (or respectively
+preceding or following) point, which may involve skipping many actual
+statements that are contained within the current statement.  In
+particular, as Emacs looks for the beginning or end of a statement it
+will skip complete compound statements (@code{begin @dots{} end}),
+group statements (@code{<< @dots{} >>}), and bracketed expressions
+(@code{(@dots{})}, @code{@{@dots{}@}} and @code{[@dots{}]}, even
+though square brackets are not normally used in REDUCE).  Bracket
+skipping is controlled entirely by the Emacs syntax table.
 
 Hence, ``statement'' in this manual will normally mean a complete
 @emph{logical statement}.  A syntax-directed editor clearly must perform
@@ -370,20 +369,20 @@ consistent and reliable.
 @end itemize
 
 REDUCE mode considers REDUCE statements to be terminated by the
-statement separator characters @code{;} and @code{$}.  It also
-considers statements contained within any kind of brackets to be
-terminated by those brackets, statements within compound statements
-(@code{begin @dots{} end}) to be terminated by the @code{begin} and
-@code{end} keywords, and statements within group statements (@code{<<
-@dots{} >>}) to be terminated by the @code{<<} and @code{>>} tokens.
-Commas are not considered to separate statements.
+characters @code{;} and @code{$}.  It also considers statements
+contained within any kind of brackets to be terminated by those
+brackets, statements within compound statements (@code{begin @dots{}
+end}) to be terminated by the @code{begin} and @code{end} keywords,
+and statements within group statements (@code{<< @dots{} >>}) to be
+terminated by the @code{<<} and @code{>>} tokens.  Commas are not
+considered to separate statements.
 
 More precisely, a statement is considered to begin at the first
-non-white-space character following the previous statement separator,
+non-white-space character following the previous statement terminator,
 opening bracket, @code{begin} or @code{<<}.  It is considered to end
-immediately after the first statement separator or immediately after the
-last non-white-space character preceding a closing bracket, @code{end}
-or @code{>>}.
+immediately after the first statement terminator or immediately after
+the last non-white-space character preceding a closing bracket,
+@code{end} or @code{>>}.
 
 The current philosophy of REDUCE mode is that the statements within
 compound or group statements form essentially isolated systems, and
@@ -394,37 +393,42 @@ try hard enough, REDUCE mode will let a simple statement-oriented
 command move out of (but never into) a compound or group statement.
 Trying hard enough means repeating the same command enough times,
 which is determined by the value of the option
-@code{reduce-max-up-tries} (@pxref{Customization,, Customization of
+@code{reduce-max-up-tries} (@ref{Customization,, Customization of
 REDUCE IDE}), which currently has the default value 2.  The overall
 effect of this is to enforce a brief pause (one ineffective command
 execution) that serves to prevent you from skipping out of a compound
 or group statement accidentally, but without causing any serious
 inconvenience.
 
-There is special code to handle the keyword @code{end} when it is used
-as the end-of-file marker.  The following commands all accept a
-numerical argument, which defaults to 1.  The commands to move forward
-or backward by statements do not move in the opposite direction if given
-a negative argument, in which case they do not move at all.
+The following commands all accept a numerical argument, which defaults
+to 1.  The commands to move forwards or backwards by statements do not
+move in the opposite direction if given a negative argument, in which
+case they do not move at all.  They contain special code to handle the
+keyword @code{end} when it is used as the end-of-file marker and they
+do not regard comment statements as statement, i.e. they treat them
+like white space.
 
 @table @kbd
 @item  C-c C-n
 @kindex C-c C-n
 @itemx M-x reduce-forward-statement
 @findex reduce-forward-statement
-Move forward to the end of the statement.  With an argument, do it that
-many times.  If looking at the end of a block or group, or the
-end-of-file marker, move over it after @code{reduce-max-up-tries}
-consecutive interactive tries.
+Move forwards to the end of the current statement if within a
+statement or to the end of the following statement otherwise.  With an
+argument, do it that many times.  If looking at the end of a block or
+group, or the end-of-file marker, move over it after
+@code{reduce-max-up-tries} consecutive interactive tries.
 
 @item  C-c C-p
 @kindex C-c C-p
 @itemx M-x reduce-backward-statement
 @findex reduce-backward-statement
-Move backward to the start of the statement.  With an argument, do it
-that many times.  If looking at the beginning of a block or group move
-over it after @code{reduce-max-up-tries} consecutive interactive tries.
-The end-of-file marker is treated as a statement.
+Move backwards to the start of the current statement if within a
+statement or to the start of the previous statement otherwise.  With
+an argument, do it that many times.  If looking at the beginning of a
+block or group move over it after @code{reduce-max-up-tries}
+consecutive interactive tries.  The end-of-file marker is treated as a
+statement.
 
 @item  C-c C-k
 @kindex C-c C-k

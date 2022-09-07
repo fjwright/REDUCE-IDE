@@ -60,3 +60,4 @@ Main Updates since REDUCE IDE 1.6 (see the manual for details)
 * REDUCE mode now inherits from `prog-mode`, so it runs `prog-mode-hook` and some `prog-mode` customizations are relevant.
 * Initial incomplete support for C-style comments.  They are highlighted as comments but no other explicit support.
 * Improved code relating to the commands `reduce-forward-sexp` and `reduce-backward-sexp`.
+* **INCOMPATIBLE CHANGE** The command `reduce-eval-line` is now bound to the key sequence `C-c C-e` instead of `C-c C-n`, which was already bound to `reduce-forward-statement`.

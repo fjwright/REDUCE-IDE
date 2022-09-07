@@ -74,3 +74,9 @@ procedure foo; /* OK */ bar;
 "This is a string containing keywords: comment, procedure, operator, lisp, algebraic.";
 
 procedure foo; bar;
+
+%%% Recommended end-of-file marker...
+
+;end;
+
+%%% End of file
