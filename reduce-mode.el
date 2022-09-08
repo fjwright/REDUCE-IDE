@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sourceforge.net/u/fjwright>
 ;; Created: late 1992
-;; Time-stamp: <2022-09-07 17:54:58 franc>
+;; Time-stamp: <2022-09-08 16:48:42 franc>
 ;; Keywords: languages
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.7alpha
@@ -48,7 +48,6 @@
 ;;  BUGS
 ;;  ====
 ;;  ! should not be an escape IN STRINGS (motion by sexp, font-lock)
-;;  reduce-backward-statement does too much searching!
 
 ;;  Enhancements
 ;;  ============
@@ -1433,7 +1432,7 @@ Return t if match found, nil otherwise."
            ((match-end 101)             ; /*...*/ comment
             (goto-char (match-end 101))
             (forward-comment -1) t)
-           ((reduce--back-to-comment-start) t)) ; % comment or comment statement
+           ((reduce--back-to-comment-start))) ; % comment or comment statement
           (reduce--re-search-backward1 pattern move) ; search again
         t)))                         ; match for original regexp found
 
@@ -1445,31 +1444,32 @@ Otherwise do not move and return nil."
    (reduce--back-to-percent-comment-start)
    ;; Check whether in comment statement:
    (save-match-data
-     (let ((initial (point))
+     (let ((initial (point)) found
            (pattern "\\(\\_<comment\\_>\\)\\|[;$]"))
        ;; Move backwards to the nearest ‘comment’ keyword or terminator.
        ;; *** BUT THEY MUST NOT BE WITHIN A % OR /**/ COMMENT, OR A STRING! ***
-       (while (and (re-search-backward pattern nil 'move)
+       (while (and (setq found (re-search-backward pattern nil 'move))
                    (reduce--back-to-percent-comment-start)))
        ;; If it is ‘comment’ then return its start position; otherwise return nil.
        (cond
-        ((match-beginning 1)
+        ((and found (match-beginning 1))
          ;; In comment statement – go to its beginning:
          (goto-char (match-beginning 1)) t)
         (t (goto-char initial) nil)))))) ; not in comment statement
 
 (defun reduce--back-to-percent-comment-start ()
-  "If point is in a percent comment then move to its start and return t.
+  "If point is in a % comment then move to its start and return t.
+In fact, skip all preceding % and /**/ comments and white space.
 Otherwise do not move and return nil."
-;;;  (re-search-backward
-;;;   "^%\\|[^!]%" (save-excursion (beginning-of-line) (point)) t)
-  ;; Note that a % may appear at the end of, or alone on, a line!
-  (save-match-data
-    (let ((start (point)))
-      (beginning-of-line)
-      (prog1
-          (re-search-forward "^%\\|[^!]%" (1+ start) 'move)
-        (backward-char)))))
+  (let ((start (point))
+        (bol (line-beginning-position)))
+    (skip-syntax-backward "^<" bol) ; skip to preceding % on this line
+    ;; If point after beginning of line then in % comment:
+    (cond ((> (point) bol)
+           (backward-char)              ; skip %
+           ;; Skip all syntactic comments & white space:
+           (forward-comment (- (buffer-size))) t)
+          (t (goto-char start) nil))))
 
 
 ;;;; ****************
