@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sourceforge.net/u/fjwright>
 ;; Created: late 1992
-;; Time-stamp: <2022-09-08 16:48:42 franc>
+;; Time-stamp: <2022-09-08 17:06:44 franc>
 ;; Keywords: languages
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.7alpha
@@ -1102,8 +1102,8 @@ which is used by ‘reduce-calculate-indent-proc’."
                    (eobp))))
     ;; Skip to the preceding syntactically relevant character:
     (reduce--skip-comments-backward)
-    ;; If a terminator then skip it:
-    (re-search-backward "[\;$]\\=" nil t)
+    ;; If a terminator or opening bracket then skip it:
+    (re-search-backward "\\(?:[\;$]\\|\\s\(\\)\\=" nil t)
     ;; Now within a statement or at the end of the preceding
     ;; statement.  Skip arg statements backwards to immediately before
     ;; the preceding terminator or other delimiter:
@@ -1140,7 +1140,7 @@ Return t if successful; nil otherwise."
         (forward-char) (backward-list)  ; skip balanced brackets
         (reduce-backward-statement1 pattern at-eof))
        ((match-beginning 6)             ; found opening bracket
-        (forward-char) (skip-chars-forward " \t\n") (backward-char) t))))
+        (forward-char) (skip-chars-forward " \t\n") t))))
 
 
 (defun reduce-kill-statement (&optional arg)
