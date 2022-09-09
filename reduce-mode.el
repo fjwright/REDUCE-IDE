@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sourceforge.net/u/fjwright>
 ;; Created: late 1992
-;; Time-stamp: <2022-09-08 17:06:44 franc>
+;; Time-stamp: <2022-09-09 14:25:54 franc>
 ;; Keywords: languages
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.7alpha
@@ -1013,24 +1013,29 @@ The procedure visible is the one that contains point or follows point."
 ;; Currently reviewing this section September 2022.
 
 (defvar reduce-up-tries 1
-  "Repeat count of reduce-forward/backward-statement calls inside a
-block or group at its beginning or end.")
+  "Repeat count of reduce-forward/backward-statement calls.
+These were made inside a block or group at its beginning or end.")
 
-(defun reduce--up-block-or-group-maybe (found start)
-  "Move over ‘<<’, ‘begin’, ‘>>’ or ‘end’ (including end-of-file marker)
-after reduce-max-up-tries repeated interactive attempts."
-  (if (and found (= (point) start) (eq this-command last-command))
+(defvar reduce--outside-group-or-block nil
+  "Position immediately outside a group or block, or nil.
+This includes position after an end-of-file marker.  These
+positions are found from inside the group or block by
+‘reduce-forward-statement’ or ‘reduce-backward-statement’, which
+bind this variable.")
+;; *** Consider replacing with lexical binding. ***
+
+(defun reduce--up-block-or-group-maybe (start)
+  "Move over “<<”, “begin”, “>>” or “end” if at START.
+This includes the end-of-file marker.  But move only after
+‘reduce-max-up-tries’ repeated interactive attempts."
+  (if (and reduce--outside-group-or-block
+           (= (point) start)
+           (eq this-command last-command))
       (if (< reduce-up-tries reduce-max-up-tries)
           (setq reduce-up-tries (1+ reduce-up-tries))
         (setq reduce-up-tries 1)
-        (goto-char found))
+        (goto-char reduce--outside-group-or-block))
     (setq reduce-up-tries 1)))
-
-(defvar reduce--outside-group-or-block nil
-  "Position found immediately outside a group or block from inside it,
-or after an end-of-file marker, by ‘reduce-forward-statement’ or
-‘reduce-backward-statement’, which bind this variable, or nil.")
-;; *** Consider replacing with lexical binding. ***
 
 (defun reduce-forward-statement (arg)
   "Move forwards to the end of this or the following statement.
@@ -1046,14 +1051,14 @@ interactive tries."
         reduce--outside-group-or-block)
     ;; Skip an immediate closing bracket:
     (if (looking-at "[ \t\n]*\\s)") (goto-char (match-end 0)))
-    (while (and (> arg 0) (reduce-forward-statement1 pattern))
+    (while (and (> arg 0) (reduce--forward-statement1 pattern))
       (setq arg (1- arg)))
     ;; Move over  >>  or  end  on repeated interactive attempts:
-    (reduce--up-block-or-group-maybe reduce--outside-group-or-block start)
+    (reduce--up-block-or-group-maybe start)
     ;; Never move backwards:
     (if (< (point) start) (goto-char start))))
 
-(defun reduce-forward-statement1 (pattern)
+(defun reduce--forward-statement1 (pattern)
   "Syntactic search forwards for PATTERN.
 Recursive sub-function of ‘reduce-forward-statement’.
 Return t if successful; nil otherwise."
@@ -1065,18 +1070,18 @@ Return t if successful; nil otherwise."
         (goto-char (match-beginning 2))
         (skip-chars-backward " \t\n") t)
        ((match-beginning 3)             ; found start of group
-        (reduce--forward-group) (reduce-forward-statement1 pattern))
+        (reduce--forward-group) (reduce--forward-statement1 pattern))
        ((match-beginning 4)             ; found start of block
-        (reduce--forward-block) (reduce-forward-statement1 pattern))
+        (reduce--forward-block) (reduce--forward-statement1 pattern))
        ((match-beginning 5)             ; found opening bracket
         (backward-char) (forward-list)
-        (reduce-forward-statement1 pattern))
+        (reduce--forward-statement1 pattern))
        ((match-beginning 6)             ; found closing bracket
         (if (save-excursion             ; quoted list does not
               (backward-list)           ; contain REDUCE statements
               (skip-chars-backward " \t\n")
               (= (preceding-char) ?'))
-            (reduce-forward-statement1 pattern)
+            (reduce--forward-statement1 pattern)
           (backward-char) (skip-chars-backward " \t\n") t)))))
 
 
@@ -1108,19 +1113,19 @@ which is used by ‘reduce-calculate-indent-proc’."
     ;; statement.  Skip arg statements backwards to immediately before
     ;; the preceding terminator or other delimiter:
     (while (and (> arg 0)
-                (reduce-backward-statement1 pattern at-eof))
+                (reduce--backward-statement1 pattern at-eof))
       (setq arg (1- arg)))
     ;; Move forwards to start of actual statement, skipping any
     ;; terminator, comments and white space:
     (re-search-forward "\\=[\;$]" nil t)
     (reduce--skip-comments-forward)
     ;; Move over  <<  or  begin  on repeated interactive attempts:
-    (reduce--up-block-or-group-maybe reduce--outside-group-or-block start)
+    (reduce--up-block-or-group-maybe start)
     ;; Never move forwards:
     (if (> (point) start) (goto-char start))
     arg))
 
-(defun reduce-backward-statement1 (pattern at-eof)
+(defun reduce--backward-statement1 (pattern at-eof)
   "Syntactic search backwards for PATTERN.
 If AT-EOF is non-nil then after “end” in end-of-file marker, “;end;”.
 Recursive sub-function of ‘reduce-backward-statement’.
@@ -1132,13 +1137,13 @@ Return t if successful; nil otherwise."
         (setq reduce--outside-group-or-block (point))
         (goto-char (match-end 2)) t)
        ((match-beginning 3)             ; found end of group
-        (reduce--backward-group) (reduce-backward-statement1 pattern at-eof))
+        (reduce--backward-group) (reduce--backward-statement1 pattern at-eof))
        ((match-beginning 4)             ; found end of block (or file)
         (unless at-eof (reduce--backward-block))
-        (reduce-backward-statement1 pattern nil))
+        (reduce--backward-statement1 pattern nil))
        ((match-beginning 5)             ; found closing bracket
         (forward-char) (backward-list)  ; skip balanced brackets
-        (reduce-backward-statement1 pattern at-eof))
+        (reduce--backward-statement1 pattern at-eof))
        ((match-beginning 6)             ; found opening bracket
         (forward-char) (skip-chars-forward " \t\n") t))))
 
@@ -1182,7 +1187,7 @@ negative argument means move forward instead of backward."
       )))
 
 (defun reduce-up-block-or-group1 (arg)
-  "Sub-function of ‘reduce-up-block-or-group’."
+  "Sub-function of ‘reduce-up-block-or-group’, which see re ARG."
   (let ((start (point)))
     (if (or
      (and (> arg 0) (reduce-backward-block-or-group))
@@ -1230,7 +1235,7 @@ negative argument means move backward instead of forward."
       )))
 
 (defun reduce-down-block-or-group1 (arg)
-  "Sub-function of ‘reduce-down-block-or-group’."
+  "Sub-function of ‘reduce-down-block-or-group’, which see re ARG."
   (let ((start (point)))
     (if
     (if (> arg 0)
@@ -1420,7 +1425,7 @@ Return t if match found, nil otherwise."
 
 (defun reduce--re-search-backward1 (pattern move)
   "Search backwards for PATTERN; if no match and MOVE then move to end.
-  Recursive sub-function of ‘reduce--re-search-backward’.
+Recursive sub-function of ‘reduce--re-search-backward’.
 Process match to skip comments, strings, etc.
 Return t if match found, nil otherwise."
   (if (re-search-backward pattern nil move)
@@ -1445,16 +1450,18 @@ Otherwise do not move and return nil."
    ;; Check whether in comment statement:
    (save-match-data
      (let ((initial (point)) found
-           (pattern "\\(\\_<comment\\_>\\)\\|[;$]"))
-       ;; Move backwards to the nearest ‘comment’ keyword or terminator.
-       ;; *** BUT THEY MUST NOT BE WITHIN A % OR /**/ COMMENT, OR A STRING! ***
+           (pattern "\\(\\_<comment\\_>\\)\\|\\(\"\\)\\|[;$]"))
+       ;; Move backwards to the nearest ‘comment’ keyword or
+       ;; terminator not in a comment or string.  (Should also check
+       ;; whether match is in a /**/ comment!)
        (while (and (setq found (re-search-backward pattern nil 'move))
-                   (reduce--back-to-percent-comment-start)))
-       ;; If it is ‘comment’ then return its start position; otherwise return nil.
+                   (or (when (match-beginning 2) ; skip string
+                         (forward-char) (backward-sexp) t)
+                       (reduce--back-to-percent-comment-start))))
+       ;; If match is ‘comment’ then return its start position;
+       ;; otherwise return nil.
        (cond
-        ((and found (match-beginning 1))
-         ;; In comment statement – go to its beginning:
-         (goto-char (match-beginning 1)) t)
+        ((and found (match-beginning 1))) ; in comment statement
         (t (goto-char initial) nil)))))) ; not in comment statement
 
 (defun reduce--back-to-percent-comment-start ()
