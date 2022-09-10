@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sourceforge.net/u/fjwright>
 ;; Created: late 1992
-;; Time-stamp: <2022-09-10 14:06:33 franc>
+;; Time-stamp: <2022-09-10 18:02:19 franc>
 ;; Keywords: languages
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.7alpha
@@ -1054,6 +1054,9 @@ interactive tries."
     (if (looking-at "[ \t\n]*\\s)") (goto-char (match-end 0)))
     (while (and (> arg 0) (reduce--forward-statement1 pattern))
       (setq arg (1- arg)))
+    (when (> arg 0)                     ; error!
+      (goto-char start)
+      (user-error "End of statement not found"))
     ;; Move over  >>  or  end  on repeated interactive attempts:
     (reduce--up-block-or-group-maybe start)
     ;; Never move backwards:
@@ -1071,9 +1074,11 @@ Return t if successful; nil otherwise."
         (goto-char (match-beginning 2))
         (skip-chars-backward " \t\n") t)
        ((match-beginning 3)             ; found start of group
-        (reduce--forward-group) (reduce--forward-statement1 pattern))
+        (and (reduce--forward-group)
+             (reduce--forward-statement1 pattern)))
        ((match-beginning 4)             ; found start of block
-        (reduce--forward-block) (reduce--forward-statement1 pattern))
+        (and (reduce--forward-block)
+             (reduce--forward-statement1 pattern)))
        ((match-beginning 5)             ; found opening bracket
         (backward-char) (forward-list)
         (reduce--forward-statement1 pattern))
@@ -1083,7 +1088,10 @@ Return t if successful; nil otherwise."
               (skip-chars-backward " \t\n")
               (= (preceding-char) ?'))
             (reduce--forward-statement1 pattern)
-          (backward-char) (skip-chars-backward " \t\n") t)))))
+          (backward-char) (skip-chars-backward " \t\n") t)))
+    (save-excursion
+      (reduce--skip-comments-forward)
+      (eobp))))
 
 
 (defun reduce-backward-statement (arg)
@@ -1116,6 +1124,9 @@ which is used by ‘reduce-calculate-indent-proc’."
     (while (and (> arg 0)
                 (reduce--backward-statement1 pattern at-eof))
       (setq arg (1- arg)))
+    (when (> arg 0)                     ; error!
+      (goto-char start)
+      (user-error "Start of statement not found"))
     ;; Move forwards to start of actual statement, skipping any
     ;; terminator, comments and white space:
     (re-search-forward "\\=[\;$]" nil t)
@@ -1138,15 +1149,17 @@ Return t if successful; nil otherwise."
         (setq reduce--outside-group-or-block (point))
         (goto-char (match-end 2)) t)
        ((match-beginning 3)             ; found end of group
-        (reduce--backward-group) (reduce--backward-statement1 pattern at-eof))
+        (and (reduce--backward-group)
+             (reduce--backward-statement1 pattern at-eof)))
        ((match-beginning 4)             ; found end of block (or file)
-        (unless at-eof (reduce--backward-block))
-        (reduce--backward-statement1 pattern nil))
+        (and (or at-eof (reduce--backward-block))
+             (reduce--backward-statement1 pattern nil)))
        ((match-beginning 5)             ; found closing bracket
         (forward-char) (backward-list)  ; skip balanced brackets
         (reduce--backward-statement1 pattern at-eof))
        ((match-beginning 6)             ; found opening bracket
-        (forward-char) (skip-chars-forward " \t\n") t))))
+        (forward-char) (skip-chars-forward " \t\n") t))
+    (bobp)))
 
 
 (defun reduce-kill-statement (&optional arg)
@@ -1252,12 +1265,12 @@ negative argument means move backward instead of forward."
 
 
 (defun reduce--forward-block ()
-  "Move forwards to end of block containing point.
-Return t if successful; otherwise move as far as possible and return nil."
+  "Move forwards to end of block containing point if possible.
+Return t if successful; otherwise return nil."
   (let (found)
     (while (and
             (setq found (reduce--re-search-forward
-                         "\\_<end\\_>\\|\\(\\_<begin\\_>\\)" 'move))
+                         "\\_<end\\_>\\|\\(\\_<begin\\_>\\)"))
             (reduce--symbol-unquoted-&-distinct-p
              (match-beginning 0) (match-end 0))
             (match-beginning 1))
@@ -1267,12 +1280,12 @@ Return t if successful; otherwise move as far as possible and return nil."
     found))
 
 (defun reduce--backward-block ()
-  "Move backwards to start of block containing point.
-Return t if successful; otherwise move as far as possible and return nil."
+  "Move backwards to start of block containing point if possible.
+Return t if successful; otherwise return nil."
   (let (found)
     (while (and
             (setq found (reduce--re-search-backward
-                         "\\_<begin\\_>\\|\\(\\_<end\\_>\\)" 'move))
+                         "\\_<begin\\_>\\|\\(\\_<end\\_>\\)"))
             (reduce--symbol-unquoted-&-distinct-p
              (match-beginning 0) (match-end 0))
             (match-beginning 1))
@@ -1310,22 +1323,22 @@ It may be preceded only by an odd number of escape characters"
     (= (logand (skip-syntax-backward "/") 1) 0)))
 
 (defun reduce--forward-group ()
-  "Move forwards to end of group containing point.
-Return t if successful; otherwise move as far as possible and return nil."
+  "Move forwards to end of group containing point if possible.
+Return t if successful; otherwise return nil."
   (let (found)
     (while (and
-            (setq found (reduce--re-search-forward ">>\\|<<" 'move))
+            (setq found (reduce--re-search-forward ">>\\|<<"))
             (reduce--unescaped-p (match-beginning 0))
             (= (char-before) ?<))
       (reduce--forward-group))
     found))
 
 (defun reduce--backward-group ()
-  "Move backwards to start of group containing point.
-Return t if successful; otherwise move as far as possible and return nil."
+  "Move backwards to start of group containing point if possible.
+Return t if successful; otherwise return nil."
   (let (found)
     (while (and
-            (setq found (reduce--re-search-backward "<<\\|>>" 'move))
+            (setq found (reduce--re-search-backward "<<\\|>>"))
             (reduce--unescaped-p)
             (= (char-after) ?>))
       (reduce--backward-group))
