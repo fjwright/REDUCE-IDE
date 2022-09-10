@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sourceforge.net/u/fjwright>
 ;; Created: late 1992
-;; Time-stamp: <2022-09-09 14:25:54 franc>
+;; Time-stamp: <2022-09-10 14:06:33 franc>
 ;; Keywords: languages
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.7alpha
@@ -1010,7 +1010,8 @@ The procedure visible is the one that contains point or follows point."
 ;;;; Operations based on statements
 ;;;; ******************************
 
-;; Currently reviewing this section September 2022.
+;; This section updated September 2022.
+;; It now handles /*...*/ comments.
 
 (defvar reduce-up-tries 1
   "Repeat count of reduce-forward/backward-statement calls.
@@ -1150,22 +1151,16 @@ Return t if successful; nil otherwise."
 
 (defun reduce-kill-statement (&optional arg)
   "Kill the rest of the current statement or ARG statements from point.
-If no nonblanks kill thru newline.
 With prefix argument, kill that many statements from point.
-Negative arguments kill complete statements backwards, cf. ‘kill-line’."
-  ;; Based on kill-line in simple.el
-  (interactive "*P")            ; error if buffer read-only
-  (kill-region (point)
-               (progn
-                 (if (and (null arg) (looking-at "[ \t]*$"))
-                     (forward-line 1)
-                   (setq arg (prefix-numeric-value arg))
-                   (if (> arg 0)
-                       (progn
-                         (reduce-forward-statement arg)
-                         (skip-chars-forward " \t")) ; 2 Oct 1994
-                     (reduce-backward-statement (- 1 arg))))
-                 (point))))
+Negative arguments kill statements backwards, where the prefix
+argument minus (-) is equivalent to -1."
+  (interactive "*p")                    ; error if buffer read-only
+  (kill-region (point) (progn
+                         (if (< arg 0)
+                             (reduce-backward-statement (- arg))
+                           (reduce-forward-statement arg)
+                           (skip-syntax-forward "-"))
+                         (point))))
 
 
 ;;;; ************************

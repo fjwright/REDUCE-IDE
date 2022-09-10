@@ -2,7 +2,7 @@
 @c %**start of header
 @settitle GNU Emacs REDUCE Integrated Development Environment
 @c Manual last updated:
-@set UPDATED Time-stamp: <2022-09-03 15:11:38 franc>
+@set UPDATED Time-stamp: <2022-09-10 15:09:21 franc>
 @c Software version:
 @set VERSION 1.7alpha
 @afourpaper
@@ -341,11 +341,12 @@ the @emph{logical} statement currently containing (or respectively
 preceding or following) point, which may involve skipping many actual
 statements that are contained within the current statement.  In
 particular, as Emacs looks for the beginning or end of a statement it
-will skip complete compound statements (@code{begin @dots{} end}),
-group statements (@code{<< @dots{} >>}), and bracketed expressions
-(@code{(@dots{})}, @code{@{@dots{}@}} and @code{[@dots{}]}, even
-though square brackets are not normally used in REDUCE).  Bracket
-skipping is controlled entirely by the Emacs syntax table.
+will skip complete compound or block statements (@code{begin @dots{}
+end}), group statements (@code{<< @dots{} >>}), and bracketed
+expressions (@code{(@dots{})}, @code{@{@dots{}@}} and
+@code{[@dots{}]}, even though square brackets are not normally used in
+REDUCE).  Bracket skipping is controlled entirely by the Emacs syntax
+table.
 
 Hence, ``statement'' in this manual will normally mean a complete
 @emph{logical statement}.  A syntax-directed editor clearly must perform
@@ -370,19 +371,21 @@ consistent and reliable.
 
 REDUCE mode considers REDUCE statements to be terminated by the
 characters @code{;} and @code{$}.  It also considers statements
-contained within any kind of brackets to be terminated by those
-brackets, statements within compound statements (@code{begin @dots{}
-end}) to be terminated by the @code{begin} and @code{end} keywords,
-and statements within group statements (@code{<< @dots{} >>}) to be
-terminated by the @code{<<} and @code{>>} tokens.  Commas are not
-considered to separate statements.
+contained within any kind of brackets to be delimited by those
+brackets, statements within compound or block statements (@code{begin
+@dots{} end}) to be delimited by the @code{begin} and @code{end}
+keywords, and statements within group statements (@code{<< @dots{}
+>>}) to be delimited by the @code{<<} and @code{>>} tokens.  Commas
+are not considered to delimited statements.
 
 More precisely, a statement is considered to begin at the first
 non-white-space character following the previous statement terminator,
 opening bracket, @code{begin} or @code{<<}.  It is considered to end
 immediately after the first statement terminator or immediately after
 the last non-white-space character preceding a closing bracket,
-@code{end} or @code{>>}.
+@code{end} or @code{>>}.  Comments are treated as white space by all
+REDUCE mode commands other than those specifically related to comments
+(@ref{Comments,, Support for REDUCE comments}).
 
 The current philosophy of REDUCE mode is that the statements within
 compound or group statements form essentially isolated systems, and
@@ -405,8 +408,8 @@ to 1.  The commands to move forwards or backwards by statements do not
 move in the opposite direction if given a negative argument, in which
 case they do not move at all.  They contain special code to handle the
 keyword @code{end} when it is used as the end-of-file marker and they
-do not regard comment statements as statement, i.e. they treat them
-like white space.
+do not regard comment statements as statement, i.e.@: they treat them
+as white space.
 
 @table @kbd
 @item  C-c C-n
@@ -434,10 +437,10 @@ statement.
 @kindex C-c C-k
 @itemx M-x reduce-kill-statement
 @findex reduce-kill-statement
-Kill the rest of the current statement; if there are no non-blank
-characters kill through the newline.  With an argument, kill that many
-statements from point.  Negative arguments kill complete statements
-backwards, cf.@: @code{kill-line}.
+Kill the rest of the current statement from point.  With a prefix
+argument, kill that many statements from point.  Negative arguments
+kill statements backwards, where the prefix argument minus (-) is
+equivalent to -1.
 
 @item  C-c C-u
 @kindex C-c C-u
