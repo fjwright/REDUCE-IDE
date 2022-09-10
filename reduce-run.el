@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sourceforge.net/u/fjwright>
 ;; Created: late 1998
-;; Time-stamp: <2022-09-03 11:45:22 franc>
+;; Time-stamp: <2022-09-09 18:14:16 franc>
 ;; Keywords: languages, processes
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.7alpha
@@ -462,13 +462,17 @@ already running this command, switch to it.  Runs the hooks from
               'reduce-run-history)))))
   (if current-prefix-arg
       (reduce-run-reduce cmd "")        ; unknown REDUCE version
+    (when (and (null cmd) reduce-run-history)
+      ;; Non-interactive but history, so use it:
+      (setq cmd (car reduce-run-history)))
     (when (or (null cmd) (zerop (length cmd)))
       (setq cmd (x-popup-menu t `("REDUCE command name:"
                                   (""
                                    ,@(mapcar
                                       (lambda (x)
                                         (cons (car x) (car x)))
-                                      reduce-run-commands))))))
+                                      reduce-run-commands))))
+            reduce-run-history (list cmd)))
     (let ((reduce-run-command (assoc-string cmd reduce-run-commands t)))
       (if reduce-run-command
           (reduce-run-reduce (cdr reduce-run-command) (car reduce-run-command))
