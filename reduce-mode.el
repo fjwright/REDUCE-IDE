@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sourceforge.net/u/fjwright>
 ;; Created: late 1992
-;; Time-stamp: <2022-09-10 18:02:19 franc>
+;; Time-stamp: <2022-09-11 14:29:24 franc>
 ;; Keywords: languages
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.7alpha
@@ -136,8 +136,10 @@ Default is \"Procs/Ops\"."
   :type 'string
   :group 'reduce-interface)
 
-(defcustom reduce-max-up-tries 2
-  "Repeats of reduce-forward/backward-statement to move up block or group."
+(defcustom reduce-max-escape-tries 2
+  "Number of attempts required to escape a block or group.
+This relates to repeated use of ‘reduce-forward-statement’ or
+‘reduce-backward-statement’ from inside the block or group."
   :type 'integer
   :group 'reduce-interface)
 
@@ -1013,43 +1015,43 @@ The procedure visible is the one that contains point or follows point."
 ;; This section updated September 2022.
 ;; It now handles /*...*/ comments.
 
-(defvar reduce-up-tries 1
+(defvar reduce-escape-tries 1
   "Repeat count of reduce-forward/backward-statement calls.
 These were made inside a block or group at its beginning or end.")
 
-(defvar reduce--outside-group-or-block nil
-  "Position immediately outside a group or block, or nil.
+(defvar reduce--outside-block-or-group nil
+  "Position immediately outside a block or group, or nil.
 This includes position after an end-of-file marker.  These
-positions are found from inside the group or block by
+positions are found from inside the block or group by
 ‘reduce-forward-statement’ or ‘reduce-backward-statement’, which
 bind this variable.")
 ;; *** Consider replacing with lexical binding. ***
 
-(defun reduce--up-block-or-group-maybe (start)
+(defun reduce--escape-block-or-group (start)
   "Move over “<<”, “begin”, “>>” or “end” if at START.
 This includes the end-of-file marker.  But move only after
-‘reduce-max-up-tries’ repeated interactive attempts."
-  (if (and reduce--outside-group-or-block
+‘reduce-max-escape-tries’ repeated interactive attempts."
+  (if (and reduce--outside-block-or-group
            (= (point) start)
            (eq this-command last-command))
-      (if (< reduce-up-tries reduce-max-up-tries)
-          (setq reduce-up-tries (1+ reduce-up-tries))
-        (setq reduce-up-tries 1)
-        (goto-char reduce--outside-group-or-block))
-    (setq reduce-up-tries 1)))
+      (if (< reduce-escape-tries reduce-max-escape-tries)
+          (setq reduce-escape-tries (1+ reduce-escape-tries))
+        (setq reduce-escape-tries 1)
+        (goto-char reduce--outside-block-or-group))
+    (setq reduce-escape-tries 1)))
 
 (defun reduce-forward-statement (arg)
   "Move forwards to the end of this or the following statement.
 With ARG, move that many times.  Ignore (skip) comment statements.
 If looking at the end of a block or group, or the end-of-file
-marker, move over it after ‘reduce-max-up-tries’ consecutive
+marker, move over it after ‘reduce-max-escape-tries’ consecutive
 interactive tries."
   (interactive "p")
   (let ((case-fold-search t)
         (start (point))
         (pattern "\\([\;$]\\)\\|\\(>>\\|\\_<end\\_>\\)\\|\
 \\(<<\\)\\|\\(\\_<begin\\_>\\)\\|\\(\\s\(\\)\\|\\(\\s\)\\)")
-        reduce--outside-group-or-block)
+        reduce--outside-block-or-group)
     ;; Skip an immediate closing bracket:
     (if (looking-at "[ \t\n]*\\s)") (goto-char (match-end 0)))
     (while (and (> arg 0) (reduce--forward-statement1 pattern))
@@ -1058,7 +1060,7 @@ interactive tries."
       (goto-char start)
       (user-error "End of statement not found"))
     ;; Move over  >>  or  end  on repeated interactive attempts:
-    (reduce--up-block-or-group-maybe start)
+    (reduce--escape-block-or-group start)
     ;; Never move backwards:
     (if (< (point) start) (goto-char start))))
 
@@ -1070,7 +1072,7 @@ Return t if successful; nil otherwise."
       (cond
        ((match-beginning 1))            ; found terminator
        ((match-beginning 2)             ; found end of group or block
-        (setq reduce--outside-group-or-block (point))
+        (setq reduce--outside-block-or-group (point))
         (goto-char (match-beginning 2))
         (skip-chars-backward " \t\n") t)
        ((match-beginning 3)             ; found start of group
@@ -1098,7 +1100,7 @@ Return t if successful; nil otherwise."
   "Move backwards to the start of this or the preceding statement.
 With ARG, move that many times.  Ignore (skip) comment statements.
 If looking at the beginning of a block or group move over it
-after ‘reduce-max-up-tries’ consecutive interactive tries.
+after ‘reduce-max-escape-tries’ consecutive interactive tries.
 The end-of-file marker is treated as a statement.
 Return the count of statements left to move,
 which is used by ‘reduce-calculate-indent-proc’."
@@ -1107,7 +1109,7 @@ which is used by ‘reduce-calculate-indent-proc’."
         (start (point))
         (pattern "\\([\;$]\\)\\|\\(<<\\|\\_<begin\\_>\\)\
 \\|\\(>>\\)\\|\\(\\_<end\\_>\\)\\|\\(\\s\)\\)\\|\\(\\s\(\\)")
-        reduce--outside-group-or-block
+        reduce--outside-block-or-group
         ;; Check whether after end in end-of-file marker, “;end;”, to
         ;; avoid skipping a non-existent block to the top of the file!
         (at-eof (save-excursion
@@ -1132,7 +1134,7 @@ which is used by ‘reduce-calculate-indent-proc’."
     (re-search-forward "\\=[\;$]" nil t)
     (reduce--skip-comments-forward)
     ;; Move over  <<  or  begin  on repeated interactive attempts:
-    (reduce--up-block-or-group-maybe start)
+    (reduce--escape-block-or-group start)
     ;; Never move forwards:
     (if (> (point) start) (goto-char start))
     arg))
@@ -1146,7 +1148,7 @@ Return t if successful; nil otherwise."
       (cond
        ((match-beginning 1))           ; found terminator
        ((match-beginning 2)            ; found start of group or block
-        (setq reduce--outside-group-or-block (point))
+        (setq reduce--outside-block-or-group (point))
         (goto-char (match-end 2)) t)
        ((match-beginning 3)             ; found end of group
         (and (reduce--backward-group)

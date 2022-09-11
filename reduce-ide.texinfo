@@ -2,7 +2,7 @@
 @c %**start of header
 @settitle GNU Emacs REDUCE Integrated Development Environment
 @c Manual last updated:
-@set UPDATED Time-stamp: <2022-09-10 15:09:21 franc>
+@set UPDATED Time-stamp: <2022-09-11 15:24:34 franc>
 @c Software version:
 @set VERSION 1.7alpha
 @afourpaper
@@ -396,7 +396,7 @@ try hard enough, REDUCE mode will let a simple statement-oriented
 command move out of (but never into) a compound or group statement.
 Trying hard enough means repeating the same command enough times,
 which is determined by the value of the option
-@code{reduce-max-up-tries} (@ref{Customization,, Customization of
+@code{reduce-max-escape-tries} (@ref{Customization,, Customization of
 REDUCE IDE}), which currently has the default value 2.  The overall
 effect of this is to enforce a brief pause (one ineffective command
 execution) that serves to prevent you from skipping out of a compound
@@ -420,7 +420,7 @@ Move forwards to the end of the current statement if within a
 statement or to the end of the following statement otherwise.  With an
 argument, do it that many times.  If looking at the end of a block or
 group, or the end-of-file marker, move over it after
-@code{reduce-max-up-tries} consecutive interactive tries.
+@code{reduce-max-escape-tries} consecutive interactive tries.
 
 @item  C-c C-p
 @kindex C-c C-p
@@ -429,7 +429,7 @@ group, or the end-of-file marker, move over it after
 Move backwards to the start of the current statement if within a
 statement or to the start of the previous statement otherwise.  With
 an argument, do it that many times.  If looking at the beginning of a
-block or group move over it after @code{reduce-max-up-tries}
+block or group move over it after @code{reduce-max-escape-tries}
 consecutive interactive tries.  The end-of-file marker is treated as a
 statement.
 
@@ -1658,9 +1658,10 @@ see the documentation for @code{imenu-generic-expression}.
 Default value "Procs/Ops".  The title to use if REDUCE mode adds a
 procedure/operator menu to the menubar.
 
-@item reduce-max-up-tries
-Default value 2.  Number of repeats of @code{reduce-forward} or
-@code{backward-statement} required to move up out of a block or group.
+@item reduce-max-escape-tries
+Default value 2.  Number of repeats of @code{reduce-forward-statement}
+or @code{reduce-backward-statement} required to escape out of a block
+or group.
 @end vtable
 
 @c ===================================================================
