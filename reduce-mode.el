@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sourceforge.net/u/fjwright>
 ;; Created: late 1992
-;; Time-stamp: <2022-09-11 14:29:24 franc>
+;; Time-stamp: <2022-09-11 17:30:23 franc>
 ;; Keywords: languages
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.7alpha
@@ -1182,86 +1182,97 @@ argument minus (-) is equivalent to -1."
 ;;;; Moving by block or group
 ;;;; ************************
 
+;; This section updated September 2022.
+
 (defun reduce-up-block-or-group (arg)
   "Move backwards up one level of block or group; if ARG move forwards.
-Move to beginning of nearest unpaired  ‘begin’  or  ‘<<’.
-A universal argument means move forwards
-to end of nearest unpaired  ‘end’  or  ‘>>’.
-With a numeric argument, do it that many times, where a
-negative argument means move forward instead of backward."
+Move to the beginning of the nearest unpaired “begin” or “<<”.  A
+universal argument means move forwards to the end of the nearest
+unpaired “end” or “>>”.  Throw an error if the move fails.  With
+a numeric argument, do it that many times, where a negative
+argument means move forwards instead of backwards."
   (interactive "P")
   (let ((case-fold-search t))
-    (setq arg (reduce-prefix-numeric-value arg))
-    (while (and (not (= arg 0)) (reduce-up-block-or-group1 arg))
-      (setq arg (if (> arg 0) (1- arg) (1+ arg)))
-      )))
+    (setq arg (reduce--prefix-numeric-value arg))
+    (cond
+     ((> arg 0)                         ; move backwards
+      (while (> arg 0)
+        (let ((start (point)))
+          (unless (reduce--backward-block-or-group)
+            (goto-char start)
+            (user-error "Start of block or group containing point not found")))
+        (setq arg (1- arg))))
+     ((< arg 0)                         ; move forwards
+      (while (< arg 0)
+        (let ((start (point)))
+          (unless (reduce--forward-block-or-group)
+            (goto-char start)
+            (user-error "End of block or group containing point not found")))
+        (setq arg (1+ arg)))))))
 
-(defun reduce-up-block-or-group1 (arg)
-  "Sub-function of ‘reduce-up-block-or-group’, which see re ARG."
-  (let ((start (point)))
-    (if (or
-     (and (> arg 0) (reduce-backward-block-or-group))
-     (and (< arg 0) (reduce-forward-block-or-group)))
-    t
-      (goto-char start) nil)))
+(defun reduce--backward-block-or-group ()
+  "Move backwards to beginning of block or group containing point.
+Return t is successful; otherwise do not move and return nil.
+Recursive sub-function of ‘reduce-up-block-or-group’."
+  (if (reduce--re-search-backward
+       "\\_<begin\\_>\\|<<\\|\\(\\_<end\\_>\\)\\|\\(>>\\)")
+      (cond ((match-beginning 1)        ; end of block found
+             (reduce--backward-block)   ; skip block
+             (reduce--backward-block-or-group))
+            ((match-beginning 2)        ; end of group found
+             (reduce--backward-group)   ; skip group
+             (reduce--backward-block-or-group))
+            (t))))
 
-(defun reduce-backward-block-or-group ()
-  "Move backward to beginning of block or group containing point."
-  (if (reduce--re-search-backward "\\<begin\\>\\|<<\\|\\<end\\>\\|>>")
-      (cond ((= (following-char) ?>)
-         (reduce--backward-group)
-         (reduce-backward-block-or-group))
-        ((memq (following-char) '(?e ?E))
-         (reduce--backward-block)
-         (reduce-backward-block-or-group))
-        (t t)
-        )))
-
-(defun reduce-forward-block-or-group ()
-  "Move forward to end of block or group containing point."
-  (if (reduce--re-search-forward "\\<end\\>\\|>>\\|\\<begin\\>\\|<<")
-      (cond ((= (preceding-char) ?<)
-         (reduce--forward-group)
-         (reduce-forward-block-or-group))
-        ((memq (preceding-char) '(?n ?N))
-         (reduce--forward-block)
-         (reduce-forward-block-or-group))
-        (t t)
-        )))
+(defun reduce--forward-block-or-group ()
+  "Move forwards to end of block or group containing point.
+Return t is successful; otherwise do not move and return nil.
+Recursive sub-function of ‘reduce-up-block-or-group’."
+  (if (reduce--re-search-forward
+       "\\_<end\\_>\\|>>\\|\\(\\_<begin\\_>\\)\\|\\(<<\\)")
+      (cond ((match-beginning 1)        ; start of block found
+             (reduce--forward-block)    ; skip block
+             (reduce--forward-block-or-group))
+            ((match-beginning 2)        ; start of group found
+             (reduce--forward-group)    ; skip group
+             (reduce--forward-block-or-group))
+            (t))))
 
 
 (defun reduce-down-block-or-group (arg)
-  "Move forward down one level of block or group; if ARG move backwards.
-Move to end of nearest unpaired  ‘begin’  or  ‘<<’.
-A universal argument means move backward
-to beginning of nearest unpaired  ‘end’  or  ‘>>’.
-With a numeric argument, do it that many times, where a
-negative argument means move backward instead of forward."
+  "Move forwards down one level of block or group; if ARG move backwards.
+Move to the end of the nearest unpaired “begin” or “<<”.  A
+universal argument means move backwards to the beginning of the
+nearest unpaired “end” or “>>”.  Throw an error if the move
+fails.  With a numeric argument, do it that many times, where a
+negative argument means move backwards instead of forward."
   (interactive "P")
   (let ((case-fold-search t))
-    (setq arg (reduce-prefix-numeric-value arg))
-    (while (and (not (= arg 0)) (reduce-down-block-or-group1 arg))
-      (setq arg (if (> arg 0) (1- arg) (1+ arg)))
-      )))
+    (setq arg (reduce--prefix-numeric-value arg))
+    (cond
+     ((> arg 0)                         ; move forwards
+      (while (> arg 0)
+        (let ((start (point)))
+          (unless (and
+                   (reduce--re-search-forward
+                    "\\(<<\\|\\_<begin\\_>\\)\\|>>\\|\\_<end\\_>")
+                   (match-beginning 1))
+            (goto-char start)
+            (user-error "Start of block or group following point not found")))
+        (setq arg (1- arg))))
+     ((< arg 0)                         ; move backwards
+      (while (< arg 0)
+        (let ((start (point)))
+          (unless (and
+                   (reduce--re-search-backward
+                    "\\(>>\\|\\_<end\\_>\\)\\|<<\\|\\_<begin\\_>")
+                   (match-beginning 1))
+            (goto-char start)
+            (user-error "End of block or group preceding point not found")))
+        (setq arg (1+ arg)))))))
 
-(defun reduce-down-block-or-group1 (arg)
-  "Sub-function of ‘reduce-down-block-or-group’, which see re ARG."
-  (let ((start (point)))
-    (if
-    (if (> arg 0)
-        (and
-         (reduce--re-search-forward "<<\\|\\<begin\\>\\|>>\\|\\<end\\>")
-         (memq (preceding-char) '(?< ?n ?N)))
-      (and
-       (reduce--re-search-backward ">>\\|\\<end\\>\\|<<\\|\\<begin\\>")
-       (memq (following-char) '(?> ?e ?E)))
-      )
-    t
-      (goto-char start) nil)
-    ))
 
-
-(defun reduce-prefix-numeric-value (arg)
+(defun reduce--prefix-numeric-value (arg)
   "Interpret universal ARG as -1, otherwise apply ‘prefix-numeric-value’."
   (if (and arg (listp arg)) -1 (prefix-numeric-value arg)))
 
@@ -1303,17 +1314,16 @@ character, and that the following character is not an escape."
   ;; char-after and char-before return nil if the character is not
   ;; available, e.g. at BOB or EOB.
   (let (pos char)
-    (not
-     (or
-      ;; Preceded by single quote character?
-      (and (setq char (char-after (setq pos (1- beg))))
-           (eq char ?\'))
-      ;; Preceded by escaped character?
-      (and char (setq char (char-before pos))
-           (eq char ?!))
-      ;; Followed by escape character?
-      (and (setq char (char-after (setq pos end)))
-           (eq char ?!))))))
+    (not (or
+          ;; Preceded by single quote character?
+          (and (setq char (char-after (setq pos (1- beg))))
+               (eq char ?\'))
+          ;; Preceded by escaped character?
+          (and char (setq char (char-before pos))
+               (eq char ?!))
+          ;; Followed by escape character?
+          (and (setq char (char-after (setq pos end)))
+               (eq char ?!))))))
 
 (defun reduce--unescaped-p (&optional pos)
   "Return t if char at POS (defaults to point) is not escaped.
@@ -1323,6 +1333,7 @@ It may be preceded only by an odd number of escape characters"
   (save-excursion
     (if pos (goto-char pos))
     (= (logand (skip-syntax-backward "/") 1) 0)))
+
 
 (defun reduce--forward-group ()
   "Move forwards to end of group containing point if possible.
@@ -1350,6 +1361,9 @@ Return t if successful; otherwise return nil."
 ;;;; *****************
 ;;;; Skipping comments
 ;;;; *****************
+
+;; This section created September 2022.
+;; It handles /*...*/ comments.
 
 (defun reduce--skip-comments-forward ()
   "Move forwards across comments and white space of all types."
@@ -1507,7 +1521,7 @@ First two args specify the region boundaries, third arg is interactive."
     (goto-char beg-region)
     (beginning-of-line)
     (if (if arg
-        (< (reduce-prefix-numeric-value arg) 0)
+        (< (reduce--prefix-numeric-value arg) 0)
       (looking-at "%")) ; FJW
     ;; Uncomment the region:
     (let ((com "%+ ?"))
@@ -1538,7 +1552,7 @@ or following point (cf. minor modes)."
   (save-excursion
     (beginning-of-line)
     (if (if arg
-        (< (reduce-prefix-numeric-value arg) 0)
+        (< (reduce--prefix-numeric-value arg) 0)
       (looking-at "%"))
     (let (start)            ; uncomment lines
       (if (looking-at "%")      ; necessary ???

@@ -61,3 +61,4 @@ Main Updates since REDUCE IDE 1.6 (see the manual for details)
 * Initial incomplete support for C-style comments.  They are highlighted as comments but no other explicit support.
 * Improved code relating to the commands `reduce-forward-sexp` and `reduce-backward-sexp`.
 * **INCOMPATIBLE CHANGE** The command `reduce-eval-line` is now bound to the key sequence `C-c C-e` instead of `C-c C-n`, which was already bound to `reduce-forward-statement`.
+* **INCOMPATIBLE CHANGE** The customizable option `reduce-max-up-tries` is now called `reduce-max-escape-tries`.
