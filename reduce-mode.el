@@ -4,10 +4,10 @@
 
 ;; Author: Francis J. Wright <https://sourceforge.net/u/fjwright>
 ;; Created: late 1992
-;; Time-stamp: <2022-09-11 17:30:23 franc>
+;; Time-stamp: <2022-09-14 17:25:41 franc>
 ;; Keywords: languages
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
-;; Package-Version: 1.7alpha
+;; Package-Version: 1.7
 
 ;; This file is part of REDUCE IDE.
 
@@ -135,6 +135,9 @@ This adds a Contents menu to the menubar.  Default is nil."
 Default is \"Procs/Ops\"."
   :type 'string
   :group 'reduce-interface)
+
+(define-obsolete-variable-alias
+  'reduce-max-up-tries 'reduce-max-escape-tries "1.7")
 
 (defcustom reduce-max-escape-tries 2
   "Number of attempts required to escape a block or group.
@@ -1025,7 +1028,6 @@ This includes position after an end-of-file marker.  These
 positions are found from inside the block or group by
 ‘reduce-forward-statement’ or ‘reduce-backward-statement’, which
 bind this variable.")
-;; *** Consider replacing with lexical binding. ***
 
 (defun reduce--escape-block-or-group (start)
   "Move over “<<”, “begin”, “>>” or “end” if at START.
@@ -1356,6 +1358,78 @@ Return t if successful; otherwise return nil."
             (= (char-after) ?>))
       (reduce--backward-group))
     found))
+
+
+;;;; **********************************
+;;;; Balanced structure (sexp) commands
+;;;; **********************************
+
+(defun reduce-forward-sexp (arg)
+  "Move forwards across one balanced expression.
+With ARG, do it that many times.  Negative arg -N means move
+backward across N balanced expressions.  “Balanced expression”
+means a symbol, string, bracketed expression, block or group.  A
+symbol or bracketed expression may be quoted.  Skip any preceding
+or intervening white space or terminator characters.  This
+command assumes point is not in a string or comment.  It is
+modelled on ‘forward-sexp’.  If unable to move over a balanced
+expression, throw a user error."
+  (interactive "p")
+  (if (< arg 0) (reduce-backward-sexp (- arg))
+  (skip-chars-forward " \t\r\n;$")
+    (let ((case-fold-search t) (start (point)))
+      (cond
+       ((and (looking-at "<<") (reduce--unescaped-p))
+        (forward-char 2)
+        (unless (reduce--forward-group)
+          (reduce--move-error start "next")))
+       ((and (looking-at "\\_<begin\\_>")
+             (reduce--symbol-unquoted-&-distinct-p
+              (point) (+ (point) 5)))
+        (forward-char 5)
+        (unless (reduce--forward-block)
+          (reduce--move-error start "next")))
+       ((and (looking-at "\\s\(\\|\"") (reduce--unescaped-p))
+        (forward-sexp))
+       ((looking-at "'?\\_<\\|'\\s\(") (forward-sexp))
+       (t (reduce--move-error start "next")))
+      (if (> arg 1) (reduce-forward-sexp (1- arg))))))
+
+(defun reduce-backward-sexp (arg)
+  "Move backwards across one balanced expression.
+With ARG, do it that many times.  Negative arg -N means move
+backward across N balanced expressions.  “Balanced expression”
+means a symbol, string, bracketed expression, block or group.  A
+symbol or bracketed expression may be quoted.  Skip any following
+or intervening white space or terminator characters.  This
+command assumes point is not in a string or comment.  It is
+modelled on ‘backward-sexp’.  If unable to move over a balanced
+expression, throw a user error."
+  (interactive "p")
+  (if (< arg 0) (reduce-forward-sexp (- arg))
+  (skip-chars-backward " \t\r\n;$")
+    (let ((case-fold-search t) (start (point)))
+      (cond
+       ((and (looking-back ">>" nil) (reduce--unescaped-p (- (point) 2)))
+        (backward-char 2)
+        (unless (reduce--backward-group)
+          (reduce--move-error start "previous")))
+       ((and (looking-back "\\_<end\\_>" nil)
+             (reduce--symbol-unquoted-&-distinct-p
+              (- (point) 3) (point)))
+        (backward-char 3)
+        (unless (reduce--backward-block)
+          (reduce--move-error start "previous")))
+       ((and (looking-back "\\s\)\\|\"" nil) (reduce--unescaped-p (1- (point))))
+        (backward-sexp))
+       ((looking-back "\\_>" nil) (backward-sexp))
+       (t (reduce--move-error start "previous")))
+      (if (> arg 1) (reduce-backward-sexp (1- arg))))))
+
+(defun reduce--move-error (start next-or-previous)
+  "Move to START and throw an error appropriate to NEXT-OR-PREVIOUS."
+  (goto-char start)
+  (user-error "No %s “balanced expression”" next-or-previous))
 
 
 ;;;; *****************
@@ -1712,78 +1786,6 @@ If ‘nosplit’ is true then put ‘open’ and ‘close’ on the same line."
 (defun reduce-expand-if-then-else (&optional arg)
   "Insert ‘if ... then ... else’ and position point after ‘if’, ignoring ARG."
   (reduce-insert-if-then 'else))
-
-
-;;;; **********************************
-;;;; Balanced structure (sexp) commands
-;;;; **********************************
-
-(defun reduce-forward-sexp (arg)
-  "Move forward across one balanced expression.
-With ARG, do it that many times.  Negative arg -N means move
-backward across N balanced expressions.  “Balanced expression”
-means a symbol, string, bracketed expression, block or group.  A
-symbol or bracketed expression may be quoted.  Skip any preceding
-or intervening white space or terminator characters.  This
-command assumes point is not in a string or comment.  It is
-modelled on ‘forward-sexp’.  If unable to move over a balanced
-expression, throw a user error."
-  (interactive "p")
-  (if (< arg 0) (reduce-backward-sexp (- arg))
-  (skip-chars-forward " \t\r\n;$")
-    (let ((case-fold-search t) (start (point)))
-      (cond
-       ((and (looking-at "<<") (reduce--unescaped-p))
-        (forward-char 2)
-        (unless (reduce--forward-group)
-          (reduce--move-error start "next")))
-       ((and (looking-at "\\_<begin\\_>")
-             (reduce--symbol-unquoted-&-distinct-p
-              (point) (+ (point) 5)))
-        (forward-char 5)
-        (unless (reduce--forward-block)
-          (reduce--move-error start "next")))
-       ((and (looking-at "\\s\(\\|\"") (reduce--unescaped-p))
-        (forward-sexp))
-       ((looking-at "'?\\_<\\|'\\s\(") (forward-sexp))
-       (t (reduce--move-error start "next")))
-      (if (> arg 1) (reduce-forward-sexp (1- arg))))))
-
-(defun reduce-backward-sexp (arg)
-  "Move backward across one balanced expression.
-With ARG, do it that many times.  Negative arg -N means move
-backward across N balanced expressions.  “Balanced expression”
-means a symbol, string, bracketed expression, block or group.  A
-symbol or bracketed expression may be quoted.  Skip any following
-or intervening white space or terminator characters.  This
-command assumes point is not in a string or comment.  It is
-modelled on ‘backward-sexp’.  If unable to move over a balanced
-expression, throw a user error."
-  (interactive "p")
-  (if (< arg 0) (reduce-forward-sexp (- arg))
-  (skip-chars-backward " \t\r\n;$")
-    (let ((case-fold-search t) (start (point)))
-      (cond
-       ((and (looking-back ">>" nil) (reduce--unescaped-p (- (point) 2)))
-        (backward-char 2)
-        (unless (reduce--backward-group)
-          (reduce--move-error start "previous")))
-       ((and (looking-back "\\_<end\\_>" nil)
-             (reduce--symbol-unquoted-&-distinct-p
-              (- (point) 3) (point)))
-        (backward-char 3)
-        (unless (reduce--backward-block)
-          (reduce--move-error start "previous")))
-       ((and (looking-back "\\s\)\\|\"" nil) (reduce--unescaped-p (1- (point))))
-        (backward-sexp))
-       ((looking-back "\\_>" nil) (backward-sexp))
-       (t (reduce--move-error start "previous")))
-      (if (> arg 1) (reduce-backward-sexp (1- arg))))))
-
-(defun reduce--move-error (start next-or-previous)
-  "Move to START and throw an error appropriate to NEXT-OR-PREVIOUS."
-  (goto-char start)
-  (user-error "No %s “balanced expression”" next-or-previous))
 
 
 ;;;; *************************************

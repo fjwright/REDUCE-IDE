@@ -5,7 +5,7 @@ Major modes for editing and running REDUCE source code
 
 **[Francis Wright](https://sites.google.com/site/fjwcentaur)**
 
-Version 1.7alpha, September 2022
+Version 1.7, September 2022
 
 REDUCE IDE is a package that provides an Integrated Development Environment for the REDUCE computer algebra system within the GNU Emacs editor.  Its two major components are Emacs Lisp libraries that provide major modes for editing REDUCE source code and running a *command-line version* of REDUCE in an Emacs window.  It assumes that Emacs is running under a GUI such as Microsoft Windows or the X Window System under some flavour of UNIX or Linux, and displays Unicode character sets correctly.
 
@@ -45,20 +45,22 @@ Optional:
 To Do
 -----
 
-* Support C-style comments.
+* Full font-lock support for C-style comments (which currently prevent some other font locking).
 * Further rationalise and perhaps simplify the font-lock support.
 * Maybe highlight nested function calls without ().
-* Fix switch-to-reduce, which may hang when starting a new REDUCE process.
+* Check switch-to-reduce and related commands.
+* Check that sexp commands skip comments and add a kill sexp command.
 
 Main Updates since REDUCE IDE 1.6 (see the manual for details)
 --------------------------------------------------------------
 
-* **INCOMPATIBLE CHANGE** The command `run-reduce` is now the only way to run REDUCE.  It prompts for the REDUCE command name to run, defaulting to the last one used.
-* The option `reduce-run-commands` now accepts arbitrary key strings and an arbitrary number of REDUCE versions.
-* Improved access to the `comint` customization group (since REDUCE Run inherits from comint).
-* `<RET>` in REDUCE Run mode now adds a `;` input terminator automatically as appropriate (whereas `S-<RET>` never adds a terminator).
+* **INCOMPATIBLE CHANGE:** The command `run-reduce` is now the only way to run REDUCE.  It prompts for the REDUCE command name to run, defaulting to the last one used.
+* The commands `run-csl-reduce` and `run-psl-reduce` have been removed; use `run-reduce` and select the appropriate command name instead.
+* The customizable option `reduce-run-commands` now accepts arbitrary key strings and an arbitrary number of REDUCE versions.
+* Improved access to the `comint` customization group (since REDUCE Run mode inherits from comint).
+* `<RET>` in REDUCE Run mode now adds a `;` statement terminator automatically as appropriate (whereas `S-<RET>` never adds a terminator).
 * REDUCE mode now inherits from `prog-mode`, so it runs `prog-mode-hook` and some `prog-mode` customizations are relevant.
-* Initial incomplete support for C-style comments.  They are highlighted as comments but no other explicit support.
-* Improved code relating to the commands `reduce-forward-sexp` and `reduce-backward-sexp`.
-* **INCOMPATIBLE CHANGE** The command `reduce-eval-line` is now bound to the key sequence `C-c C-e` instead of `C-c C-n`, which was already bound to `reduce-forward-statement`.
-* **INCOMPATIBLE CHANGE** The customizable option `reduce-max-up-tries` is now called `reduce-max-escape-tries`.
+* Initial support for C-style `/**/` comments: they are now highlighted as comments and movement commands should skip them.
+* **INCOMPATIBLE CHANGE:** The command `reduce-eval-line` is now bound to the key sequence `C-c C-e` instead of `C-c C-n`, which was already bound to `reduce-forward-statement`.
+* Improved code relating to all the commands that move by statements and expressions.
+* **INCOMPATIBLE CHANGE:** The customizable option `reduce-max-up-tries` is now called `reduce-max-escape-tries`.

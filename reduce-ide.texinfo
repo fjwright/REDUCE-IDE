@@ -2,9 +2,9 @@
 @c %**start of header
 @settitle GNU Emacs REDUCE Integrated Development Environment
 @c Manual last updated:
-@set UPDATED Time-stamp: <2022-09-11 15:24:34 franc>
+@set UPDATED Time-stamp: <2022-09-14 17:25:41 franc>
 @c Software version:
-@set VERSION 1.7alpha
+@set VERSION 1.7
 @afourpaper
 @c With different size paper the printed page breaks will need attention!
 @c Look for @page and @need commands.
@@ -116,13 +116,14 @@ syntax-directed editing of REDUCE source code (REDUCE mode) and a
 subsidiary major mode for running REDUCE as an inferior process with
 input and output via a buffer (REDUCE Run mode).  REDUCE is a system
 and language for algebraic computing developed originally by Anthony
-C.  Hearn, which is now Open Source and available from
+C. Hearn, which is now Open Source and available from
 @uref{https://sourceforge.net/projects/reduce-algebra/, SourceForge}.
 It therefore shares the GNU spirit of collaborative software
 development, which provided part of my motivation to begin this
-project.  REDUCE is also written in Lisp, as is (most of) Emacs.
-However, the REDUCE user language is similar to Algol-60 (which looks
-a bit like a cross between Pascal and FORTRAN-77).
+project.  REDUCE is written in Lisp, as is (most of) Emacs.  However,
+the REDUCE user language is similar to
+@uref{https://en.wikipedia.org/wiki/ALGOL_60, Algol 60}, an ancestor
+of most current programming languages.
 
 I began development of REDUCE mode tentatively in late 1992 and
 seriously in early 1994, and I began development of REDUCE Run mode in
@@ -145,10 +146,12 @@ versions of Microsoft Windows and Linux.  It should also run under
 closely related versions of GNU Emacs and on other platforms, but I
 may not be able to provide support.
 
-REDUCE IDE version 1.6 provides better syntactic highlighting
-(fontification) and better delimiter matching, which are provided by
-two new files.  It also repair support for running PSL REDUCE on
-Microsoft Windows.  @xref{REDUCE on Windows} for further details.
+REDUCE IDE version 1.7 provides: support for running several different
+versions of REDUCE and automatic termination of input to REDUCE
+(@pxref{Run REDUCE,, Running@comma{} re-running and switching to
+REDUCE}); partial support for C-style @code{/**/} comments;
+improvements to the commands that move by statement, block, group,
+etc.@: (@pxref{Statements,, Commands that operate on statements}).
 
 This manual assumes that you are familiar in general with both Emacs
 and REDUCE.
@@ -160,8 +163,8 @@ statements, procedures and comments.  To the reader who has never used
 a syntax-directed editor, I can only say that it is surprisingly
 useful!  In particular, the automatic indentation code provides
 valuable clues to potential REDUCE programming errors by showing how
-the REDUCE parser is likely to interpret the code
-(@pxref{Indentation,, Indenting REDUCE code automatically}).
+the REDUCE parser is likely to interpret the code; @ref{Indentation,,
+Indenting REDUCE code automatically}.
 
 The purpose of REDUCE Run mode is to provide a friendly interface to a
 @strong{command-line version} of REDUCE running as an inferior process
@@ -170,15 +173,15 @@ functionality from REDUCE mode and cannot be run alone.  The
 assumption is that normal use will involve editing one or more REDUCE
 source files and running REDUCE simultaneously, and this is what
 REDUCE Run mode aims to support.  REDUCE Run mode is described in its
-own sub-manual: @pxref{Run, Running REDUCE in a buffer}.
+own sub-manual; @ref{Run, Running REDUCE in a buffer}.
 
 @kindex C-h m
 @findex describe-mode
 All REDUCE IDE commands are self-documenting as usual in Emacs,
-including in particular the modes themselves.  Hence, for an overview of
-the version of a REDUCE mode that is actually installed in your Emacs,
-select it in some buffer and then give the command @kbd{C-h m}
-(@code{describe-mode}) or use the @kbd{Help} menu option @kbd{Describe}.
+including in particular the modes themselves.  Hence, for an overview
+of REDUCE mode, select it in some buffer and then give the command
+@kbd{C-h m} (@code{describe-mode}) or use the @kbd{Help} menu option
+@kbd{Describe}.
 
 @c ===================================================================
 
@@ -208,17 +211,17 @@ REDUCE mode is provided by files called @file{reduce-mode.el},
 of Emacs Lisp source code.  These files should be byte-compiled, and
 the compiled (@file{.elc}) files installed in a directory from which
 Emacs loads its Lisp code.  If necessary, you can customize your Emacs
-@code{load-path} so that Emacs can find the @file{.elc} files.
-@xref{Customization,,,emacs, The Emacs Editor}.
+@code{load-path} so that Emacs can find the @file{.elc} files;
+@ref{Customization,,,emacs, The Emacs Editor}.
 
 Emacs initialization and customization is stored in a file that is
 normally called @file{.emacs} and lives in your home directory.  The
-precise meaning of ``home directory'' depends on both your OS and
-Emacs version; the easiest way to find it in Emacs is to visit the
-directory @file{~}, or just visit the file @file{~/.emacs} directly.
-Your @file{.emacs} file is updated automatically by the Emacs
-customization facility and you can also edit it by hand to add other
-configuration.  @xref{Init File,,,emacs,The Emacs Editor}.
+precise meaning of ``home directory'' depends on both your operating
+system and Emacs version; the easiest way to find it in Emacs is to
+visit the directory @file{~}, or just visit the file @file{~/.emacs}
+directly.  Your @file{.emacs} file is updated automatically by the
+Emacs customization facility and you can also edit it by hand to add
+other configuration.  @xref{Init File,,,emacs,The Emacs Editor}.
 
 @findex load-library
 Before REDUCE mode can be used, the file @file{reduce-mode.elc} must
@@ -258,7 +261,7 @@ file naming convention then make the appropriate change(s) to the above
 statement.  Emacs also provides other facilities that can be used for
 controlling major modes.
 
-Installation of REDUCE Run mode is documented separately.  @xref{Run,,
+Installation of REDUCE Run mode is documented separately; @ref{Run,,
 Running REDUCE in a buffer}.
 
 @c ===================================================================
@@ -271,15 +274,14 @@ Running REDUCE in a buffer}.
 @findex reduce-mode
 REDUCE mode can be selected by giving the command @kbd{M-x
 reduce-mode}, although normally it will be selected automatically,
-probably via the filename extension (@ref{Installation,, Installation
-of the REDUCE IDE}).  REDUCE mode inherits from @code{prog-mode} and
-so shares some basic functionality common to all Emacs programming
-modes.
+probably via the filename extension; @ref{Installation,, Installation
+of the REDUCE IDE}.  REDUCE mode inherits from @code{prog-mode} and so
+shares some basic functionality common to all Emacs programming modes.
 
 The commands provided by REDUCE mode are aware of REDUCE syntax and
 ignore the contents of strings and the case of characters.  Except for
-the special comment commands (@ref{Comments,, Support for REDUCE
-comments}), they also ignore comments.  The standard GNU Emacs
+the special comment commands, they also ignore comments;
+@ref{Comments,, Support for REDUCE comments}).  The standard GNU Emacs
 indentation (@ref{Indentation,, Indenting REDUCE code automatically})
 and comment commands are supported, either via the general Emacs
 mechanisms or by re-binding the standard keys to REDUCE mode versions
@@ -289,12 +291,12 @@ those of Lisp mode, except that comments are started by percent
 (@code{%}) signs or the keyword @code{comment}.  I have also taken
 some ideas from FORTRAN mode.
 
-The standard Emacs syntax tables have been modified to reflect REDUCE
-syntax, so that for example Emacs knows that the REDUCE escape character
-is @code{!}.  However, there remain some unresolved problems concerning
-the REDUCE escape character.  @xref{Font-Lock,,Font-lock support for
-automatic font selection,,}.  @xref{Miscellaneous,,Miscellaneous minor
-features and bugs,,}.
+The standard Emacs syntax tables are modified to reflect REDUCE
+syntax, so that for example Emacs knows that the REDUCE escape
+character is @code{!}.  However, there remain some unresolved problems
+concerning the REDUCE escape character.  @xref{Font-Lock,,Font-lock
+support for automatic font selection,,}.
+@xref{Miscellaneous,,Miscellaneous minor features and bugs,,}.
 
 Blank lines separate ``paragraphs''.
 
@@ -335,17 +337,17 @@ facilities of REDUCE mode.
 @cindex Operations on Statements
 
 The most basic facility provided by REDUCE mode is the ability to move
-forwards and backwards by statements through a file of REDUCE source
-code.  Moving by one statement means moving to the beginning or end of
-the @emph{logical} statement currently containing (or respectively
-preceding or following) point, which may involve skipping many actual
-statements that are contained within the current statement.  In
-particular, as Emacs looks for the beginning or end of a statement it
-will skip complete compound or block statements (@code{begin @dots{}
-end}), group statements (@code{<< @dots{} >>}), and bracketed
-expressions (@code{(@dots{})}, @code{@{@dots{}@}} and
-@code{[@dots{}]}, even though square brackets are not normally used in
-REDUCE).  Bracket skipping is controlled entirely by the Emacs syntax
+forwards and backwards by statements or expressions through a file of
+REDUCE source code.  Moving by one statement means moving to the
+beginning or end of the @emph{logical} statement currently containing
+(or respectively preceding or following) point, which may involve
+skipping many actual statements that are contained within the current
+statement.  In particular, as REDUCE mode looks for the beginning or
+end of a statement it will skip complete compound or block statements
+(@code{begin @dots{}  end}), group statements (@code{<< @dots{} >>}),
+and bracketed expressions (@code{(@dots{})}, @code{@{@dots{}@}} and
+@code{[@dots{}]}, although square brackets are not normally used in
+REDUCE)@.  Bracket skipping is controlled entirely by the Emacs syntax
 table.
 
 Hence, ``statement'' in this manual will normally mean a complete
@@ -369,6 +371,10 @@ obey precisely the full syntax of the language, provided it is
 consistent and reliable.
 @end itemize
 
+In particular, the REDUCE-mode movement commands may fail if point is
+within a comment or string, although they should skip complete
+comments and strings.
+
 REDUCE mode considers REDUCE statements to be terminated by the
 characters @code{;} and @code{$}.  It also considers statements
 contained within any kind of brackets to be delimited by those
@@ -384,8 +390,8 @@ opening bracket, @code{begin} or @code{<<}.  It is considered to end
 immediately after the first statement terminator or immediately after
 the last non-white-space character preceding a closing bracket,
 @code{end} or @code{>>}.  Comments are treated as white space by all
-REDUCE mode commands other than those specifically related to comments
-(@ref{Comments,, Support for REDUCE comments}).
+REDUCE-mode commands other than those specifically related to
+comments; @ref{Comments,, Support for REDUCE comments}.
 
 The current philosophy of REDUCE mode is that the statements within
 compound or group statements form essentially isolated systems, and
@@ -396,8 +402,8 @@ try hard enough, REDUCE mode will let a simple statement-oriented
 command move out of (but never into) a compound or group statement.
 Trying hard enough means repeating the same command enough times,
 which is determined by the value of the option
-@code{reduce-max-escape-tries} (@ref{Customization,, Customization of
-REDUCE IDE}), which currently has the default value 2.  The overall
+@code{reduce-max-escape-tries}, which currently has the default value
+2; @ref{Customization,, Customization of REDUCE IDE}.  The overall
 effect of this is to enforce a brief pause (one ineffective command
 execution) that serves to prevent you from skipping out of a compound
 or group statement accidentally, but without causing any serious
@@ -409,10 +415,10 @@ move in the opposite direction if given a negative argument, in which
 case they do not move at all.  They contain special code to handle the
 keyword @code{end} when it is used as the end-of-file marker and they
 do not regard comment statements as statement, i.e.@: they treat them
-as white space.
+as white space.  They report a user error if they fail.
 
 @table @kbd
-@item  C-c C-n
+@item C-c C-n
 @kindex C-c C-n
 @itemx M-x reduce-forward-statement
 @findex reduce-forward-statement
@@ -422,7 +428,7 @@ argument, do it that many times.  If looking at the end of a block or
 group, or the end-of-file marker, move over it after
 @code{reduce-max-escape-tries} consecutive interactive tries.
 
-@item  C-c C-p
+@item C-c C-p
 @kindex C-c C-p
 @itemx M-x reduce-backward-statement
 @findex reduce-backward-statement
@@ -433,7 +439,7 @@ block or group move over it after @code{reduce-max-escape-tries}
 consecutive interactive tries.  The end-of-file marker is treated as a
 statement.
 
-@item  C-c C-k
+@item C-c C-k
 @kindex C-c C-k
 @itemx M-x reduce-kill-statement
 @findex reduce-kill-statement
@@ -442,25 +448,53 @@ argument, kill that many statements from point.  Negative arguments
 kill statements backwards, where the prefix argument minus (-) is
 equivalent to -1.
 
-@item  C-c C-u
+@item C-c C-u
 @kindex C-c C-u
 @itemx M-x reduce-up-block-or-group
 @findex reduce-up-block-or-group
-Move backward up one level of block or group, i.e.@: to the beginning of
-the nearest unpaired @code{begin} or @code{<<}.  A universal argument
-means move forward, i.e.@: to the end of the nearest unpaired @code{end}
-or @code{>>}.  With a numeric argument, do it that many times, where a
-negative argument means move forward instead of backward.
+Move backwards up one level of block or group, i.e.@: to the beginning
+of the nearest unpaired @code{begin} or @code{<<}.  A universal
+argument means move forwards, i.e.@: to the end of the nearest
+unpaired @code{end} or @code{>>}.  With a numeric argument, do it that
+many times, where a negative argument means move forwards instead of
+backwards.
 
-@item  C-c C-d
+@item C-c C-d
 @kindex C-c C-d
 @itemx M-x reduce-down-block-or-group
 @findex reduce-down-block-or-group
-Move forward down one level of block or group, i.e.@: to the end of the
-nearest unpaired @code{begin} or @code{<<}.  A universal argument means
-move backward to the beginning of the nearest unpaired @code{end} or
-@code{>>}.  With a numeric argument, do it that many times, where a
-negative argument means move backward instead of forward.
+Move forwards down one level of block or group, i.e.@: to the end of
+the nearest unpaired @code{begin} or @code{<<}.  A universal argument
+means move backwards to the beginning of the nearest unpaired
+@code{end} or @code{>>}.  With a numeric argument, do it that many
+times, where a negative argument means move backwards instead of
+forwards.
+@end table
+
+The following two commands move by ``balanced expression'', which
+means a symbol, string, bracketed expression, block or group.  A
+symbol or bracketed expression may be quoted.  The commands skip any
+preceding or intervening white space or terminator characters, but
+assume point is not in a string or comment.
+
+@table @kbd
+@item C-M-f
+@kindex C-M-f
+@itemx M-x reduce-forward-sexp
+@findex reduce-forward-sexp
+Move forwards across one ``balanced expression''.  With a numeric
+argument, move that many times, where a negative argument means move
+backwards instead of forwards.  This command is modelled on
+@code{forward-sexp}.
+
+@item C-M-b
+@kindex C-M-b
+@itemx M-x reduce-backward-sexp
+@findex reduce-backward-sexp
+Move backwards across one ``balanced expression''.  With a numeric
+argument, move that many times, where a negative argument means move
+forwards instead of backwards.  This command is modelled on
+@code{backward-sexp}.
 @end table
 
 @c ===================================================================
@@ -582,31 +616,27 @@ argument, narrow to the following arg procedures including this one.
 
 There are three comment conventions used in REDUCE@.  One is the
 comment statement, which is a statement that begins with the keyword
-@code{comment} and ends with a statement separator.  This is not used
+@code{comment} and ends with a statement terminator.  This is not used
 much in modern REDUCE code.  The most commonly used form of comment
 begins with a @code{%} character and ends at the end of the line.
 Hence, it can appear either on its own on a line or at the end of a
-line after other code.
-
-C-style comments, which begin with @code{/*} and end with @code{*/},
-are also accepted although not widely used.  REDUCE IDE provides some
-initial support for such comments (in particular, they will be
-highlighted as comments), but support is not yet complete, so not all
-of the following applies.
+line after other code.  C-style comments, which begin with @code{/*}
+and end with @code{*/}, are also accepted although not (yet) widely
+used.  REDUCE mode highlights them all as comments.
 
 Comments are ignored (skipped) by all syntax-directed commands.  (This
 is not trivial to achieve, since comments can contain essentially
-arbitrary text including keywords, and %-comments can contain statement
-separators, which do not have any syntactic significance.)  There is
-currently no way to use any of the REDUCE syntax-directed commands on
-comment statements.
+arbitrary text including keywords, and @code{%} and @code{/**/}
+comments can contain statement terminators, which do not have any
+syntactic significance.)  There is currently no way to use any of the
+REDUCE syntax-directed commands on comment statements.
 
-There is no special support for comment statements other than that they
-are currently @emph{completely} ignored.  There is considerably more
-support for %-comments, much of which is already built into Emacs
-because %-comments are very similar to the comments used in Emacs Lisp.
-Indeed, the comment conventions supported by REDUCE mode are modelled
-primarily on those used in Emacs Lisp mode.
+There is no other support for comment statements or @code{/**/}
+comments.  There is considerably more support for %-comments, much of
+which is already built into Emacs because %-comments are very similar
+to the comments used in Emacs Lisp.  Indeed, the comment conventions
+supported by REDUCE mode are modelled primarily on those used in Emacs
+Lisp mode.
 
 The comment commands are intimately related to the automatic comment
 indentation conventions.  (These are the indentation conventions
@@ -614,33 +644,34 @@ enforced by the Emacs comment and indentation commands, although the
 user is not otherwise forced to follow them.)  @xref{Indentation,,
 Indenting REDUCE code automatically}.
 
-The indentation of a %-comment that begins with no more than 2 @code{%}
-characters together and appears alone on a line is determined by the
-previous non-blank line.  If this is a procedure (header) statement then
-the comment line is indented relative to it, otherwise it has no indent
-relative to the previous line, and at the beginning of a file it is not
-indented at all.  A %-comment at the end of a line of code is indented
-to the column specified by the value of the standard Emacs buffer-local
-variable @code{comment-column}, which by default is 40 (half way across
-a ``standard'' 80 column page), unless the code extends beyond this
-column.  In that case, the comment begins one space later.
+The indentation of a @code{%}-comment that begins with no more than 2
+@code{%} characters together and appears alone on a line is determined
+by the previous non-blank line.  If this is a procedure (header)
+statement then the comment line is indented relative to it, otherwise
+it has no indent relative to the previous line, and at the beginning
+of a file it is not indented at all.  A @code{%}-comment at the end of
+a line of code is indented to the column specified by the value of the
+standard Emacs buffer-local variable @code{comment-column}, which by
+default is 40 (half way across a ``standard'' 80 column page), unless
+the code extends beyond this column.  In that case, the comment begins
+one space later.
 
 This convention can be over-ridden as follows.  If the comment begins
 with 3 or more @code{%} characters then the comment indentation is not
 changed.  This allows a comment to be placed anywhere on an empty line
 without any risk of it being automatically re-indented.
 
-A new single-%-comment can be introduced and/or automatically indented
-by the standard Emacs command @code{indent-for-comment}, normally bound
-to the key @kbd{Meta-;}.  An existing %-comment can be automatically
-continued on the next line by the standard Emacs command
-@code{indent-new-comment-line}, normally bound to the key
-@kbd{Meta-@key{LFD}}.  This will copy the structure of the %-comment to
-be continued, including the number of @code{%} characters and the
-indentation.  All other indentation commands will also indent
-%-comments, in particular those bound to the @kbd{@key{TAB}} and
-@kbd{@key{BACKTAB}} (i.e.@: @kbd{Shift-@key{TAB}}) keys.
-@xref{Indentation,, Indenting REDUCE code automatically}.
+A new single-@code{%}-comment can be introduced and/or automatically
+indented by the standard Emacs command @code{indent-for-comment},
+normally bound to the key @kbd{M-;}.  An existing @code{%}-comment can
+be automatically continued on the next line by the standard Emacs
+command @code{indent-new-comment-line}, normally bound to the key
+@kbd{M-@key{LFD}}.  This will copy the structure of the
+@code{%}-comment to be continued, including the number of @code{%}
+characters and the indentation.  All other indentation commands will
+also indent @code{%}-comments, in particular those bound to the
+@kbd{@key{TAB}} and @kbd{@key{BACKTAB}} (i.e.@: @kbd{S-@key{TAB}})
+keys.  @xref{Indentation,, Indenting REDUCE code automatically}.
 
 @table @kbd
 @item  M-;
@@ -658,36 +689,37 @@ within one.  The body of the continued comment is indented under the
 previous comment line.
 @end table
 
-The only program text that it normally makes sense to fill or justify is
-comment text.  Hence, REDUCE mode rebinds the key @kbd{M-q} that
+The only program text that it normally makes sense to fill or justify
+is comment text.  Hence, REDUCE mode rebinds the key @kbd{M-q} that
 normally fills or justifies a paragraph to the command
 @code{reduce-fill-comment}.  This should be completely safe to use in
 REDUCE code (unlike @code{fill-paragraph} etc., which would be a
 potential disaster were there no undo facility!), and makes it easy to
 keep comments formatted tidily.  Currently this command fills or
-justifies only %-comments and not comment statements.
+justifies only @code{%}-comments.
 
 @table @kbd
 @item  M-q
 @kindex M-q
 @itemx M-x reduce-fill-comment
 @findex reduce-fill-comment
-Fill successive %-comment lines around or immediately following point.
-A prefix argument means justify as well.
+Fill successive @code{%}-comment lines around or immediately following
+point.  A prefix argument means justify as well.
 @end table
 
 REDUCE mode also provides commands for turning sections of text into
-%-comments by adding @code{%} characters at the start of each line,
-which will be referred to as ``start-comments''.  These commands are
-intended primarily for temporarily preventing REDUCE from executing
-sections of code without actually removing them.  Such a section can be
-either the current region or the procedure ending after point.  By
-default, these commands automatically toggle the comment status.  When
-given an interactive argument, they remove any start-commenting of the
-specified section of text if the argument is negative (or null) and
-insert start-commenting if the argument is positive.  The precise text
-that is added to or removed from each line is the value of the variable
-@code{reduce-comment-region-string}, which defaults to @samp{%% }.
+@code{%}-comments by adding @code{%} characters at the start of each
+line, which will be referred to as ``start-comments''.  These commands
+are intended primarily for temporarily preventing REDUCE from
+executing sections of code without actually removing them.  Such a
+section can be either the current region or the procedure ending after
+point.  By default, these commands automatically toggle the comment
+status.  When given an interactive argument, they remove any
+start-commenting of the specified section of text if the argument is
+negative (or null) and insert start-commenting if the argument is
+positive.  The precise text that is added to or removed from each line
+is the value of the variable @code{reduce-comment-region-string},
+which defaults to @samp{%% }.
 
 @table @kbd
 @item  C-c ;
@@ -730,12 +762,13 @@ indentation currently provided by REDUCE mode is very inflexible and
 reflects very much my own style of indentation.  Future versions may
 provide more flexible and customizable indentation.
 
-Currently all indentation is done in steps consisting of a fixed number
-of columns determined by the value of the variable
-@code{reduce-indentation} (@pxref{Customization,, Customization of
-REDUCE IDE}), the default value of which is 3.  This is the indentation
-recommended by A. C. Hearn (the principal author of REDUCE) for the
-indentation of the first line after a procedure (header) statement.
+Currently all indentation is done in steps consisting of a fixed
+number of columns determined by the value of the variable
+@code{reduce-indentation}, the default value of which is 3;
+@ref{Customization,, Customization of REDUCE IDE}.  This is the
+indentation recommended by A.@ C.@ Hearn (the principal author of
+REDUCE) for the indentation of the first line after a procedure
+(header) statement.
 
 REDUCE mode provides fairly intelligent automatic indentation.  The
 style used is as follows, where the indentation of a child statement is
@@ -863,16 +896,16 @@ Indent or re-indent the procedure (and trailing white space) ending
 after point by applying @code{reduce-indent-line} to each line.
 @end table
 
-An inverse of the extra-indentation facility is provided to decrease the
-indentation by one step.  This command is bound to @kbd{Shift-@key{TAB}}
-(i.e.@: @kbd{@key{BACKTAB}}) if possible, but not all platforms support
-this (because it has no ASCII representation).  It may be no different
-from @kbd{@key{TAB}} alone, or it may generate an obscure ASCII
-sequence, so just try @kbd{Shift-@key{TAB}}, or ask Emacs what function
-is bound to @kbd{Shift-@key{TAB}} (by using @kbd{C-h k}).  A default key
-binding, which should work on all platforms, is provided as @kbd{C-c
-@key{TAB}}.  (However, currently this is rebound by REDUCE Run mode.
-@xref{Run Keys,, Run mode key bindings and menu}.)
+An inverse of the extra-indentation facility is provided to decrease
+the indentation by one step.  This command is bound to
+@kbd{S-@key{TAB}} (i.e.@: @kbd{@key{BACKTAB}}) if possible, but not
+all platforms support this (because it has no ASCII representation).
+It may be no different from @kbd{@key{TAB}} alone, or it may generate
+an obscure ASCII sequence, so just try @kbd{S-@key{TAB}}, or ask Emacs
+what function is bound to @kbd{S-@key{TAB}} (by using @kbd{C-h k}).  A
+default key binding, which should work on all platforms, is provided
+as @kbd{C-c @key{TAB}}.  (However, currently this is rebound by REDUCE
+Run mode.  @xref{Run Keys,, Run mode key bindings and menu}.)
 
 With an argument, @code{reduce-unindent-line} rigidly unindents by one
 step the current line and the rest of the logical statement as an
@@ -882,8 +915,8 @@ argument.
 @table @kbd
 @item BACKTAB
 @kindex BACKTAB
-@itemx Shift-TAB
-@kindex Shift-TAB
+@itemx S-TAB
+@kindex S-TAB
 @kindex TAB
 @itemx C-c TAB
 @kindex C-c TAB
@@ -959,17 +992,17 @@ completion and abbreviation expansion,,}.
 @cindex Abbreviations
 @cindex Structures
 
-Emacs provides various standard facilities for semi-automatic completion
-of key words and phrases (@pxref{Symbol Completion,, Completion for
-Symbol Names, emacs, The Emacs Editor}, @pxref{Dynamic Abbrevs,, Dynamic
-Abbrev Expansion, emacs, The Emacs Editor}).  REDUCE mode provides
-completion of common REDUCE key words and phrases, such as
-@samp{procedure}, by typing the first few letters of a key word or
-phrase and then pressing @kbd{Meta-@key{TAB}}.  (For use under Microsoft
-Window @pxref{Miscellaneous,,Miscellaneous minor features and bugs,,})
-This works in a similar way to completion in other major modes
-(@pxref{Symbol Completion,, Completion for Symbol Names, emacs, The
-Emacs Editor}).
+Emacs provides various standard facilities for semi-automatic
+completion of key words and phrases.  @xref{Symbol Completion,,
+Completion for Symbol Names, emacs, The Emacs Editor}.  @xref{Dynamic
+Abbrevs,, Dynamic Abbrev Expansion, emacs, The Emacs Editor}.  REDUCE
+mode provides completion of common REDUCE key words and phrases, such
+as @samp{procedure}, by typing the first few letters of a key word or
+phrase and then pressing @kbd{Meta-@key{TAB}}.  (For use under
+Microsoft Window @ref{Miscellaneous,,Miscellaneous minor features and
+bugs,,}.)  This works in a similar way to completion in other major
+modes; @ref{Symbol Completion,, Completion for Symbol Names, emacs,
+The Emacs Editor}.
 
 REDUCE mode also provides @emph{abbreviations} that are expanded like
 completions, except that they are @emph{replaced} by their expansions
@@ -1032,9 +1065,9 @@ sub-menu.  The levels and corresponding highlighting are as follows:
 
 @enumerate 0
 @item
-Minimal: strings, %-comments and comment statements, main keywords and
-group delimiters, procedure and other main type declarations,
-assertions and pre-processor #-directives;
+Minimal: strings, comments, main keywords and block delimiters,
+procedure and other main type declarations, assertions and
+pre-processor @code{#}-directives;
 
 @item
 Algebraic: minimal plus operator, operator type and vector
@@ -1268,48 +1301,12 @@ and describes how to access some special function keys that are useful
 in Emacs in general and in REDUCE mode in particular.
 
 @menu
-* Symbolic or balanced expressions moving::    Moving over
 * Groups and blocks highlighting:: Delimiter highlighting
 * Major mode menu::             Major mode menu
 * Version::                     REDUCE mode version information
 * Problems::                    Known and potential problems
 * Special function keys::       Linefeed, Meta-TAB, etc.
 @end menu
-
-@node Symbolic or balanced expressions moving
-@section Symbolic or balanced expressions: moving over
-@cindex Symbolic expression
-@cindex Balanced expression
-@cindex Groups
-@cindex Blocks
-@cindex Moving over
-
-A group or block is regarded as a ``symbolic expression'' (sexp) or
-``balanced expression'' by the commands @code{reduce-backward-sexp}
-and @code{reduce-forward-sexp}.  The other such expressions are
-symbols and bracketed expressions, both of which may be quoted, and
-strings.  The commands below skip white space and statement
-terminators between point and the beginning or end of a balanced
-expression, or between balanced expressions.  They do not move point
-if they cannot find the other end of a balanced expression, e.g.@: the
-@code{end} matching a @code{begin}, and instead report a user error.
-With a negative argument they move in the opposite direction.
-
-@table @kbd
-@item  C-M-f
-@kindex C-M-f
-@itemx M-x reduce-forward-sexp
-@findex reduce-forward-sexp
-Move forward across one balanced expression.  With a numeric argument,
-do it that many times.
-
-@item  C-M-b
-@kindex C-M-b
-@itemx M-x reduce-backward-sexp
-@findex reduce-backward-sexp
-Move backward across one balanced expression.  With a numeric argument,
-do it that many times.
-@end table
 
 @c -------------------------------------------------------------------
 
@@ -1326,13 +1323,13 @@ highlighting of matching group and block delimiters or (group only)
 blink matching is toggled by the command
 @code{reduce-show-delim-mode}.
 
-REDUCE Show Delim mode is based closely on Show Paren mode
-(@pxref{Matching,, Automatic Display Of Matching Parentheses, emacs,
-The Emacs Editor}).  It is completely independent except that all
-settings default to the corresponding values for Show Paren mode.
-Show Delim mode is turned on automatically when REDUCE mode is
-selected if @code{reduce-show-delim-mode-on} is non-nil, which it is
-by default if Show Paren mode is on.
+REDUCE Show Delim mode is based closely on Show Paren mode;
+@ref{Matching,, Automatic Display Of Matching Parentheses, emacs, The
+Emacs Editor}.  It is completely independent except that all settings
+default to the corresponding values for Show Paren mode.  Show Delim
+mode is turned on automatically when REDUCE mode is selected if
+@code{reduce-show-delim-mode-on} is non-nil, which it is by default if
+Show Paren mode is on.
 
 Note that highlighting of matching group and block delimiters does not
 work when point is @emph{within} a delimiter.  (This cannot happen
@@ -1661,7 +1658,8 @@ procedure/operator menu to the menubar.
 @item reduce-max-escape-tries
 Default value 2.  Number of repeats of @code{reduce-forward-statement}
 or @code{reduce-backward-statement} required to escape out of a block
-or group.
+or group.  (This option was previously called
+@code{reduce-max-up-tries}.)
 @end vtable
 
 @c ===================================================================
@@ -1680,10 +1678,10 @@ window.
 
 In fact, it allows you to run multiple versions of REDUCE
 simultaneously and independently in multiple windows.  By default, it
-runs the distributed versions of CSL and PSL REDUCE.
+runs the distributed pre-built versions of CSL and PSL REDUCE.
 
 You can also run a REDUCE source code file or an Emacs buffer
-containing REDUCE source code (in REDUCE mode) as a completed REDUCE
+containing REDUCE source code (in REDUCE mode) as a complete REDUCE
 program in an independent window automatically named from the source
 code file or buffer.
 
@@ -1697,11 +1695,10 @@ automatically.
 @cartouche
 @quotation
 Beware that version 1.7 introduces a significant incompatible change:
-the command @code{run-reduce} has changed (@ref{Run REDUCE,,
-Running@comma{} re-running and switching to REDUCE}); it is now the
-main command to run REDUCE and subsumes the commands
-@code{run-csl-reduce} and @code{run-psl-reduce}, which have been
-removed.
+the command @code{run-reduce} has changed; it is now the main command
+to run REDUCE and subsumes the commands @code{run-csl-reduce} and
+@code{run-psl-reduce}, which have been removed.  @xref{Run REDUCE,,
+Running@comma{} re-running and switching to REDUCE}.
 @end quotation
 @end cartouche
 
@@ -1751,7 +1748,7 @@ interaction buffer.
 
 These facilities include many of those offered by other REDUCE
 interfaces, with the notable exception of typeset quality display of
-mathematical output.  It may be possible to support this in future.
+mathematical output.
 
 REDUCE Run mode is a subsidiary library to REDUCE mode and when loaded
 it hooks itself into and cooperates closely with REDUCE mode.
@@ -1790,11 +1787,8 @@ customization group.
 It is probably best to use the GNU Emacs package manager to install
 the latest REDUCE IDE package; @ref{Installation,, Installation of
 REDUCE IDE}.  None of the manual installation described below is then
-required.
-
-But if you want to install by hand, or understand the details of the
-installation process, then read on.  (Please also @pxref{Installation,
-, Installation of REDUCE IDE}.)
+required.  But if you want to install by hand, or understand the
+details of the installation process, then read on.
 
 REDUCE Run mode requires the library @file{reduce-mode} both when it is
 compiled and when it is loaded.  It tries quite hard to locate this
@@ -1868,7 +1862,7 @@ starts a new REDUCE process every time it is executed; successive
 REDUCE process buffers have successively higher numbers at the end of
 their names, e.g.@: @code{*CSL REDUCE*}, @code{*CSL REDUCE 1*},
 @code{*CSL REDUCE 2*}, @enddots{}  Otherwise it only starts a new
-REDUCE process if necessary---if an appropriate REDUCE process is
+REDUCE process if necessary -- if an appropriate REDUCE process is
 already running then it simply switches to it.  Finally, these
 commands run the hooks from @code{reduce-run-mode-hook} (after the
 @code{comint-mode-hook} is run).
@@ -1887,6 +1881,11 @@ If this command is executed with a prefix argument then it reads an
 actual command to run REDUCE from the minibuffer and runs that
 command.  In this case, the REDUCE process buffer is named without any
 reference to the REDUCE command, e.g.@: @code{*REDUCE*}.
+
+(Note that the definition of this command has changed in version 1.7
+and the commands @code{run-csl-reduce} and @code{run-psl-reduce} have
+been removed; use @code{run-reduce} and select the appropriate command
+name instead.)
 @end deffn
 
 A couple of convenience commands allow you to re-start a running
@@ -1903,7 +1902,7 @@ directly.)
 
 @deffn Command switch-to-reduce
 This command is primarily intended for internal use by other commands
-but it can be run interactively to switch to a running REDUCE process
+but it can be used interactively to switch to a running REDUCE process
 buffer.  If the current buffer is an active REDUCE process buffer then
 the command does nothing; if there is only one active REDUCE process
 buffer then the command switches to it; otherwise, the command reads
