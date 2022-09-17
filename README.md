@@ -5,7 +5,7 @@ Major modes for editing and running REDUCE source code
 
 **[Francis Wright](https://sites.google.com/site/fjwcentaur)**
 
-Version 1.7, September 2022
+Version 1.8alpha, September 2022
 
 REDUCE IDE is a package that provides an Integrated Development Environment for the REDUCE computer algebra system within the GNU Emacs editor.  Its two major components are Emacs Lisp libraries that provide major modes for editing REDUCE source code and running a *command-line version* of REDUCE in an Emacs window.  It assumes that Emacs is running under a GUI such as Microsoft Windows or the X Window System under some flavour of UNIX or Linux, and displays Unicode character sets correctly.
 
@@ -49,7 +49,6 @@ To Do
 * Further rationalise and perhaps simplify the font-lock support.
 * Maybe highlight nested function calls without ().
 * Check switch-to-reduce and related commands.
-* Check that sexp commands skip comments and add a kill sexp command.
 
 Main Updates since REDUCE IDE 1.6 (see the manual for details)
 --------------------------------------------------------------
@@ -64,3 +63,9 @@ Main Updates since REDUCE IDE 1.6 (see the manual for details)
 * **INCOMPATIBLE CHANGE:** The command `reduce-eval-line` is now bound to the key sequence `C-c C-e` instead of `C-c C-n`, which was already bound to `reduce-forward-statement`.
 * Improved code relating to all the commands that move by statements and expressions.
 * **INCOMPATIBLE CHANGE:** The customizable option `reduce-max-up-tries` is now called `reduce-max-escape-tries`.
+
+Main Updates since REDUCE IDE 1.7 (see the manual for details)
+--------------------------------------------------------------
+
+* **INCOMPATIBLE CHANGE:** The commands `reduce-forward-sexp` and `reduce-backward-sexp` no longer accept an argument and now skip any comments or white space, but **not terminators**, between point and the "balanced expression".
+* Add the command `reduce-kill-sexp` to kill one "balanced expression" either forwards or, with any argument, backwards, bound to `C-M-k`.

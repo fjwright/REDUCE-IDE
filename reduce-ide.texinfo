@@ -2,9 +2,9 @@
 @c %**start of header
 @settitle GNU Emacs REDUCE Integrated Development Environment
 @c Manual last updated:
-@set UPDATED Time-stamp: <2022-09-14 17:25:41 franc>
+@set UPDATED Time-stamp: <2022-09-15 17:33:00 franc>
 @c Software version:
-@set VERSION 1.7
+@set VERSION 1.8alpha
 @afourpaper
 @c With different size paper the printed page breaks will need attention!
 @c Look for @page and @need commands.
@@ -1692,16 +1692,6 @@ use.  If you try to send REDUCE code to REDUCE but REDUCE is not
 running, then REDUCE Run mode will (optionally) start REDUCE
 automatically.
 
-@cartouche
-@quotation
-Beware that version 1.7 introduces a significant incompatible change:
-the command @code{run-reduce} has changed; it is now the main command
-to run REDUCE and subsumes the commands @code{run-csl-reduce} and
-@code{run-psl-reduce}, which have been removed.  @xref{Run REDUCE,,
-Running@comma{} re-running and switching to REDUCE}.
-@end quotation
-@end cartouche
-
 @menu
 * Run Introduction::            Introduction to REDUCE Run mode
 * Run Installation::            Installation of REDUCE Run mode
@@ -1881,11 +1871,6 @@ If this command is executed with a prefix argument then it reads an
 actual command to run REDUCE from the minibuffer and runs that
 command.  In this case, the REDUCE process buffer is named without any
 reference to the REDUCE command, e.g.@: @code{*REDUCE*}.
-
-(Note that the definition of this command has changed in version 1.7
-and the commands @code{run-csl-reduce} and @code{run-psl-reduce} have
-been removed; use @code{run-reduce} and select the appropriate command
-name instead.)
 @end deffn
 
 A couple of convenience commands allow you to re-start a running

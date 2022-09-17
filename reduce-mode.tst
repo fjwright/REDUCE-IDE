@@ -53,11 +53,18 @@ z**2+fac(4)-2*fac 2*y;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-Comment Delimiter Highlighting$
+Comment Delimiter Highlighting, etc.$
 
 ( () { { } } );  ( ();
 << << >> >>;  << << >>;
 begin begin end end;  begin begin end;  beginning begin noend end;
+
+/* before block */ begin /* in block */ scalar var; % in block
+   comment What an ugly block!$
+   var /* in block */ := /* in block */ x^2; % in block
+   comment That was a pointless assignment.;
+   return /* in block */ var % in block
+end /* after block */ ;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
