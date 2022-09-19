@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sourceforge.net/u/fjwright>
 ;; Created: 6 June 2022 as a separate file (was part of reduce-mode.el)
-;; Time-stamp: <2022-09-19 15:57:22 franc>
+;; Time-stamp: <2022-09-19 17:08:30 franc>
 ;; Keywords: languages, faces
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.8alpha
@@ -591,14 +591,16 @@ the match; otherwise return nil."
   ;; any particular way.
   (when
       (re-search-forward "\\(\\_<comment\\_>[^;$]*[;$]\\)" limit t)
-    (let ((end-of-comment (point)))
-      (goto-char (match-beginning 0))   ; start of "comment"
+    (let ((start-of-comment (match-beginning 0)) (end-of-comment (point)))
+      (goto-char start-of-comment)
       (cond
        ;; -- Check "comment" not in a % comment:
-       ((let ((bol (line-beginning-position)))
-          (skip-syntax-backward "^<" bol) ; skip to preceding % on this line
-          ;; If point after beginning of line then in % comment:
-          (> (point) bol))
+       ((and
+         (not (bolp))       ; since "comment" usually at start of line
+         (let ((bol (line-beginning-position)))
+           (skip-syntax-backward "^<" bol) ; skip to preceding % on this line
+           ;; If point after beginning of line then in % comment:
+           (> (point) bol)))
         (backward-char)                 ; skip %
         ;; Skip white space and syntactic comments forwards:
         (forward-comment (buffer-size))
@@ -606,7 +608,7 @@ the match; otherwise return nil."
         (reduce-font-lock--match-comment-statement limit))
        ;; -- Check "comment" not in a /**/ comment:
        ((progn
-          (goto-char (match-beginning 0)) ; start of "comment"
+          (goto-char start-of-comment)
           (save-match-data
             (and (re-search-backward "\\(/\\*\\)\\|\\(?:\\*/\\)" nil t)
                  (match-beginning 1))))
@@ -617,13 +619,20 @@ the match; otherwise return nil."
        ;; -- Check that "comment" is preceded by beginning of buffer or
        ;; a terminator, possibly with white space and/or % and/or /**/
        ;; comments in between:
-       (t (goto-char (match-beginning 0))
-          ;; Skip white space and syntactic comments backwards:
-          (forward-comment (- (buffer-size)))
-          (when
-              (or (bobp) (memq (char-before) '(?\; ?$)))
+       (t (goto-char start-of-comment)
+          ;; Skip white space backwards.  This is largely a hack to
+          ;; work around the comment statements at the top of the
+          ;; interactive lessons ending with a % comment!
+          (skip-chars-backward " \t\f\n")
+          (if (or (bobp) (memq (char-before) '(?\; ?$)))
+              (progn (goto-char end-of-comment) t)
+            ;; Skip syntactic comments backwards:
             (goto-char end-of-comment)
-            t))))))
+            (forward-comment (- (buffer-size)))
+            (when
+                (or (bobp) (memq (char-before) '(?\; ?$)))
+              (goto-char end-of-comment)
+              t)))))))
 
 (defvar font-lock-beg)
 (defvar font-lock-end)
