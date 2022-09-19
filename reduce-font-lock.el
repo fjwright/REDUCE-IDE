@@ -1,10 +1,10 @@
-;;; reduce-font-lock.el --- Syntax highlighting for REDUCE source code
+;;; reduce-font-lock.el --- Syntax highlighting for REDUCE source code  -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2022 Francis J. Wright
 
 ;; Author: Francis J. Wright <https://sourceforge.net/u/fjwright>
 ;; Created: 6 June 2022 as a separate file (was part of reduce-mode.el)
-;; Time-stamp: <2022-09-15 17:33:38 franc>
+;; Time-stamp: <2022-09-19 11:48:14 franc>
 ;; Keywords: languages, faces
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.8alpha
@@ -688,6 +688,8 @@ which must be done in ‘reduce-mode’."
   "REDUCE Fontification Submenu."
   reduce-font-lock--submenu)
 
+(defvar reduce-mode-map)                ; defined in reduce-mode.el
+
 (define-key-after (lookup-key reduce-mode-map [menu-bar REDUCE])
   [Fontification] (cons "Syntax Highlighting" reduce-fontification-submenu)
   t)                                    ; was 'Make\ Proc\ Menu
@@ -724,6 +726,8 @@ which must be done in ‘reduce-mode’."
 ;;     (setq reduce-font-lock--level level)
 ;;     (message "REDUCE Font Lock decoration set to level %d : %s."
 ;;              level name))))
+
+(defvar reduce-mode-syntax-table)       ; defined in reduce-mode.el
 
 (defun reduce-font-lock--toggle-escape (&optional arg)
   "Toggle “!” escape syntax for REDUCE Font Lock mode (only) and re-fontify.

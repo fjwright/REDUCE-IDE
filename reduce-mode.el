@@ -1,10 +1,10 @@
-;;; reduce-mode.el --- Major mode to edit REDUCE computer-algebra code
+;;; reduce-mode.el --- Major mode to edit REDUCE computer-algebra code  -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 1998-2001, 2012, 2017-2019, 2022 Francis J. Wright
 
 ;; Author: Francis J. Wright <https://sourceforge.net/u/fjwright>
 ;; Created: late 1992
-;; Time-stamp: <2022-09-17 17:50:40 franc>
+;; Time-stamp: <2022-09-19 11:38:54 franc>
 ;; Keywords: languages
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.8alpha
@@ -227,7 +227,7 @@ Optional ‘cdr’ is a replacement string or nullary function (for structures).
   "If non-nil then conditionally re-indent the current line.
 This will happen after ‘reduce-auto-indent-delay’ seconds of idle
 time if the text just typed matches ‘reduce-auto-indent-regex’."
-  :set (lambda (symbol value)
+  :set (lambda (_symbol value)
      (reduce-auto-indent-mode (or value 0)))
   :initialize 'custom-initialize-default
   :type 'boolean
@@ -265,7 +265,7 @@ Defaults to the value of ‘show-paren-mode’."
 (defcustom reduce-show-proc-mode nil
   "If non-nil then display current procedure name in mode line.
 Update after ‘reduce-show-proc-delay’ seconds of Emacs idle time."
-  :set (lambda (symbol value)
+  :set (lambda (_symbol value)
      (reduce-show-proc-mode (or value 0)))
   :initialize 'custom-initialize-default
   :type 'boolean
@@ -1791,11 +1791,11 @@ If ‘nosplit’ is true then put ‘open’ and ‘close’ on the same line."
 ;; the expansion should be kept on one line.  The following are
 ;; provided solely to ignore any argument:
 
-(defun reduce-expand-if-then (&optional arg)
+(defun reduce-expand-if-then (&optional _arg)
   "Insert ‘if ... then’ and position point inside, ignoring ARG."
   (reduce-insert-if-then))
 
-(defun reduce-expand-if-then-else (&optional arg)
+(defun reduce-expand-if-then-else (&optional _arg)
   "Insert ‘if ... then ... else’ and position point after ‘if’, ignoring ARG."
   (reduce-insert-if-then 'else))
 
@@ -1910,7 +1910,7 @@ passing on any prefix argument (in raw form)."
         (point)))
      (beg (unwind-protect
           (save-excursion
-            (reduce-backward-sexp 1)
+            (reduce-backward-sexp)
             ;; (while (= (char-syntax (following-char)) ?\')
               ;; (forward-char 1))
             (skip-syntax-forward "\'")
@@ -2043,6 +2043,8 @@ MSG is the message displayed when the tagging process started."
         (message "%sdone" msg)
       (message "etags failed with status: %s" value))))
 
+(defvar reduce--tagify-root)
+
 (defun reduce-tagify-dir-recursively (dir)
   "Generate a REDUCE TAGS file for all ‘*.red’ files under directory DIR.
 TAGS goes in DIR, which by default is the current directory."
@@ -2058,8 +2060,6 @@ TAGS goes in DIR, which by default is the current directory."
     (reduce--tagify
      dir (reduce--directory-files-recursively dir)
      (message "Tagging all files ‘%s/...*.red’..." dir))))
-
-(defvar reduce--tagify-root)
 
 (defun reduce--directory-files-recursively (dir)
   "Return a list of all ‘*.red’ files under DIR.
