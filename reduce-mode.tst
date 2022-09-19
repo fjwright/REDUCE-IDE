@@ -70,7 +70,7 @@ end /* after block */ ;
 
 /* This is a C-style comment! */
 
-Comment The above line seems to break this comment!$
+Comment The above line no longer seems to break this comment!$
 
 procedure foo; bar;
 

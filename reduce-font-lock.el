@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sourceforge.net/u/fjwright>
 ;; Created: 6 June 2022 as a separate file (was part of reduce-mode.el)
-;; Time-stamp: <2022-09-19 11:48:14 franc>
+;; Time-stamp: <2022-09-19 15:57:22 franc>
 ;; Keywords: languages, faces
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.8alpha
@@ -590,15 +590,40 @@ the match; otherwise return nil."
   ;; until it fails.  On failure, there is no need to reset point in
   ;; any particular way.
   (when
-      (re-search-forward "\\(\\<comment\\>[^;$]*[;$]\\)" limit t)
-    ;; If successful, check that "comment" is preceded by beginning of
-    ;; buffer or a terminator, possibly with white space and/or %
-    ;; comments in between:
-    (save-excursion
-      (goto-char (match-beginning 0))
-      (save-match-data
-        (looking-back "\\(?:\\`\\|[;$]\\)\
-\\(?:\\s-*\\(?:%.*\\)?\n\\)*\\s-*" nil)))))
+      (re-search-forward "\\(\\_<comment\\_>[^;$]*[;$]\\)" limit t)
+    (let ((end-of-comment (point)))
+      (goto-char (match-beginning 0))   ; start of "comment"
+      (cond
+       ;; -- Check "comment" not in a % comment:
+       ((let ((bol (line-beginning-position)))
+          (skip-syntax-backward "^<" bol) ; skip to preceding % on this line
+          ;; If point after beginning of line then in % comment:
+          (> (point) bol))
+        (backward-char)                 ; skip %
+        ;; Skip white space and syntactic comments forwards:
+        (forward-comment (buffer-size))
+        ;; Search again:
+        (reduce-font-lock--match-comment-statement limit))
+       ;; -- Check "comment" not in a /**/ comment:
+       ((progn
+          (goto-char (match-beginning 0)) ; start of "comment"
+          (save-match-data
+            (and (re-search-backward "\\(/\\*\\)\\|\\(?:\\*/\\)" nil t)
+                 (match-beginning 1))))
+        ;; Skip white space and syntactic comments forwards:
+        (forward-comment (buffer-size))
+        ;; Search again:
+        (reduce-font-lock--match-comment-statement limit))
+       ;; -- Check that "comment" is preceded by beginning of buffer or
+       ;; a terminator, possibly with white space and/or % and/or /**/
+       ;; comments in between:
+       (t (goto-char (match-beginning 0))
+          ;; Skip white space and syntactic comments backwards:
+          (forward-comment (- (buffer-size)))
+          (when
+              (or (bobp) (memq (char-before) '(?\; ?$)))
+            (goto-char end-of-comment)
+            t))))))
 
 (defvar font-lock-beg)
 (defvar font-lock-end)
