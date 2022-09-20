@@ -85,8 +85,7 @@ procedure foo; /* OK */ bar;
 "This is a string!";
 "It contains keywords: comment, procedure, operator, lisp, algebraic.";
 
-% Above should not be highlighted as a comment!
-% And below hitting TAB leads to a scan error!
+% Hitting TAB here leads to a scan error!
 
 procedure foo; bar;
 

@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sourceforge.net/u/fjwright>
 ;; Created: 6 June 2022 as a separate file (was part of reduce-mode.el)
-;; Time-stamp: <2022-09-20 16:48:21 franc>
+;; Time-stamp: <2022-09-20 17:25:08 franc>
 ;; Keywords: languages, faces
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.8alpha
@@ -631,12 +631,11 @@ the match; otherwise return nil."
           (if (or (bobp) (memq (char-before) '(?\; ?$)))
               (progn (goto-char end-of-comment) t)
             ;; Skip syntactic comments backwards:
-            (goto-char end-of-comment)
+            (goto-char start-of-comment)
             (forward-comment (- (buffer-size)))
             (when
                 (or (bobp) (memq (char-before) '(?\; ?$)))
-              (goto-char end-of-comment)
-              t)))))))
+              (goto-char end-of-comment) t)))))))
 
 (defvar font-lock-beg)
 (defvar font-lock-end)
