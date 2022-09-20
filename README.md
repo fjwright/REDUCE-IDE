@@ -45,27 +45,14 @@ Optional:
 To Do
 -----
 
-* Full font-lock support for C-style comments (which currently prevent some other font locking).
 * Further rationalise and perhaps simplify the font-lock support.
 * Maybe highlight nested function calls without ().
 * Check switch-to-reduce and related commands.
-
-Main Updates since REDUCE IDE 1.6 (see the manual for details)
---------------------------------------------------------------
-
-* **INCOMPATIBLE CHANGE:** The command `run-reduce` is now the only way to run REDUCE.  It prompts for the REDUCE command name to run, defaulting to the last one used.
-* The commands `run-csl-reduce` and `run-psl-reduce` have been removed; use `run-reduce` and select the appropriate command name instead.
-* The customizable option `reduce-run-commands` now accepts arbitrary key strings and an arbitrary number of REDUCE versions.
-* Improved access to the `comint` customization group (since REDUCE Run mode inherits from comint).
-* `<RET>` in REDUCE Run mode now adds a `;` statement terminator automatically as appropriate (whereas `S-<RET>` never adds a terminator).
-* REDUCE mode now inherits from `prog-mode`, so it runs `prog-mode-hook` and some `prog-mode` customizations are relevant.
-* Initial support for C-style `/**/` comments: they are now highlighted as comments and movement commands should skip them.
-* **INCOMPATIBLE CHANGE:** The command `reduce-eval-line` is now bound to the key sequence `C-c C-e` instead of `C-c C-n`, which was already bound to `reduce-forward-statement`.
-* Improved code relating to all the commands that move by statements and expressions.
-* **INCOMPATIBLE CHANGE:** The customizable option `reduce-max-up-tries` is now called `reduce-max-escape-tries`.
 
 Main Updates since REDUCE IDE 1.7 (see the manual for details)
 --------------------------------------------------------------
 
 * **INCOMPATIBLE CHANGE:** The commands `reduce-forward-sexp` and `reduce-backward-sexp` no longer accept an argument and now skip any comments or white space, but **not terminators**, between point and the "balanced expression".
 * Add the command `reduce-kill-sexp` to kill one "balanced expression" either forwards or, with any argument, backwards, bound to `C-M-k`.
+* More robust font-lock support for comment statements with neighbouring % or /**/ comments.
+* Treat the escape character (!) as part of a word for motion commands.

@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sourceforge.net/u/fjwright>
 ;; Created: 6 June 2022 as a separate file (was part of reduce-mode.el)
-;; Time-stamp: <2022-09-19 17:08:30 franc>
+;; Time-stamp: <2022-09-20 16:48:21 franc>
 ;; Keywords: languages, faces
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.8alpha
@@ -58,40 +58,44 @@ The symbols are in order of increasing fontification level, which
 is selected by the value of ‘font-lock-maximum-decoration’.
 This defaults to t, meaning maximal fontification.")
 
-(defconst reduce-font-lock--syntactic-keywords
-  ;; ((MATCHER SUBEXP SYNTAX OVERRIDE LAXMATCH) ... )
-  ;; where SYNTAX = (SYNTAX-CODE . MATCHING-CHAR)
-  ;;   If this proves unreliable, try
-  ;;    '(("\".*\\(!\\)\"" 1 (1 . nil)))
-  ;;   i.e. only mark ! at end of a string as punctuation.
-  ;;   But this may be slow!
-  '(("[^'\(]\\(!\\)\"" 1 (1 . nil)))
-  "Mark ! followed by \" as having punctuation syntax (syntax-code 1)
-unless preceded by ' or (, for correct syntax highlighing of strings.")
-
 (defun reduce-font-lock-mode ()
   "Set up font-lock mode."
-  ;; Variables automatically buffer-local.
+  ;; These variables are automatically buffer-local:
   (setq font-lock-defaults
         ;; reduce-font-lock--keywords evaluates to a list of symbols!
         (list reduce-font-lock--keywords     ; KEYWORDS
               nil                            ; KEYWORDS-ONLY
               t                              ; CASE-FOLD
-              nil                            ; SYNTAX-ALIST
-              (cons                          ; (VARIABLE . VALUE) ...
-               'font-lock-syntactic-keywords ; obsolete since 24.1! Use
-                                        ; syntax-propertize-function
-                                        ; instead!
-               reduce-font-lock--syntactic-keywords)
-              ))
-  (reduce-font-lock--level)             ; for font-lock menu
-  (setq font-lock-multiline t)          ; for comment statements
+              )
+        font-lock-multiline t)          ; for comment statements
   ;; Additional support for comment statements:
   (add-to-list 'font-lock-extend-region-functions
                #'reduce-font-lock--extend-region-for-comment-statement)
-  ;; Make all parsing respect the syntax property set by the above
-  ;; font-lock option (which is essential to parse "...!"):
-  (set (make-local-variable 'parse-sexp-lookup-properties) t))
+  (reduce-font-lock--level)             ; for font-lock menu
+  ;; This code should perhaps be in reduce-mode.el:
+  (setq-local
+   ;; Fix syntax of ! in strings (especially preceding the closing "):
+   syntax-propertize-function
+   #'reduce-font-lock--syntax-propertize-function
+   ;; Make syntax scanning functions, like ‘forward-sexp’, pay
+   ;; attention to ‘syntax-table’ text properties:
+   parse-sexp-lookup-properties t
+   ;; Treat escape char (!) as part of word:
+   words-include-escapes t))
+
+(defun reduce-font-lock--syntax-propertize-function (start end)
+  "START and END are the start and end of the text to which
+‘syntax-table’ text properties might need to be applied.  Mark !
+followed by \" as having punctuation syntax (syntax-code 1)
+unless preceded by ' or (, for correct syntactic processing of
+strings."
+  ;; This code should perhaps be in reduce-mode.el.
+  (while (< start end)
+    (if (and (eq (char-after start) ?!)
+             (eq (char-after (1+ start)) ?\")
+             (not (memq (char-before start) '(?' ?\())))
+        (put-text-property start (1+ start) 'syntax-table '(1 . nil)))
+    (setq start (1+ start))))
 
 
 ;;;; **************************

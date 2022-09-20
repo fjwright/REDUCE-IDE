@@ -78,7 +78,15 @@ procedure /* breaks fontification! */ foo; bar;
 
 procedure foo; /* OK */ bar;
 
-"This is a string containing keywords: comment, procedure, operator, lisp, algebraic.";
+!Strange + var! iable + !!names;
+
+% Also need to deal with escaped double quotes in identifiers!
+
+"This is a string!";
+"It contains keywords: comment, procedure, operator, lisp, algebraic.";
+
+% Above should not be highlighted as a comment!
+% And below hitting TAB leads to a scan error!
 
 procedure foo; bar;
 
