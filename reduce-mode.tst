@@ -78,9 +78,7 @@ procedure /* breaks fontification! */ foo; bar;
 
 procedure foo; /* OK */ bar;
 
-!Strange + var! iable + !!names;
-
-% Also need to deal with escaped double quotes in identifiers!
+!Strange + var!"iable + !!names + ! spaced! ;
 
 "This is a string!";
 "It contains keywords: comment, procedure, operator, lisp, algebraic.";

@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sourceforge.net/u/fjwright>
 ;; Created: 6 June 2022 as a separate file (was part of reduce-mode.el)
-;; Time-stamp: <2022-09-20 17:25:08 franc>
+;; Time-stamp: <2022-09-21 10:07:20 franc>
 ;; Keywords: languages, faces
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.8alpha
@@ -27,14 +27,15 @@
 
 ;;; Commentary:
 
-;; Based on code by Rainer Schöpf.
+;; Based on original code by Rainer Schöpf.
 
 ;; Note that Font Lock Mode is documented in the ELisp manual under
 ;; Major and Minor Modes.  Syntactic fontification happens first; it
-;; finds %-comments and string constants and highlights them.
-;; Search-based fontification happens second.
+;; finds %-comments, /**/-comments and string constants and highlights
+;; them.  Search-based fontification happens second.
 
-;; Regard quoted identifiers and lists as data and don't fontify them.
+;; Regard quoted identifiers and lists as data and fontify as
+;; constants.
 
 ;; Font Lock mode processes the elements of ‘font-lock-keywords’ one
 ;; by one, and for each element, it finds and handles all matches.
@@ -63,11 +64,10 @@ This defaults to t, meaning maximal fontification.")
   ;; These variables are automatically buffer-local:
   (setq font-lock-defaults
         ;; reduce-font-lock--keywords evaluates to a list of symbols!
-        (list reduce-font-lock--keywords     ; KEYWORDS
-              nil                            ; KEYWORDS-ONLY
-              t                              ; CASE-FOLD
-              )
-        font-lock-multiline t)          ; for comment statements
+        (list reduce-font-lock--keywords ; KEYWORDS
+              nil                        ; KEYWORDS-ONLY
+              t)                         ; CASE-FOLD
+        font-lock-multiline t)           ; for comment statements
   ;; Additional support for comment statements:
   (add-to-list 'font-lock-extend-region-functions
                #'reduce-font-lock--extend-region-for-comment-statement)
@@ -86,15 +86,14 @@ This defaults to t, meaning maximal fontification.")
 (defun reduce-font-lock--syntax-propertize-function (start end)
   "START and END are the start and end of the text to which
 ‘syntax-table’ text properties might need to be applied.  Mark !
-followed by \" as having punctuation syntax (syntax-code 1)
-unless preceded by ' or (, for correct syntactic processing of
-strings."
-  ;; This code should perhaps be in reduce-mode.el.
+followed by \" as having punctuation syntax (syntax-code 1) if
+within a string, for correct syntactic processing of strings."
+  ;; This function should perhaps be in reduce-mode.el.
   (while (< start end)
-    (if (and (eq (char-after start) ?!)
-             (eq (char-after (1+ start)) ?\")
-             (not (memq (char-before start) '(?' ?\())))
-        (put-text-property start (1+ start) 'syntax-table '(1 . nil)))
+    (and (eq (char-after start) ?!)
+         (eq (char-after (1+ start)) ?\")
+         (nth 3 (syntax-ppss start))
+         (put-text-property start (1+ start) 'syntax-table '(1 . nil)))
     (setq start (1+ start))))
 
 
