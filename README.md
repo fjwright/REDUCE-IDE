@@ -56,3 +56,4 @@ Main Updates since REDUCE IDE 1.7 (see the manual for details)
 * Add the command `reduce-kill-sexp` to kill one "balanced expression" either forwards or, with any argument, backwards, bound to `C-M-k`.
 * More robust font-lock support for comment statements with neighbouring % or /**/ comments.
 * Treat the escape character (!) as part of a word for motion commands.
+* Reliably disregard ! at the end of a string as an escape character, which would otherwise mask the end of the string.

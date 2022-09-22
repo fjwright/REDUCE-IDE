@@ -2,7 +2,7 @@
 @c %**start of header
 @settitle GNU Emacs REDUCE Integrated Development Environment
 @c Manual last updated:
-@set UPDATED Time-stamp: <2022-09-15 17:33:00 franc>
+@set UPDATED Time-stamp: <2022-09-22 17:57:24 franc>
 @c Software version:
 @set VERSION 1.8alpha
 @afourpaper
@@ -293,10 +293,7 @@ some ideas from FORTRAN mode.
 
 The standard Emacs syntax tables are modified to reflect REDUCE
 syntax, so that for example Emacs knows that the REDUCE escape
-character is @code{!}.  However, there remain some unresolved problems
-concerning the REDUCE escape character.  @xref{Font-Lock,,Font-lock
-support for automatic font selection,,}.
-@xref{Miscellaneous,,Miscellaneous minor features and bugs,,}.
+character is @code{!}.
 
 Blank lines separate ``paragraphs''.
 
@@ -1153,15 +1150,10 @@ because the character @code{!} represents an escape character within
 an identifier but not within a string.  This is different from the
 convention in the languages (C and Emacs Lisp) that Emacs was
 primarily designed to support, in which the significance of the escape
-character does not depend on the context.  I have not found a
-completely satisfactory way to deal with this problem.  The solution I
-currently adopt in REDUCE mode is to use a recently added font-lock
-facility that allows the syntax of @code{!} to be reset from escape to
+character does not depend on the context.  The solution I adopt in
+REDUCE mode is to reset the syntax of @code{!} from escape to
 punctuation when it occurs immediately followed by a double quote,
-i.e.@: as @code{!"}.  This avoids most of the difficulties, but it
-fails in the (fairly rare) case that @code{!"}  appears in an
-identifier (which it does in one or two of the core REDUCE source
-files).
+i.e.@: as @code{!"}, but only within a string.
 
 @c ===================================================================
 
@@ -1304,7 +1296,6 @@ in Emacs in general and in REDUCE mode in particular.
 * Groups and blocks highlighting:: Delimiter highlighting
 * Major mode menu::             Major mode menu
 * Version::                     REDUCE mode version information
-* Problems::                    Known and potential problems
 * Special function keys::       Linefeed, Meta-TAB, etc.
 @end menu
 
@@ -1410,29 +1401,6 @@ menu option from the REDUCE major mode menu or by running the command
 way to start it is to switch to a temporary buffer (e.g.@: by using
 @kbd{C-x b tmp}) and then switch it to REDUCE mode (by using @kbd{M-x
 reduce-mode}).
-
-@c -------------------------------------------------------------------
-
-@node Problems
-@section Known and potential problems
-@cindex Problems
-@cindex Bugs
-@cindex Compatibility
-
-There is a problem with the way that REDUCE mode handles an exclamation
-mark (@samp{!}) followed immediately by a double quote @samp{"}.
-@xref{Font-Lock,, Font-lock support for automatic font selection}.  This
-should not be a problem in ``normal'' code, but it may upset the parsing
-of code that uses this character sequence within an identifier.  It is
-caused by a limitation in the way that Emacs currently handles the
-syntax of the text being edited and is not easy to avoid completely!  I
-am looking for a better resolution of this problem.
-
-There is no guarantee that an arbitrary minor mode or other extension
-will be compatible with REDUCE mode, although I am not aware of any
-conflicts.  Two minor modes that are known to be compatible with REDUCE
-mode are transient-mark-mode and delete-selection-mode (because I always
-use them and I recommend them!).
 
 @c -------------------------------------------------------------------
 
