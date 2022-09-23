@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sourceforge.net/u/fjwright>
 ;; Created: 6 June 2022 as a separate file (was part of reduce-mode.el)
-;; Time-stamp: <2022-09-23 15:57:47 franc>
+;; Time-stamp: <2022-09-23 16:17:01 franc>
 ;; Keywords: languages, faces
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.8alpha
@@ -71,32 +71,7 @@ This defaults to t, meaning maximal fontification.")
   ;; Additional support for comment statements:
   (add-to-list 'font-lock-extend-region-functions
                #'reduce-font-lock--extend-region-for-comment-statement)
-  (reduce-font-lock--level)             ; for font-lock menu
-  ;; This code should perhaps be in reduce-mode.el:
-  (setq-local
-   ;; Fix syntax of ! at the end of a strings:
-   syntax-propertize-function
-   #'reduce-font-lock--syntax-propertize-function
-   ;; Make syntax scanning functions, like ‘forward-sexp’, pay
-   ;; attention to ‘syntax-table’ text properties:
-   parse-sexp-lookup-properties t
-   ;; Treat escape char (!) as part of word:
-   words-include-escapes t))
-
-(defun reduce-font-lock--syntax-propertize-function (start end)
-  "START and END are the start and end of the text to which
-‘syntax-table’ text properties might need to be applied.  Mark !
-followed by \" as having punctuation syntax (syntax-code 1) if
-within a string, for correct syntactic processing of strings."
-  ;; Allowed to arbitrarily move point within the region delimited by
-  ;; START and END.
-  ;; This function should perhaps be in reduce-mode.el.
-  (while (< start end)
-    (and (eq (char-after start) ?!)
-         (eq (char-after (1+ start)) ?\")
-         (nth 3 (syntax-ppss start))    ; moves point to start
-         (put-text-property start (1+ start) 'syntax-table '(1 . nil)))
-    (setq start (1+ start))))
+  (reduce-font-lock--level))             ; for font-lock menu
 
 
 ;;;; **************************

@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sourceforge.net/u/fjwright>
 ;; Created: late 1992
-;; Time-stamp: <2022-09-19 11:38:54 franc>
+;; Time-stamp: <2022-09-23 16:18:35 franc>
 ;; Keywords: languages
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.8alpha
@@ -546,7 +546,29 @@ also affects this mode.  Entry to this mode runs the hooks on
   (setq comment-column 40)              ; auto buffer local
   (setq-local comment-indent-function #'reduce-comment-indent)
   ;; (setq fill-prefix "% ")        ; buffer local
- )
+  (setq-local
+   ;; Fix syntax of ! at the end of a strings:
+   syntax-propertize-function
+   #'reduce-font-lock--syntax-propertize-function
+   ;; Make syntax scanning functions, like ‘forward-sexp’, pay
+   ;; attention to ‘syntax-table’ text properties:
+   parse-sexp-lookup-properties t
+   ;; Treat escape char (!) as part of word:
+   words-include-escapes t))
+
+(defun reduce-font-lock--syntax-propertize-function (start end)
+  "START and END are the start and end of the text to which
+‘syntax-table’ text properties might need to be applied.  Mark !
+followed by \" as having punctuation syntax (syntax-code 1) if
+within a string, for correct syntactic processing of strings."
+  ;; Allowed to arbitrarily move point within the region delimited by
+  ;; START and END.
+  (while (< start end)
+    (and (eq (char-after start) ?!)
+         (eq (char-after (1+ start)) ?\")
+         (nth 3 (syntax-ppss start))    ; moves point to start
+         (put-text-property start (1+ start) 'syntax-table '(1 . nil)))
+    (setq start (1+ start))))
 
 (defun reduce-imenu-add-to-menubar (&optional redraw)
   "Add \"Contents\" menu to menubar; if REDRAW force update."
