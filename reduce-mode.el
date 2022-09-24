@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sourceforge.net/u/fjwright>
 ;; Created: late 1992
-;; Time-stamp: <2022-09-24 14:11:15 franc>
+;; Time-stamp: <2022-09-24 15:38:40 franc>
 ;; Keywords: languages
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.8alpha
@@ -957,7 +957,12 @@ current line if the text just typed matches ‘reduce-auto-indent-regexp’."
              (not (backward-char 1))
              (= (preceding-char) ?!))))
       ;; If in %-comment then skip to its end:
-      (if (reduce--back-to-percent-comment-start) (end-of-line))
+      (if (save-excursion
+            (let ((bol (line-beginning-position)))
+              (skip-syntax-backward "^<" bol) ; skip to preceding % on this line
+              ;; If point after beginning of line then in % comment:
+              (> (point) bol)))
+          (end-of-line))
       ;; Find actual start of procedure statement:
       (if (reduce--re-search-forward "[a-zA-Z]") (backward-char 1))
       )))
@@ -1461,7 +1466,7 @@ If unable to kill a balanced expression, throw a user error."
 ;;;; Skipping comments
 ;;;; *****************
 
-;; This section created September 2022.
+;; This section revised 24 September 2022.
 ;; It handles /*...*/ comments.
 
 (defun reduce--skip-comments-forward ()
@@ -1560,38 +1565,32 @@ If no match and MOVE is non-nil then move to end.
 Skip comments, strings, escaped and quoted tokens.
 Return t if match found, nil otherwise."
   (let ((start (point))
-        (pattern (concat regexp "\\|\\(?100:\"\\)\\|\\(?101:\\*/\\)"))
         (move (if MOVE 'move t)))
-    (if (reduce--re-search-backward1 pattern move)
+    (if (reduce--re-search-backward1 regexp move)
         t
       (unless MOVE (goto-char start))
       nil)))
 
-(defun reduce--re-search-backward1 (pattern move)
-  "Search backwards for PATTERN; if no match and MOVE then move to end.
+(defun reduce--re-search-backward1 (regexp move)
+  "Search backwards for REGEXP; if no match and MOVE then move to end.
 Recursive sub-function of ‘reduce--re-search-backward’.
 Process match to skip comments, strings, etc.
 Return t if match found, nil otherwise."
-  (if (re-search-backward pattern nil move)
-      (if (cond                     ; check match -- t => search again
-           ((memq (preceding-char) '(?! ?'))) ; escaped or quoted
-           ((match-end 100)                   ; string
-            (goto-char (match-end 100))
-            (backward-sexp) t)
-           ((match-end 101)             ; /*...*/ comment
-            (goto-char (match-end 101))
-            (forward-comment -1) t)
-           ((reduce--back-to-comment-start))) ; % comment or comment statement
-          (reduce--re-search-backward1 pattern move) ; search again
-        t)))                         ; match for original regexp found
+  (if (re-search-backward regexp nil move)
+      (let ((parse-state (syntax-ppss)))
+        (if (cond                   ; check match -- t => search again
+             ((memq (preceding-char) '(?! ?'))) ; escaped or quoted
+             ((or (nth 3 parse-state) (nth 4 parse-state))
+              ;; In string or % or /**/ comment.
+              (goto-char (nth 8 parse-state)) ; skip it
+              t)
+             ((reduce--back-to-comment-start))) ; skip comment statement
+            (reduce--re-search-backward1 regexp move) ; search again
+          t))))                         ; match for original regexp found
 
 (defun reduce--back-to-comment-start ()
-  "If point is in a conventional comment, move to its start and return t.
+  "If point is in a comment statement, move to its start and return t.
 Otherwise do not move and return nil."
-  (or
-   ;; Check whether in % comment:
-   (reduce--back-to-percent-comment-start)
-   ;; Check whether in comment statement:
    (save-match-data
      (let ((initial (point)) found
            (pattern "\\(\\_<comment\\_>\\)\\|\\(\"\\)\\|[;$]"))
@@ -1601,26 +1600,23 @@ Otherwise do not move and return nil."
        (while (and (setq found (re-search-backward pattern nil 'move))
                    (or (when (match-beginning 2) ; skip string
                          (forward-char) (backward-sexp) t)
-                       (reduce--back-to-percent-comment-start))))
+                       (reduce--skip-syntactic-comments-backward))))
        ;; If match is ‘comment’ then return its start position;
        ;; otherwise return nil.
        (cond
         ((and found (match-beginning 1))) ; in comment statement
-        (t (goto-char initial) nil)))))) ; not in comment statement
+        (t (goto-char initial) nil))))) ; not in comment statement
 
-(defun reduce--back-to-percent-comment-start ()
-  "If point is in a % comment then move to its start and return t.
+(defun reduce--skip-syntactic-comments-backward ()
+  "If point is in a % or /**/ comment then move to its start and return t.
 In fact, skip all preceding % and /**/ comments and white space.
 Otherwise do not move and return nil."
-  (let ((start (point))
-        (bol (line-beginning-position)))
-    (skip-syntax-backward "^<" bol) ; skip to preceding % on this line
-    ;; If point after beginning of line then in % comment:
-    (cond ((> (point) bol)
-           (backward-char)              ; skip %
-           ;; Skip all syntactic comments & white space:
-           (forward-comment (- (buffer-size))) t)
-          (t (goto-char start) nil))))
+  (let ((parse-state (syntax-ppss)))
+    (when (nth 4 parse-state)           ; in % or /**/ comment
+      (goto-char (nth 8 parse-state))   ; start of comment
+      ;; Skip all preceding syntactic comments & white space:
+      (forward-comment (-(buffer-size)))
+      t)))
 
 
 ;;;; ****************
