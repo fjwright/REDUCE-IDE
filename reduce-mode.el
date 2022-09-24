@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sourceforge.net/u/fjwright>
 ;; Created: late 1992
-;; Time-stamp: <2022-09-24 16:44:09 franc>
+;; Time-stamp: <2022-09-24 17:36:36 franc>
 ;; Keywords: languages
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.8alpha
@@ -1490,19 +1490,8 @@ If unable to kill a balanced expression, throw a user error."
     (let ((start (point)) (case-fold-search t) found)
       (when (re-search-backward "[\;$]\\=" nil t) ; search anchored to point
         ;; At end of possible comment statement immediately before terminator.
-        ;; Find previous terminator and check if it is in a string or
-        ;; a % or /**/ comment:
-        (while
-            (and (re-search-backward "[\;$]" nil 'move)
-                 (let ((parse-state (syntax-ppss)))
-                   (cond ((nth 3 parse-state) ; in string, so terminator not found
-                          nil)                ; break
-                         ((nth 4 parse-state) ; in % or /**/ comment
-                          (goto-char (nth 8 parse-state)) ; go to its start
-                          t)                         ; search again
-                         ((setq found (match-end 0)) ; terminator found
-                          nil)))))                   ; break
-        (if (or found (bobp))
+        (setq found (reduce--previous-terminator))
+        (if (or found (bobp))          ; at previous terminator or bob
             (progn
               ;; Look forwards for the word "comment" after any syntactic
               ;; comments and white space:
@@ -1518,12 +1507,30 @@ If unable to kill a balanced expression, throw a user error."
                 (goto-char start)))
           (goto-char start))))))
 
+(defun reduce--previous-terminator ()
+  "Move to previous terminator and return the position after it.
+If the terminator is in a string then move to it but return nil.
+Ignore terminators in % or /**/ comments.  If no terminator is
+found then move to beginning of buffer and return nil."
+  (let (found)
+    (while
+        (and (re-search-backward "[\;$]" nil 'move)
+             (let ((parse-state (syntax-ppss)))
+               (cond ((nth 3 parse-state) ; in string, so terminator not found
+                      nil)                ; break
+                     ((nth 4 parse-state) ; in % or /**/ comment
+                      (goto-char (nth 8 parse-state)) ; go to its start
+                      t)                         ; and search again
+                     ((setq found (match-end 0)) ; terminator found
+                      nil)))))                   ; break
+    found))
+
 
 ;;;; *****************************************************************
 ;;;; Searching for syntactic elements ignoring comments, strings, etc.
 ;;;; *****************************************************************
 
-;; This section updated September 2022.
+;; This section revised 24 September 2022.
 ;; It now handles /*...*/ comments.
 
 (defun reduce--re-search-forward (regexp &optional MOVE)
@@ -1588,9 +1595,6 @@ Return t if match found, nil otherwise."
             (reduce--re-search-backward1 regexp move) ; search again
           t))))                         ; match for original regexp found
 
-;; Remove code duplication between ‘reduce--skip-comments-backward’
-;; and ‘reduce--back-to-comment-statement-start?’
-
 (defun reduce--back-to-comment-statement-start ()
   "If point is in a comment statement, move to and return its start position.
 Otherwise do not move and return nil."
@@ -1599,18 +1603,8 @@ Otherwise do not move and return nil."
   ;; ... <point>.  The syntactic comments might contain terminator
   ;; characters that are not terminators.
   (save-match-data
-    (let ((start (point)) found)
-        (while
-            (and (re-search-backward "[\;$]" nil 'move)
-                 (let ((parse-state (syntax-ppss)))
-                   (cond ((nth 3 parse-state) ; in string, so terminator not found
-                          nil)                ; break
-                         ((nth 4 parse-state) ; in % or /**/ comment
-                          (goto-char (nth 8 parse-state)) ; go to its start
-                          t)                         ; search again
-                         ((setq found (match-end 0)) ; terminator found
-                          nil)))))                   ; break
-        (if (or found (bobp))
+    (let ((start (point)) (found (reduce--previous-terminator)))
+        (if (or found (bobp))          ; at previous terminator or bob
             (progn
               ;; Look forwards for the word "comment" after any syntactic
               ;; comments and white space:

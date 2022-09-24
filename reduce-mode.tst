@@ -83,8 +83,6 @@ procedure foo; /* OK */ bar;
 "This is a string!";
 "It contains keywords: comment, procedure, operator, lisp, algebraic.";
 
-% Hitting TAB here leads to a scan error!
-
 procedure foo; bar;
 
 %%% Recommended end-of-file marker...
