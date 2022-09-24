@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sourceforge.net/u/fjwright>
 ;; Created: late 1992
-;; Time-stamp: <2022-09-24 17:36:36 franc>
+;; Time-stamp: <2022-09-24 17:53:51 franc>
 ;; Keywords: languages
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.8alpha
@@ -1539,7 +1539,7 @@ If no match and MOVE is non-nil then move to end.
 Skip comments, strings, escaped and quoted tokens.
 Return t if match found, nil otherwise."
   (let ((start (point))
-        (pattern (concat regexp "\\|\\(?100:\"\\)\\|\\(?101:%\\|/\\*\\)\\|\\(?102:\\_<comment\\_>\\)"))
+        (pattern (concat regexp "\\|\\(?100:\\_<comment\\_>\\)"))
         (move (if MOVE 'move t)))
     (if (reduce--re-search-forward1 pattern move)
         t
@@ -1552,18 +1552,19 @@ Recursive sub-function of ‘reduce--re-search-forward’.
 Process match to skip comments, strings, etc.
 Return t if match found, nil otherwise."
   (if (re-search-forward pattern nil move)
-      (if (cond                     ; check match -- t => search again
-           ((memq (char-before (match-beginning 0)) '(?! ?'))) ; escaped or quoted
-           ((match-beginning 100)       ; string
-            (goto-char (match-beginning 100))
-            (forward-sexp) t)
-           ((match-beginning 101)       ; % or /*...*/ comment
-            (goto-char (match-beginning 101))
-            (forward-comment 1) t)
-           ((match-beginning 102)       ; comment statement
-            (re-search-forward "[;$]" nil 'move) t))
-          (reduce--re-search-forward1 pattern move) ; search again
-        t)))                         ; match for original regexp found
+      (let ((parse-state (syntax-ppss)))
+        (if (cond                   ; check match -- t => search again
+             ((memq (char-before (match-beginning 0)) '(?! ?'))) ; escaped or quoted
+             ((nth 3 parse-state)       ; string
+              (goto-char (nth 8 parse-state))
+              (forward-sexp) t)
+             ((nth 4 parse-state)       ; % or /*...*/ comment
+              (goto-char (nth 8 parse-state))
+              (forward-comment 1) t)
+             ((match-beginning 100)     ; comment statement
+              (re-search-forward "[;$]" nil 'move) t))
+            (reduce--re-search-forward1 pattern move) ; search again
+          t))))                         ; match for original regexp found
 
 
 (defun reduce--re-search-backward (regexp &optional MOVE)
