@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sourceforge.net/u/fjwright>
 ;; Created: late 1992
-;; Time-stamp: <2022-09-23 16:18:35 franc>
+;; Time-stamp: <2022-09-24 14:11:15 franc>
 ;; Keywords: languages
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.8alpha
@@ -45,12 +45,6 @@
 
 ;;; To do:
 
-;;  BUGS
-;;  ====
-;;  ! should not be an escape IN STRINGS (motion by sexp, font-lock)
-
-;;  Enhancements
-;;  ============
 ;;  more flexible intelligent indentation, rationalize the code
 ;;  make skipping comment statements configurable (?)
 ;;  add RLisp88 support (?)
@@ -66,9 +60,6 @@
   "Version information for REDUCE mode.")
 
 ;; (message "Loading reduce-mode")  ; TEMPORARY!
-
-(eval-when-compile                      ; keep compiler happy!
-  (require 'timer))
 
 ;; Customizable user options:
 
@@ -1483,21 +1474,42 @@ If unable to kill a balanced expression, throw a user error."
         (forward-comment (buffer-size))))))
 
 (defun reduce--skip-comments-backward ()
-  "Move backwards across comments and white space of all types.
-But does not skip a comment statement at the beginning of the
-buffer – should it?"
+  "Move backwards across comments and white space of all types."
+  ;; Find a comment statement backwards by matching the form <bob or
+  ;; terminator> <white space or syntactic comments> COMMENT
+  ;; ... <terminator>.  The syntactic comments might contain
+  ;; terminator characters that are not terminators.
   (save-match-data
-    (forward-comment (- (buffer-size))) ; syntactic comments & white space
-    (let ((start (point)) (case-fold-search t))
-      (when (re-search-backward "[\;$]\\=" nil t) ; at end of statement
-        ;; If comment statement then skip it:
-        (if (re-search-backward "^[^%]*[\;$]" nil t) ; avoiding % comments!
-            ;; *** ALSO NEED TO AVOID /*...*/ COMMENTS! ***
+    (forward-comment (-(buffer-size))) ; syntactic comments & white space
+    ;; Look for a preceding comment statement:
+    (let ((start (point)) (case-fold-search t) found)
+      (when (re-search-backward "[\;$]\\=" nil t) ; search anchored to point
+        ;; At end of possible comment statement immediately before terminator.
+        ;; Find previous terminator and check if it is in a string or
+        ;; a % or /**/ comment:
+        (while
+            (and (re-search-backward "[\;$]" nil 'move)
+                 (let ((parse-state (syntax-ppss)))
+                   (cond ((nth 3 parse-state) ; in string, so terminator not found
+                          nil)                ; break
+                         ((nth 4 parse-state) ; in % or /**/ comment
+                          (goto-char (nth 8 parse-state)) ; go to its start
+                          t)                         ; search again
+                         ((setq found (match-end 0)) ; terminator found
+                          nil)))))                   ; break
+        (if (or found (bobp))
             (progn
-              (goto-char (match-end 0)) ; at end of preceding statement
+              ;; Look forwards for the word "comment" after any syntactic
+              ;; comments and white space:
+              (if found (goto-char found)) ; after previous terminator
               (forward-comment (buffer-size))
-              (if (looking-at "comment") ; comment statement skipped
-                  (reduce--skip-comments-backward)
+              (if (looking-at "\\_<comment\\_>") ; comment statement skipped
+                  (if found
+                      ;; Skip again from after previous terminator:
+                      (progn
+                        (goto-char found)
+                        (reduce--skip-comments-backward))
+                    (goto-char (point-min)))
                 (goto-char start)))
           (goto-char start))))))
 
