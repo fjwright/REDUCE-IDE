@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sourceforge.net/u/fjwright>
 ;; Created: late 1992
-;; Time-stamp: <2022-09-24 15:38:40 franc>
+;; Time-stamp: <2022-09-24 16:44:09 franc>
 ;; Keywords: languages
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.8alpha
@@ -1584,39 +1584,45 @@ Return t if match found, nil otherwise."
               ;; In string or % or /**/ comment.
               (goto-char (nth 8 parse-state)) ; skip it
               t)
-             ((reduce--back-to-comment-start))) ; skip comment statement
+             ((reduce--back-to-comment-statement-start))) ; skip comment statement
             (reduce--re-search-backward1 regexp move) ; search again
           t))))                         ; match for original regexp found
 
-(defun reduce--back-to-comment-start ()
-  "If point is in a comment statement, move to its start and return t.
-Otherwise do not move and return nil."
-   (save-match-data
-     (let ((initial (point)) found
-           (pattern "\\(\\_<comment\\_>\\)\\|\\(\"\\)\\|[;$]"))
-       ;; Move backwards to the nearest ‘comment’ keyword or
-       ;; terminator not in a comment or string.  (Should also check
-       ;; whether match is in a /**/ comment!)
-       (while (and (setq found (re-search-backward pattern nil 'move))
-                   (or (when (match-beginning 2) ; skip string
-                         (forward-char) (backward-sexp) t)
-                       (reduce--skip-syntactic-comments-backward))))
-       ;; If match is ‘comment’ then return its start position;
-       ;; otherwise return nil.
-       (cond
-        ((and found (match-beginning 1))) ; in comment statement
-        (t (goto-char initial) nil))))) ; not in comment statement
+;; Remove code duplication between ‘reduce--skip-comments-backward’
+;; and ‘reduce--back-to-comment-statement-start?’
 
-(defun reduce--skip-syntactic-comments-backward ()
-  "If point is in a % or /**/ comment then move to its start and return t.
-In fact, skip all preceding % and /**/ comments and white space.
+(defun reduce--back-to-comment-statement-start ()
+  "If point is in a comment statement, move to and return its start position.
 Otherwise do not move and return nil."
-  (let ((parse-state (syntax-ppss)))
-    (when (nth 4 parse-state)           ; in % or /**/ comment
-      (goto-char (nth 8 parse-state))   ; start of comment
-      ;; Skip all preceding syntactic comments & white space:
-      (forward-comment (-(buffer-size)))
-      t)))
+  ;; Find a comment statement backwards by matching the form <bob or
+  ;; terminator> <white space or syntactic comments> COMMENT
+  ;; ... <point>.  The syntactic comments might contain terminator
+  ;; characters that are not terminators.
+  (save-match-data
+    (let ((start (point)) found)
+        (while
+            (and (re-search-backward "[\;$]" nil 'move)
+                 (let ((parse-state (syntax-ppss)))
+                   (cond ((nth 3 parse-state) ; in string, so terminator not found
+                          nil)                ; break
+                         ((nth 4 parse-state) ; in % or /**/ comment
+                          (goto-char (nth 8 parse-state)) ; go to its start
+                          t)                         ; search again
+                         ((setq found (match-end 0)) ; terminator found
+                          nil)))))                   ; break
+        (if (or found (bobp))
+            (progn
+              ;; Look forwards for the word "comment" after any syntactic
+              ;; comments and white space:
+              (if found (goto-char found)) ; after previous terminator
+              (forward-comment (buffer-size))
+              (if (looking-at "\\_<comment\\_>") ; comment statement skipped
+                  (if found
+                      ;; Skip to after previous terminator:
+                      (goto-char found) ; goto-char returns its argument
+                    (goto-char (point-min)))
+                (goto-char start) nil))
+          (goto-char start) nil))))
 
 
 ;;;; ****************
