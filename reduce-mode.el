@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sourceforge.net/u/fjwright>
 ;; Created: late 1992
-;; Time-stamp: <2022-09-25 16:39:56 franc>
+;; Time-stamp: <2022-09-25 18:05:11 franc>
 ;; Keywords: languages
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.8alpha
@@ -617,9 +617,6 @@ this one."
     (reduce-calculate-indent-this)
     (reduce-calculate-indent-prev))))
 
-(defconst procedure-regexp "\\(?:^\\|\\s-+\\|[;$]\\)procedure\\s-+[![:alpha:]]"
-  "Regexp for use in a SEARCH to find a procedure header.")
-
 (defsubst looking-at-procedure ()
   "Return t if text after point matches the start of a procedure."
   (looking-at ".*\\<procedure\\s-+[![:alpha:]]"))
@@ -942,29 +939,19 @@ current line if the text just typed matches ‘reduce-auto-indent-regexp’."
 ;;;; ******************************
 
 (defun reduce-backward-procedure (arg)
-  "Move backward to next start of procedure.  With ARG, do it ARG times."
+  "Move backwards to next start of procedure.  With ARG, do it ARG times.
+Otherwise, move backwards by as many complete procedures as possible."
   (interactive "p")
-  (let ((case-fold-search t) (count arg))
-    (while (and (> count 0) (reduce--re-search-backward procedure-regexp))
-      (setq count (1- count)))
-    (if (= count arg)
-    ()
-      ;; (reduce-backward-statement 1)  ; overkill?  Instead ...
-      ;; Find preceding "%", ";", "$", "(" or beginning of buffer:
-      (while (progn (skip-chars-backward "^%;$(")
-            (and (not (bobp))
-             (not (backward-char 1))
-             (= (preceding-char) ?!))))
-      ;; If in %-comment then skip to its end:
-      (if (save-excursion
-            (let ((bol (line-beginning-position)))
-              (skip-syntax-backward "^<" bol) ; skip to preceding % on this line
-              ;; If point after beginning of line then in % comment:
-              (> (point) bol)))
-          (end-of-line))
-      ;; Find actual start of procedure statement:
-      (if (reduce--re-search-forward "[a-zA-Z]") (backward-char 1))
-      )))
+  (let ((case-fold-search t))
+    ;; Move to the start of the procedure starting before point, which
+    ;; might be within the keyword "procedure":
+    (unless (looking-at "\\_<procedure\\_>") (skip-syntax-forward "w"))
+    (while (and (> arg 0) (reduce--re-search-backward "\\_<procedure\\_>"))
+      (setq arg (1- arg)))
+    (when (zerop arg)
+      (while
+          (re-search-backward
+           "\\(?:\\(?:algebraic\\|symbolic\\|smacro\\|inline\\)\\s-+\\)*\\=" nil t)))))
 
 (defun reduce-forward-procedure (arg)
   "Move forwards to next end of procedure.  With ARG, do it ARG times.
