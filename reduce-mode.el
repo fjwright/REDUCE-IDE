@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sourceforge.net/u/fjwright>
 ;; Created: late 1992
-;; Time-stamp: <2022-09-24 17:53:51 franc>
+;; Time-stamp: <2022-09-25 16:39:56 franc>
 ;; Keywords: languages
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.8alpha
@@ -540,18 +540,17 @@ also affects this mode.  Entry to this mode runs the hooks on
   (setq-local
    ;; Fix syntax of ! at the end of a strings:
    syntax-propertize-function
-   #'reduce-font-lock--syntax-propertize-function
+   #'reduce--syntax-propertize
    ;; Make syntax scanning functions, like ‘forward-sexp’, pay
    ;; attention to ‘syntax-table’ text properties:
    parse-sexp-lookup-properties t
    ;; Treat escape char (!) as part of word:
    words-include-escapes t))
 
-(defun reduce-font-lock--syntax-propertize-function (start end)
-  "START and END are the start and end of the text to which
-‘syntax-table’ text properties might need to be applied.  Mark !
-followed by \" as having punctuation syntax (syntax-code 1) if
-within a string, for correct syntactic processing of strings."
+(defun reduce--syntax-propertize (start end)
+  "Syntax-propertize buffer text between START and END.
+Mark ! followed by \" as having punctuation syntax (syntax-code
+1) if in a string, for correct syntactic processing of strings."
   ;; Allowed to arbitrarily move point within the region delimited by
   ;; START and END.
   (while (< start end)
@@ -968,25 +967,31 @@ current line if the text just typed matches ‘reduce-auto-indent-regexp’."
       )))
 
 (defun reduce-forward-procedure (arg)
-  "Move forward to next end of procedure.  With ARG, do it ARG times."
+  "Move forwards to next end of procedure.  With ARG, do it ARG times.
+Otherwise, move forwards by as many complete procedures as possible.
+Skip to the first following non-blank character or the next line."
   (interactive "p")
-  (let ((case-fold-search t) (start (point)) count)
-    ;; Move to end of procedure starting before point:
-    (if (reduce--re-search-backward procedure-regexp)
-        (reduce-forward-statement 2))
-    ;; Now move forward by arg or arg-1 procedures
-    ;; or stay put if at least one move not possible
-    (unless (<= (point) start)
-      (setq arg (1- arg)) (setq start (point)))
-    (setq count arg)
-    (while (and (> count 0) (reduce--re-search-forward procedure-regexp))
-      (setq count (1- count)))
-    (if (< count arg)
-        (reduce-forward-statement 2)
-      (goto-char start)))
-  ;; Skip white space and any following eol:
-  (skip-chars-forward " \t")
-  (if (= (following-char) ?\n) (forward-char)))
+  (let ((case-fold-search t) (start (point)) found)
+    ;; Move to the end of the procedure starting before point, which
+    ;; might be within the keyword "procedure":
+    (skip-syntax-backward "w")
+    (when (or (looking-at "\\_<procedure\\_>")
+              (reduce--re-search-backward "\\_<procedure\\_>"))
+      (reduce-forward-statement 2))
+    ;; If point has moved forwards then it is now at the end of the
+    ;; procedure it was within, so move forwards by another arg-1
+    ;; procedures; otherwise point was not in a procedure, so move
+    ;; forwards by arg procedures.
+    (if (> (point) start)
+        (setq arg (1- arg) found t)
+      (goto-char start))                ; don't move backwards!
+    (while (and (> arg 0) (reduce--re-search-forward "\\_<procedure\\_>"))
+      (reduce-forward-statement 2)
+      (setq arg (1- arg) found t))
+    (when found
+      ;; Skip white space and any following eol:
+      (skip-chars-forward " \t")
+      (if (= (following-char) ?\n) (forward-char)))))
 
 (defun reduce-mark-procedure (arg)
   "Mark this and following ARG procedures.
