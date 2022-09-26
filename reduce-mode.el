@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sourceforge.net/u/fjwright>
 ;; Created: late 1992
-;; Time-stamp: <2022-09-26 15:34:28 franc>
+;; Time-stamp: <2022-09-26 17:22:22 franc>
 ;; Keywords: languages
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.8alpha
@@ -938,33 +938,8 @@ current line if the text just typed matches ‘reduce-auto-indent-regexp’."
 ;;;; Operations based on procedures
 ;;;; ******************************
 
-(defconst proc-type-regexp
-  "\\(?:\\(?:algebraic\\|integer\\|real\\|symbolic\\|inline\\|s?macro\\)\\s-+\\)"
-  "Regexp that matches any single possible procedural type followed by white space.")
-
 (defconst proc-kwd-regexp "\\_<\\(?:\\(?:matrix\\|list\\)?proc\\(?:edure\\)?\\)\\_>"
   "Regexp that matches “procedure”, “matrixproc” or “listproc”.")
-
-(defun reduce-backward-procedure (arg)
-  "Move backwards to previous start of procedure.  With ARG, do it ARG times.
-Otherwise, move backwards by as many complete procedures as possible."
-  (interactive "p")
-  (let ((case-fold-search t))
-    ;; Move to the start of the procedure starting before point, which
-    ;; might be within the keyword "procedure" or preceding type
-    ;; declarations.  But this fails if the procedure heading is on
-    ;; more than one line!
-    (unless (looking-at (concat proc-type-regexp "*" proc-kwd-regexp))
-      (let ((start (point)))
-        (forward-line 0)
-        (unless (re-search-forward proc-kwd-regexp (line-end-position) t)
-          (goto-char start))))
-    (while (and (> arg 0) (reduce--re-search-backward proc-kwd-regexp))
-      (setq arg (1- arg)))
-    (let ((regexp (concat proc-type-regexp "\\=")))
-      (while (re-search-backward regexp nil t)))
-    (unless (zerop arg)
-      (user-error "Previous start of procedure not found"))))
 
 (defun reduce-forward-procedure (arg)
   "Move forwards to next end of procedure.  With ARG, do it ARG times.
@@ -994,6 +969,37 @@ Skip to the first following non-blank character or the next line."
       (if (= (following-char) ?\n) (forward-char))))
   (unless (zerop arg)
     (user-error "Next end of procedure not found")))
+
+(defconst proc-type-regexp
+  "\\(?:\\(?:algebraic\\|integer\\|real\\|symbolic\\|inline\\|s?macro\\)[ \t\n]+\\)"
+  "Regexp that matches any single possible procedural type followed by white space.")
+
+(defun reduce-backward-procedure (arg)
+  "Move backwards to previous start of procedure.  With ARG, do it ARG times.
+Otherwise, move backwards by as many complete procedures as possible."
+  (interactive "p")
+  (let ((case-fold-search t) (parse-state (syntax-ppss)))
+    ;; Move to the start of the procedure starting before point.  This
+    ;; heuristic allows point to be within the procedure keyword or
+    ;; procedural types, which might be on different lines.  First,
+    ;; check point is not in a string or syntactic comment:
+    (unless (or (nth 3 parse-state) (nth 4 parse-state))
+      (let ((start (point)) (tries 0) (max-tries 3)
+            (regexp (concat proc-type-regexp "*" proc-kwd-regexp)))
+        (while (and (< tries max-tries) (not (looking-at regexp)))
+          (backward-word-strictly)
+          (setq tries (1+ tries)))
+        (if (and (> tries 0) (< tries max-tries)) ; procedure header found?
+            (setq arg (1- arg))
+          (goto-char start))))
+    ;; Search backwards arg times for procedure keyword:
+    (while (and (> arg 0) (reduce--re-search-backward proc-kwd-regexp))
+      (setq arg (1- arg)))
+    ;; Skip any preceding procedural types:
+    (let ((regexp (concat proc-type-regexp "\\=")))
+      (while (re-search-backward regexp nil t)))
+    (unless (zerop arg)
+      (user-error "Previous start of procedure not found"))))
 
 (defun reduce-mark-procedure (arg)
   "Mark this and following ARG procedures.
