@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sourceforge.net/u/fjwright>
 ;; Created: late 1992
-;; Time-stamp: <2022-09-26 15:10:19 franc>
+;; Time-stamp: <2022-09-26 15:34:28 franc>
 ;; Keywords: languages
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.8alpha
@@ -946,7 +946,7 @@ current line if the text just typed matches ‘reduce-auto-indent-regexp’."
   "Regexp that matches “procedure”, “matrixproc” or “listproc”.")
 
 (defun reduce-backward-procedure (arg)
-  "Move backwards to next start of procedure.  With ARG, do it ARG times.
+  "Move backwards to previous start of procedure.  With ARG, do it ARG times.
 Otherwise, move backwards by as many complete procedures as possible."
   (interactive "p")
   (let ((case-fold-search t))
@@ -961,9 +961,10 @@ Otherwise, move backwards by as many complete procedures as possible."
           (goto-char start))))
     (while (and (> arg 0) (reduce--re-search-backward proc-kwd-regexp))
       (setq arg (1- arg)))
-    (when (zerop arg)
-      (let ((regexp (concat proc-type-regexp "\\=")))
-        (while (re-search-backward regexp nil t))))))
+    (let ((regexp (concat proc-type-regexp "\\=")))
+      (while (re-search-backward regexp nil t)))
+    (unless (zerop arg)
+      (user-error "Previous start of procedure not found"))))
 
 (defun reduce-forward-procedure (arg)
   "Move forwards to next end of procedure.  With ARG, do it ARG times.
@@ -990,7 +991,9 @@ Skip to the first following non-blank character or the next line."
     (when found
       ;; Skip white space and any following eol:
       (skip-chars-forward " \t")
-      (if (= (following-char) ?\n) (forward-char)))))
+      (if (= (following-char) ?\n) (forward-char))))
+  (unless (zerop arg)
+    (user-error "Next end of procedure not found")))
 
 (defun reduce-mark-procedure (arg)
   "Mark this and following ARG procedures.
