@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sourceforge.net/u/fjwright>
 ;; Created: late 1992
-;; Time-stamp: <2022-09-26 14:25:32 franc>
+;; Time-stamp: <2022-09-26 15:10:19 franc>
 ;; Keywords: languages
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.8alpha
@@ -942,8 +942,8 @@ current line if the text just typed matches ‘reduce-auto-indent-regexp’."
   "\\(?:\\(?:algebraic\\|integer\\|real\\|symbolic\\|inline\\|s?macro\\)\\s-+\\)"
   "Regexp that matches any single possible procedural type followed by white space.")
 
-;; NB: "procedure" could instead be "matrixproc" or "listproc" not
-;; preceded by any types.
+(defconst proc-kwd-regexp "\\_<\\(?:\\(?:matrix\\|list\\)?proc\\(?:edure\\)?\\)\\_>"
+  "Regexp that matches “procedure”, “matrixproc” or “listproc”.")
 
 (defun reduce-backward-procedure (arg)
   "Move backwards to next start of procedure.  With ARG, do it ARG times.
@@ -954,12 +954,12 @@ Otherwise, move backwards by as many complete procedures as possible."
     ;; might be within the keyword "procedure" or preceding type
     ;; declarations.  But this fails if the procedure heading is on
     ;; more than one line!
-    (unless (looking-at (concat proc-type-regexp "*\\_<procedure\\_>"))
+    (unless (looking-at (concat proc-type-regexp "*" proc-kwd-regexp))
       (let ((start (point)))
         (forward-line 0)
-        (unless (re-search-forward "\\_<procedure\\_>" (line-end-position) t)
+        (unless (re-search-forward proc-kwd-regexp (line-end-position) t)
           (goto-char start))))
-    (while (and (> arg 0) (reduce--re-search-backward "\\_<procedure\\_>"))
+    (while (and (> arg 0) (reduce--re-search-backward proc-kwd-regexp))
       (setq arg (1- arg)))
     (when (zerop arg)
       (let ((regexp (concat proc-type-regexp "\\=")))
@@ -972,10 +972,10 @@ Skip to the first following non-blank character or the next line."
   (interactive "p")
   (let ((case-fold-search t) (start (point)) found)
     ;; Move to the end of the procedure starting before point, which
-    ;; might be within the keyword "procedure":
+    ;; might be within the procedure keyword:
     (skip-syntax-backward "w")
-    (when (or (looking-at "\\_<procedure\\_>")
-              (reduce--re-search-backward "\\_<procedure\\_>"))
+    (when (or (looking-at proc-kwd-regexp)
+              (reduce--re-search-backward proc-kwd-regexp))
       (reduce-forward-statement 2))
     ;; If point has moved forwards then it is now at the end of the
     ;; procedure it was within, so move forwards by another arg-1
@@ -984,7 +984,7 @@ Skip to the first following non-blank character or the next line."
     (if (> (point) start)
         (setq arg (1- arg) found t)
       (goto-char start))                ; don't move backwards!
-    (while (and (> arg 0) (reduce--re-search-forward "\\_<procedure\\_>"))
+    (while (and (> arg 0) (reduce--re-search-forward proc-kwd-regexp))
       (reduce-forward-statement 2)
       (setq arg (1- arg) found t))
     (when found
