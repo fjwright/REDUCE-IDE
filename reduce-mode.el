@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sourceforge.net/u/fjwright>
 ;; Created: late 1992
-;; Time-stamp: <2022-09-25 18:05:11 franc>
+;; Time-stamp: <2022-09-26 14:25:32 franc>
 ;; Keywords: languages
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.8alpha
@@ -938,20 +938,32 @@ current line if the text just typed matches ‘reduce-auto-indent-regexp’."
 ;;;; Operations based on procedures
 ;;;; ******************************
 
+(defconst proc-type-regexp
+  "\\(?:\\(?:algebraic\\|integer\\|real\\|symbolic\\|inline\\|s?macro\\)\\s-+\\)"
+  "Regexp that matches any single possible procedural type followed by white space.")
+
+;; NB: "procedure" could instead be "matrixproc" or "listproc" not
+;; preceded by any types.
+
 (defun reduce-backward-procedure (arg)
   "Move backwards to next start of procedure.  With ARG, do it ARG times.
 Otherwise, move backwards by as many complete procedures as possible."
   (interactive "p")
   (let ((case-fold-search t))
     ;; Move to the start of the procedure starting before point, which
-    ;; might be within the keyword "procedure":
-    (unless (looking-at "\\_<procedure\\_>") (skip-syntax-forward "w"))
+    ;; might be within the keyword "procedure" or preceding type
+    ;; declarations.  But this fails if the procedure heading is on
+    ;; more than one line!
+    (unless (looking-at (concat proc-type-regexp "*\\_<procedure\\_>"))
+      (let ((start (point)))
+        (forward-line 0)
+        (unless (re-search-forward "\\_<procedure\\_>" (line-end-position) t)
+          (goto-char start))))
     (while (and (> arg 0) (reduce--re-search-backward "\\_<procedure\\_>"))
       (setq arg (1- arg)))
     (when (zerop arg)
-      (while
-          (re-search-backward
-           "\\(?:\\(?:algebraic\\|symbolic\\|smacro\\|inline\\)\\s-+\\)*\\=" nil t)))))
+      (let ((regexp (concat proc-type-regexp "\\=")))
+        (while (re-search-backward regexp nil t))))))
 
 (defun reduce-forward-procedure (arg)
   "Move forwards to next end of procedure.  With ARG, do it ARG times.
