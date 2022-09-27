@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sourceforge.net/u/fjwright>
 ;; Created: late 1992
-;; Time-stamp: <2022-09-26 17:22:22 franc>
+;; Time-stamp: <2022-09-27 15:18:42 franc>
 ;; Keywords: languages
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.8alpha
@@ -938,20 +938,26 @@ current line if the text just typed matches ‘reduce-auto-indent-regexp’."
 ;;;; Operations based on procedures
 ;;;; ******************************
 
-(defconst proc-kwd-regexp "\\_<\\(?:\\(?:matrix\\|list\\)?proc\\(?:edure\\)?\\)\\_>"
+;; This section updated 27 September 2022.
+
+(defconst reduce--proc-kwd-regexp
+  "\\_<\\(?:\\(?:matrix\\|list\\)?proc\\(?:edure\\)?\\)\\_>"
   "Regexp that matches “procedure”, “matrixproc” or “listproc”.")
 
 (defun reduce-forward-procedure (arg)
-  "Move forwards to next end of procedure.  With ARG, do it ARG times.
-Otherwise, move forwards by as many complete procedures as possible.
-Skip to the first following non-blank character or the next line."
+  "Move forwards to the end of the procedure ending after point.
+With positive ARG, do it ARG times.  If this fails, move forwards
+by as many complete procedures as possible and report a user
+error.  Skip to the first following non-blank character or the
+next line."
   (interactive "p")
   (let ((case-fold-search t) (start (point)) found)
     ;; Move to the end of the procedure starting before point, which
     ;; might be within the procedure keyword:
     (skip-syntax-backward "w")
-    (when (or (looking-at proc-kwd-regexp)
-              (reduce--re-search-backward proc-kwd-regexp))
+    (when (or (looking-at reduce--proc-kwd-regexp)
+              ;; Now search BACKWARDS for procedure keyword:
+              (reduce--re-search-backward reduce--proc-kwd-regexp))
       (reduce-forward-statement 2))
     ;; If point has moved forwards then it is now at the end of the
     ;; procedure it was within, so move forwards by another arg-1
@@ -960,77 +966,90 @@ Skip to the first following non-blank character or the next line."
     (if (> (point) start)
         (setq arg (1- arg) found t)
       (goto-char start))                ; don't move backwards!
-    (while (and (> arg 0) (reduce--re-search-forward proc-kwd-regexp))
+    (while (and (> arg 0) (reduce--re-search-forward reduce--proc-kwd-regexp))
       (reduce-forward-statement 2)
       (setq arg (1- arg) found t))
     (when found
       ;; Skip white space and any following eol:
       (skip-chars-forward " \t")
-      (if (= (following-char) ?\n) (forward-char))))
+      (if (eolp) (forward-char))))
   (unless (zerop arg)
     (user-error "Next end of procedure not found")))
 
-(defconst proc-type-regexp
+(defconst reduce--proc-type-regexp
   "\\(?:\\(?:algebraic\\|integer\\|real\\|symbolic\\|inline\\|s?macro\\)[ \t\n]+\\)"
-  "Regexp that matches any single possible procedural type followed by white space.")
+  "Regexp that matches any single possible procedural type followed
+by white space.")
 
 (defun reduce-backward-procedure (arg)
-  "Move backwards to previous start of procedure.  With ARG, do it ARG times.
-Otherwise, move backwards by as many complete procedures as possible."
+  "Move backwards to the start of the procedure starting before point.
+With positive ARG, do it ARG times.  If this fails, move
+backwards by as many complete procedures as possible and report a
+user error.  Skip to the start of any procedural types."
   (interactive "p")
+  ;; Move to the start of the procedure starting before point.  This
+  ;; heuristic allows point to be within the procedure keyword or
+  ;; procedural types, which might be on different lines.  First,
+  ;; check point is not in a string or syntactic comment:
   (let ((case-fold-search t) (parse-state (syntax-ppss)))
-    ;; Move to the start of the procedure starting before point.  This
-    ;; heuristic allows point to be within the procedure keyword or
-    ;; procedural types, which might be on different lines.  First,
-    ;; check point is not in a string or syntactic comment:
     (unless (or (nth 3 parse-state) (nth 4 parse-state))
       (let ((start (point)) (tries 0) (max-tries 3)
-            (regexp (concat proc-type-regexp "*" proc-kwd-regexp)))
+            (regexp (concat reduce--proc-type-regexp "*"
+                            reduce--proc-kwd-regexp)))
         (while (and (< tries max-tries) (not (looking-at regexp)))
-          (backward-word-strictly)
+          (skip-syntax-backward "-") (skip-syntax-backward "w")
           (setq tries (1+ tries)))
         (if (and (> tries 0) (< tries max-tries)) ; procedure header found?
             (setq arg (1- arg))
           (goto-char start))))
     ;; Search backwards arg times for procedure keyword:
-    (while (and (> arg 0) (reduce--re-search-backward proc-kwd-regexp))
+    (while (and (> arg 0)
+                (reduce--re-search-backward reduce--proc-kwd-regexp))
       (setq arg (1- arg)))
     ;; Skip any preceding procedural types:
-    (let ((regexp (concat proc-type-regexp "\\=")))
+    (let ((regexp (concat reduce--proc-type-regexp "\\=")))
       (while (re-search-backward regexp nil t)))
     (unless (zerop arg)
       (user-error "Previous start of procedure not found"))))
 
 (defun reduce-mark-procedure (arg)
-  "Mark this and following ARG procedures.
-Put mark after next end of procedure, point at start of that procedure.
-Procedure ends AFTER any trailing white space.
-Return t is successful, nil otherwise."
-  ;; Could be more efficient by hacking reduce-forward-procedure!
+  "Mark the procedure ending after point.
+With positive ARG, mark that many procedures ending after point.
+Put mark at the first non-blank character or next line after the
+ARGth end of procedure after point.  If this fails, do not mark
+anything and report a user error.  Leave point at the start of
+the first procedure before any preceding blank lines."
   (interactive "p")
-  (let ((start (point)) transient-mark-mode)
-    ;; Region must stay active, even if transient-mark-mode is on.
-    (reduce-forward-procedure arg)
-    (if (= (point) start)
-    nil
-      (skip-chars-forward " \t\n")  ; skip trailing white space
-      (push-mark start t)       ; save original position QUIETLY
-      (push-mark)           ; mark end of procedure
-      (reduce-backward-procedure arg)
-      t)
-    ))
+  ;; Region must stay active, even if transient-mark-mode is on:
+  (let (transient-mark-mode next)
+    (reduce-forward-procedure 1)
+    (if (eq arg 1)
+        (push-mark)                     ; mark end of procedure
+      (setq next (point)))
+    (reduce-backward-procedure 1)
+    (skip-chars-backward " \t\f\n") (forward-char)
+    (if (> arg 1)
+        (save-excursion                 ; leave point here
+          (goto-char next)
+          (reduce-forward-procedure (1- arg))
+          (push-mark)))))               ; mark end of ARG procedures
 
-(defun reduce-kill-procedure ()
-  "Kill the procedure (and trailing white space) ending after point."
-  (interactive "*")         ; error if buffer read-only
-  (if (reduce-mark-procedure 1)
-      (kill-region (region-beginning) (region-end))))
+(defun reduce-kill-procedure (arg)
+  "Kill the procedure ending after point.
+With positive ARG, kill that many procedures ending after point,
+including any preceding blank lines.  If this fails, do not kill
+anything and report a user error."
+  (interactive "*p")                    ; error if buffer read-only
+  (reduce-mark-procedure arg)
+  (kill-region (region-beginning) (region-end)))
 
 (defun reduce-narrow-to-procedure (arg)
+  "Narrow to the procedure ending after point.
+In other words, make all text outside this procedure invisible.
+With positive ARG, include that many procedures ending after
+point.  Also include any preceding blank lines.  If narrowing
+fails, report a user error."
   ;; Based on ‘narrow-to-defun’ in ‘lisp.el’.
-  "Narrow to this and following ARG procedures.
-Make text outside current procedure invisible.
-The procedure visible is the one that contains point or follows point."
   (interactive "p")
   (save-excursion
     (widen)
@@ -1076,7 +1095,7 @@ This includes the end-of-file marker.  But move only after
 With ARG, move that many times.  Ignore (skip) comment statements.
 If looking at the end of a block or group, or the end-of-file
 marker, move over it after ‘reduce-max-escape-tries’ consecutive
-interactive tries."
+interactive tries.  Report a user error if unsuccessful."
   (interactive "p")
   (let ((case-fold-search t)
         (start (point))
@@ -1132,9 +1151,10 @@ Return t if successful; nil otherwise."
 With ARG, move that many times.  Ignore (skip) comment statements.
 If looking at the beginning of a block or group move over it
 after ‘reduce-max-escape-tries’ consecutive interactive tries.
-The end-of-file marker is treated as a statement.
-Return the count of statements left to move,
-which is used by ‘reduce-calculate-indent-proc’."
+The end-of-file marker is treated as a statement.  Return the
+count of statements left to move, which is used by
+‘reduce-calculate-indent-proc’.  Report a user error if
+unsuccessful."
   (interactive "p")
   (let ((case-fold-search t)
         (start (point))
