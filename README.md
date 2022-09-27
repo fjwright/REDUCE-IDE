@@ -52,8 +52,12 @@ To Do
 Main Updates since REDUCE IDE 1.7 (see the manual for details)
 --------------------------------------------------------------
 
+* Use lexical scoping, which might be a little faster.
 * **INCOMPATIBLE CHANGE:** The commands `reduce-forward-sexp` and `reduce-backward-sexp` no longer accept an argument and now skip any comments or white space, but **not terminators**, between point and the "balanced expression".
 * Add the command `reduce-kill-sexp` to kill one "balanced expression" either forwards or, with any argument, backwards, bound to `C-M-k`.
 * More robust font-lock support for comment statements.
 * Reliably disregard ! as an escape character at the end of a string, which would otherwise mask the end of the string.
 * Treat the escape character (!) as part of a word for motion commands.
+* Use Emacs parsing in preference to heuristics.
+* The command `reduce-kill-procedure` now takes an argument.
+* Operations based on procedures now support `matrixproc`, `listproc`, and procedure type declarations.  They report a user error if they fail.

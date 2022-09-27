@@ -2,7 +2,7 @@
 @c %**start of header
 @settitle GNU Emacs REDUCE Integrated Development Environment
 @c Manual last updated:
-@set UPDATED Time-stamp: <2022-09-22 17:57:24 franc>
+@set UPDATED Time-stamp: <2022-09-27 16:39:51 franc>
 @c Software version:
 @set VERSION 1.8alpha
 @afourpaper
@@ -502,69 +502,79 @@ forwards instead of backwards.  This command is modelled on
 @cindex Operations on Procedures
 
 Files of REDUCE source code frequently consist mainly of procedure
-definitions.  This is certainly true of symbolic-mode code, and hence it
-is true of most of the source code of the REDUCE system itself.  REDUCE
-mode provides the following operations on procedures.  They work on all
-kinds of REDUCE procedures provided they contain the keyword
-@code{procedure} somewhere within the first statement of their
-definition.
+definitions.  This is certainly true of symbolic-mode code, and hence
+it is true of most of the source code of the REDUCE system itself.
+REDUCE mode provides the following operations on procedures.  They
+work on all kinds of REDUCE procedures provided they contain one of
+the procedural keywords @code{procedure}, @code{listproc} or
+@code{matrixproc} within their header.  Procedure type declarations
+(@code{symbolic}, @code{inline}, @code{real}, etc.@:) preceding the
+procedural keyword are also supported.
 
 A procedure is considered to begin at the first non-white-space
-character of the definition, and to end after the statement defining the
-procedure body.  White space and the first newline after the procedure
-body are always considered to be part of the procedure.  The commands to
-mark, kill and reformat a procedure also include @emph{all} blank lines
-after the procedure definition, because this seems most convenient in
-practice.  Some procedure-oriented commands support a prefix argument.
+character of the definition, and to end after the statement defining
+the procedure body.  White space and the first newline after the
+procedure body are always considered to be part of the procedure.  The
+commands to mark and kill a procedure also include @emph{all} blank
+lines before the procedure definition.  Many procedure-oriented
+commands support a prefix argument.
 
 The two commands for moving over procedures accept a positive integer
-argument that indicates by how many procedures to move -- the default is
-1.  These commands do not move in the opposite direction if given a
+argument that indicates by how many procedures to move -- the default
+is 1.  These commands do not move in the opposite direction if given a
 negative argument, in which case they do not move at all.
 
 @table @kbd
-@item  C-M-e
+@item C-M-e
 @kindex C-M-e
 @itemx M-x reduce-forward-procedure
 @findex reduce-forward-procedure
-Move forward to the next end of a procedure.  With a numeric argument,
-do it that many times.
+Move forwards to the end of the procedure ending after point.  With a
+positive argument, do it that many times.  If this fails, move
+forwards by as many complete procedures as possible and report a user
+error.  Skip to the first following non-blank character or the next
+line.
 
-@item  C-M-a
+@item C-M-a
 @kindex C-M-a
 @itemx M-x reduce-backward-procedure
 @findex reduce-backward-procedure
-Move backward to the next start of a procedure.  With a numeric
-argument, do it that many times.
+Move backwards to the start of the procedure starting before point.
+With a positive argument, do it that many times.  If this fails, move
+backwards by as many complete procedures as possible and report a user
+error.  Skip to the start of any procedural types.
 @end table
 
 Regardless of whether point is within a procedure or not, these two
-commands move respectively to the first following end of a procedure, or
-the first preceding start of a procedure.  To move to the start of the
-next procedure, move forward to its end and then move backward to its
-start.
+commands move respectively to the first following end of a procedure,
+or the first preceding start of a procedure.  One way to move to the
+start of the next procedure is to move forwards to its end and then
+move backwards to its start.
 
-The remaining commands do not accept an argument because (even without
-an argument) they can change large portions of text.  Marking a
-procedure is the basis of the other operations on procedures.
+Marking is the basis for many operations on procedures.
 
 @table @kbd
-@item  C-M-h
+@item C-M-h
 @kindex C-M-h
 @itemx M-x reduce-mark-procedure
 @findex reduce-mark-procedure
-Put the mark after the next end of a procedure and point at the start of
-that procedure.  A procedure ends @emph{after} any trailing white space.
-With a numeric argument, mark that many following procedures including
-this one.
+Mark the procedure ending after point.  With a positive argument, mark
+that many procedures ending after point.  Put mark at the first
+non-blank character or next line after the appropriate end of
+procedure.  If this fails, do not mark anything and report a user
+error.  Leave point at the start of the first procedure before any
+preceding blank lines.
 
-@item  C-c k
+@item C-c k
 @kindex C-c k
 @itemx M-x reduce-kill-procedure
 @findex reduce-kill-procedure
-Kill the procedure (and trailing white space) ending after point.
+Kill the procedure ending after point.  With a positive argument,
+kill that many procedures ending after point, including any preceding
+blank lines.  If this fails, do not kill anything and report a user
+error.
 
-@item  C-M-q
+@item C-M-q
 @kindex C-M-q
 @itemx M-x reduce-indent-procedure
 @findex reduce-indent-procedure
@@ -581,7 +591,7 @@ function to REDUCE procedures, to which the standard key @kbd{C-M-l} is
 rebound.
 
 @table @kbd
-@item  C-M-l
+@item C-M-l
 @kindex C-M-l
 @itemx M-x reduce-reposition-window
 @findex reduce-reposition-window
@@ -599,9 +609,10 @@ rebound to a function to narrow to the current procedure.
 @kindex C-x n d
 @itemx M-x reduce-narrow-to-procedure
 @findex reduce-narrow-to-procedure
-Make text outside the current procedure invisible.  The procedure
-visible is the one that contains point or follows point.  With a prefix
-argument, narrow to the following arg procedures including this one.
+Narrow to the procedure ending after point.  In other words, make all
+text outside this procedure invisible.  With a positive argument ARG,
+include that many procedures ending after point.  Also include any
+preceding blank lines.  If narrowing fails, report a user error.
 @xref{Narrowing,,, emacs, The Emacs Editor}.
 @end table
 
