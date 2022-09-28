@@ -70,20 +70,20 @@ end /* after block */ ;
 
 /* This is a C-style comment! */
 
-Comment The above line no longer seems to break this comment!$
+Comment The above line no longer breaks this comment!$
 
 procedure foo; bar;
 
-procedure /* breaks fontification! */ foo; bar;
+procedure /* no longer breaks fontification! */ foo; bar;
 
-procedure foo; /* OK */ bar;
+procedure foo x; /* OK */ bar;
 
 !Strange + var!"iable + !!names + ! spaced! ;
 
 "This is a string!";
 "It contains keywords: comment, procedure, operator, lisp, algebraic.";
 
-procedure foo; bar;
+procedure foo(x,y); bar;
 
 %%% Recommended end-of-file marker...
 

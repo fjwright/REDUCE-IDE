@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sourceforge.net/u/fjwright>
 ;; Created: 6 June 2022 as a separate file (was part of reduce-mode.el)
-;; Time-stamp: <2022-09-23 16:17:01 franc>
+;; Time-stamp: <2022-09-28 15:58:26 franc>
 ;; Keywords: languages, faces
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.8alpha
@@ -48,19 +48,21 @@
 
 (defconst reduce-font-lock--keywords
   '(
-    reduce-font-lock--keywords-0     ; Minimal = nil
+    reduce-font-lock--keywords-0     ; Basic = nil
     reduce-font-lock--keywords-1     ; Algebraic
-    reduce-font-lock--keywords-2     ; Symbolic
-    reduce-font-lock--keywords-3     ; Maximal = t
+    ;; reduce-font-lock--keywords-2     ; Symbolic
+    ;; reduce-font-lock--keywords-3     ; Maximal = t
     )
   "A list of symbols corresponding to increasing fontification.
 Each is assigned a ‘font-lock-keywords’ value for REDUCE mode.
 The symbols are in order of increasing fontification level, which
-is selected by the value of ‘font-lock-maximum-decoration’.
-This defaults to t, meaning maximal fontification.")
+is selected by the value of ‘font-lock-maximum-decoration’.  This
+defaults to t, meaning maximal fontification.  The levels are
+strictly cumulative and their names should not be taken too
+literally!")
 
 (defun reduce-font-lock-mode ()
-  "Set up font-lock mode."
+  "Set up font-lock mode.  Called in ‘reduce-mode’."
   ;; These variables are automatically buffer-local:
   (setq font-lock-defaults
         ;; reduce-font-lock--keywords evaluates to a list of symbols!
@@ -74,14 +76,12 @@ This defaults to t, meaning maximal fontification.")
   (reduce-font-lock--level))             ; for font-lock menu
 
 
-;;;; **************************
-;;;; Search-based Fontification
-;;;; **************************
+;;;;; *******************
+;;;;; Basic fontification
+;;;;; *******************
 
-;;;;; Minimal fontification
-
-(defconst reduce-identifier-regexp
-  "\\(?:[a-z]\\|!.\\)\
+(defconst reduce-font-lock--identifier-regexp
+  "\\(?:\\w\\|!.\\)\
 \\(?:\\w\\|\\s_\\|!.\\)*"
   ;; NB: digits have word syntax
   "Regular expression matching a REDUCE identifier.
@@ -93,79 +93,153 @@ identifier.  Special characters may be used in identifiers too,
 even as the first character, but each must be preceded by an
 exclamation mark in input.")
 
-(defconst reduce-infix-regexp
-  "where\\|when\\|or\\|and\\|member\\|memq\\|neq\\|eq")
+(defconst reduce-font-lock--infix-regexp
+  "where\\|when\\|or\\|and\\|member\\|memq\\|neq\\|eq"
+  "Regular expression matching a REDUCE infix operator keyword.")
 
-(defconst reduce-keyword-regexp
-  (mapconcat #'identity
-             (list
-              "begin" "end" "return" "<<" ">>"
-              "if" "then" "else" "ws"
-              "while" "do" "repeat" "until"
-              "collect" "join" "conc" "sum" "product"
-              "for\\(?:\\s-*\\(?:all\\|each\\)\\)?" "step"
-              "in" "on" "off" "write" "pause"
-              "such\\s-+that" "let" "match" "clear\\(?:rules\\)?"
-              "order" "factor" "remfac" "showtime"
-              "index" "mass" "mshell"
-              ;; "assert_install" "assert_install_all"
-              ;; "assert_uninstall" "assert_uninstall_all"
-              ;; "assert"
-              "assert\\(?:_\\(?:un\\)?install\\(?:_all\\)?\\)?"
-              ;; Lisp keywords used frequently in REDUCE:
-              "lambda" "function"
-              ;; "put" "flag" "remprop" "remflag"
-              reduce-infix-regexp)
-             "\\|")
+(defconst reduce-font-lock--keyword-regexp
+  (mapconcat
+   #'identity
+   (list "procedure" "ws"
+         "begin" "end" "return" "\\go\\(?:\\s-*to\\)?"
+         "if" "then" "else" "not"
+         "while" "do" "repeat" "until"
+         "collect" "join" "conc" "sum" "product"
+         "for\\(?:\\s-*\\(?:all\\|each\\)\\)?" "step"
+         "in" "on" "off" "write" "pause"
+         "such\\s-+that" "let" "match" "clear\\(?:rules\\)?"
+         "order" "factor" "remfac" "showtime"
+         "index" "mass" "mshell"
+         "assert\\(?:_\\(?:un\\)?install\\(?:_all\\)?\\)?"
+         ;; Lisp keywords used frequently in REDUCE:
+         "lambda" "function"
+         "put" "flag" "remprop" "remflag"
+         reduce-font-lock--infix-regexp)
+   "\\|")
   ;; module/endmodule keywords are handled specially in
   ;; reduce-font-lock--keywords-symbolic.
   "Regular expression matching a REDUCE keyword.")
 
-(defconst reduce-font-lock--keywords-00
-  `((reduce-font-lock--match-comment-statement
+(defconst reduce-font-lock--keywords-0
+  `("reduce-font-lock--keywords-0"     ; TEMPORARY label for debugging
+    (reduce-font-lock--match-comment-statement
      . (1 font-lock-comment-face t))
 
-    ;; Main keywords:
+    ;; List of main keywords, etc:
     (,(concat
        ;; Ignore 'keyword, _keyword, #keyword:
        "\\(?:^\\|[^'_#]\\)"
-       "\\<\\(" reduce-keyword-regexp "\\)\\>"
+       "\\<\\(" reduce-font-lock--keyword-regexp "\\)\\>"
        ;; Ignore composite identifiers beginning with a keyword:
        "[^!_#]")
      (1 font-lock-keyword-face)
      ;; Handle consecutive keywords:
-     (,(concat "\\<\\(" reduce-keyword-regexp "\\)\\>[^!_#]")
-      nil nil (1 font-lock-keyword-face))))
-  "List of rules to highlight comment statements and main keywords.
-Spliced into the start of all other rule lists.")
+     (,(concat "\\<\\(" reduce-font-lock--keyword-regexp "\\)\\>[^!_#]")
+      nil nil (1 font-lock-keyword-face)))
+    "<<\\|>>")                          ; group delimiters
+  "List of “basic” REDUCE fontification rules.
+Highlight comment statements, main syntactic keywords and group
+delimiters.")
 
-(defconst reduce-type-regexp
-  "algebraic\\|symbolic\\|lisp\\|scalar\\|integer\\|real")
+
+;;;;; ***********************
+;;;;; Algebraic fontification
+;;;;; ***********************
 
-(defconst reduce-font-lock--keywords-0
-  `("reduce-font-lock--keywords-0"      ; TEMPORARY label for debugging
+(defconst reduce-font-lock--type-regexp
+  "algebraic\\|scalar\\|integer\\|real\\|symbolic\\|lisp\\|inline\\|s?macro"
+  "Regexp that matches any single possible procedural type.")
 
-    ,@reduce-font-lock--keywords-00
-
-    ;; References:
-    "\\<\\go\\(?:\\s-*to\\)?\\>"
+(defconst reduce-font-lock--keywords-1
+  `("reduce-font-lock--keywords-1"     ; TEMPORARY label for debugging
+    ,@reduce-font-lock--keywords-0
 
     ;; Procedure declarations:
-    (,(concat "\\<\\(procedure\\)\\s-+"
-              "\\(" reduce-identifier-regexp "\\)")
-     (1 font-lock-keyword-face)
-     (2 font-lock-function-name-face))
+    ;; procedure name arg ;  [where arg may be missing]
+    (,(concat "\\_<procedure\\s-+"
+              "\\(" reduce-font-lock--identifier-regexp "\\)\\s-+"
+              "\\(" reduce-font-lock--identifier-regexp "\\)?\\s-*[;$]")
+     (1 font-lock-function-name-face)
+     (2 font-lock-variable-name-face))
+    ;; procedure name ( arg1 , arg2 , ... )
+    (,(concat "\\_<procedure\\s-+"
+              "\\(" reduce-font-lock--identifier-regexp "\\)\\s-*\(?")
+     (1 font-lock-function-name-face)
+     ;; Anchored matches (single line only!):
+     (,(concat "\\s-*\\(" reduce-font-lock--identifier-regexp "\\)\\s-*[,\)]")
+      nil nil (1 font-lock-variable-name-face)))
 
-    ;; Type declarations:
+    ;; General type declarations:
     ;; (Ignore quoted keywords and composite identifiers.)
     (,(concat
-       "\\(?:^\\|[^'_]\\)\\<\\("
-       reduce-type-regexp
-       "\\)\\>[^!_]")
-     (1 font-lock-type-face)))
-  "List of minimal REDUCE fontification rules.
-Highlights comment statements, main keywords and procedure definitions.
-No variables are fontified.")
+       "\\(?:^\\|[^']\\)\\_<\\(" reduce-font-lock--type-regexp "\\)\\_>[^!]")
+     (1 font-lock-type-face)
+     ;; Handle consecutive types:
+     (,(concat "\\_<\\(" reduce-font-lock--type-regexp "\\)\\_>[^!]")
+      nil nil (1 font-lock-type-face)))
+
+    ;; Local variable type declarations: e.g.
+    ;; scalar var1 , var2 , ... ;
+    ("\\_<\\(scalar\\|integer\\|real\\)\\s-"
+     ;; (1 font-lock-type-face)
+     ;; Anchored matches (single line only!):
+     (,(concat "\\s-*\\(" reduce-font-lock--identifier-regexp "\\)\\s-*\\s.")
+      nil nil (1 font-lock-variable-name-face)))
+
+    ;; References -- goto and labels:
+    ;; go to label; ... label :
+    (,(concat "\\_<go\\(?:\\s-*to\\)?\\s-+"
+              "\\(" reduce-font-lock--identifier-regexp "\\)")
+     (1 font-lock-constant-face))
+    (,(concat "\\(?:^\\|[\;$]\\)\\s-*"
+              "\\(" reduce-font-lock--identifier-regexp "\\)\\s-*:[^=]")
+     . (1 font-lock-constant-face))
+
+    ;; Operator declarations of the form ‘type op1, op2, ...’
+    (,(concat "\\_<\\(?:"
+              (mapconcat #'identity
+                         '("even" "odd"
+                           "linear" "noncom"
+                           "\\(?:anti\\)?symmetric"
+                           "operator" "infix" "precedence"
+                           "vector")
+                         "\\|")
+              "\\_>\\)")
+     ;; Subexp highlighter:
+     (0 font-lock-type-face)
+     ;; Anchored highlighter:
+     (,(concat "\\s-*\\(" reduce-font-lock--identifier-regexp "\\)\\s-*[,;$]")
+      ;; Pre-form -- return position of terminator to limit search:
+      (save-excursion (re-search-forward "[;$]"))
+      nil (1 font-lock-function-name-face)))
+
+    ;; Array and matrix type declarations: e.g.
+    ;; array a 10, b(2,3,4);
+    ;; matrix x(2,1),y(3,4),z;
+    ("\\_<\\(?:array\\|matrix\\)\\_>"
+     ;; Subexp highlighter:
+     (0 font-lock-type-face)
+     ;; Anchored highlighter:
+     (,(concat "\\s-*\\(" reduce-font-lock--identifier-regexp "\\)"
+               ;; Optional bounds with optional ():
+               "\\s-*\\(?:\\(?:(.*?)\\)\\|\\w*\\)\\s-*[,;$]"
+               )
+      ;; Pre-form -- return position of terminator to limit search:
+      (save-excursion (re-search-forward "[;$]"))
+      nil (1 font-lock-function-name-face)))
+
+    ;; Symbolic constants:
+    ("[^[:alpha:]_]\\(e\\|i\\|infinity\\|nil\\|pi\\|t\\)\\_>"
+     ;; Allow 5pi to match pi, etc.  Digits have word syntax.
+     ;; Must also match within i*pi/2, etc.
+     (1 font-lock-constant-face)))
+  "List of “algebraic” REDUCE fontification rules.
+Basic (‘reduce-font-lock--keywords-0’) plus procedure names and
+parameters; general types (e.g. “algebraic”), local variable
+types (e.g. “scalar”) and names; goto and label names; operator,
+operator type (e.g. “linear”) and vector declarations; array and
+matrix declarations with or without bounds; symbolic
+constants (e.g. “pi”).")
 
 
 ;; *****************************************************************
@@ -188,24 +262,24 @@ No variables are fontified.")
 (defconst reduce-font-lock--asserted-type-rule
   `("procedure"
      ;; anchored-highlighter to handle the rest of the statement:
-    ,(concat "[^!]:\\s-*\\(" reduce-identifier-regexp "\\)") nil nil
+    ,(concat "[^!]:\\s-*\\(" reduce-font-lock--identifier-regexp "\\)") nil nil
     (1 font-lock-type-face t))
   "Rules to highlight types of procedure arguments and return values.")
 
 (defconst reduce-font-lock--assert-declare/struct-rules
   `((,(concat
        "\\(declare\\)\\s-+"
-       "\\(" reduce-identifier-regexp "\\)\\s-*:")
+       "\\(" reduce-font-lock--identifier-regexp "\\)\\s-*:")
      (1 font-lock-keyword-face)
      (2 font-lock-function-name-face)
      ;; anchored-highlighter to handle the rest of the statement:
-     (,reduce-identifier-regexp nil nil (0 font-lock-type-face)))
+     (,reduce-font-lock--identifier-regexp nil nil (0 font-lock-type-face)))
     (,(concat
        "\\(struct\\)\\s-+"
-       "\\(" reduce-identifier-regexp "\\)"
+       "\\(" reduce-font-lock--identifier-regexp "\\)"
        ;; optionally followed by...
        "\\(?:\\s-+\\(\\(?:checked\\|asserted\\)\\s-+by\\)\\s-+"
-       "\\(" reduce-identifier-regexp "\\)\\)?")
+       "\\(" reduce-font-lock--identifier-regexp "\\)\\)?")
      (1 font-lock-keyword-face)
      (2 font-lock-type-face)
      (3 font-lock-keyword-face t)
@@ -215,8 +289,8 @@ No variables are fontified.")
 (defconst reduce-font-lock--preprocessor-rules
   `((,(concat
        "\\(#define\\)\\s-+"
-       "\\(" reduce-identifier-regexp "\\)\\s-+"
-       "\\(" reduce-identifier-regexp "\\)")
+       "\\(" reduce-font-lock--identifier-regexp "\\)\\s-+"
+       "\\(" reduce-font-lock--identifier-regexp "\\)")
      (1 font-lock-preprocessor-face)
      (2 font-lock-variable-name-face)
      (3 font-lock-variable-name-face))
@@ -232,98 +306,9 @@ No variables are fontified.")
      (1 font-lock-preprocessor-face)))
   "Rules to highlight preprocessor #-directives.")
 
-
 ;; ****************************************
 ;; End of assertion and preprocessor rules.
 ;; ****************************************
-
-(defconst reduce-font-lock--keywords-basic
-  `(,@reduce-font-lock--keywords-00
-
-    ;; Procedure declarations:
-    ;; procedure name arg ;  [where arg may be missing]
-    (,(concat "\\<\\(procedure\\)\\s-+"
-              "\\(" reduce-identifier-regexp "\\)\\s-+"
-              "\\(" reduce-identifier-regexp "\\)?\\s-*[;$]")
-     (1 font-lock-keyword-face)
-     (2 font-lock-function-name-face)
-     (3 font-lock-variable-name-face))
-    ;; procedure name ( arg1 , arg2 , ... )
-    (,(concat "\\<\\(procedure\\)\\s-+"
-              "\\(" reduce-identifier-regexp "\\)\\s-*(?")
-     (1 font-lock-keyword-face)
-     (2 font-lock-function-name-face)
-     ;; Anchored matches (single line only!):
-     (,(concat "\\s-*\\(" reduce-identifier-regexp "\\)\\s-*[,\)]")
-      nil nil (1 font-lock-variable-name-face)))
-
-    ;; Type declarations: e.g.
-    ;; scalar var1 , var2 , ... ;
-    ("\\<\\(scalar\\|integer\\|real\\)\\s-"
-     (1 font-lock-type-face)
-     ;; Anchored matches (single line only!):
-     (,(concat "\\s-*\\(" reduce-identifier-regexp "\\)\\s-*\\s.")
-      nil nil (1 font-lock-variable-name-face)))
-
-    ;; References -- goto and labels:
-    ;; go to label; ... label :
-    (,(concat "\\<\\(go\\(?:\\s-*to\\)?\\)\\s-+"
-              "\\(" reduce-identifier-regexp "\\)")
-     (1 font-lock-keyword-face)
-     (2 font-lock-constant-face))
-    (,(concat "\\(?:^\\|[\;$]\\)\\s-*\\("
-              reduce-identifier-regexp "\\)\\s-*:[^=]")
-     . (1 font-lock-constant-face))
-
-    ,reduce-font-lock--asserted-type-rule
-    ,@reduce-font-lock--preprocessor-rules)
-  "List of basic REDUCE fontification rules including variable fontification.")
-
-
-;;;;; Algebraic fontification
-
-(defconst reduce-font-lock--keywords-algebraic
-  `(;; Operator declarations of the form ‘type op1, op2, ...’
-    (,(concat "\\_<\\(?:"
-              (mapconcat #'identity
-                         '("even" "odd"
-                           "linear" "noncom"
-                           "\\(?:anti\\)?symmetric"
-                           "operator" "infix" "precedence"
-                           "vector")
-                         "\\|")
-              "\\_>\\)")
-     ;; Subexp highlighter:
-     (0 font-lock-type-face)
-     ;; Anchored highlighter:
-     (,(concat "\\s-*\\(" reduce-identifier-regexp "\\)\\s-*[,;$]")
-      ;; Pre-form -- return position of terminator to limit search:
-      (save-excursion (re-search-forward "[;$]"))
-      nil (1 font-lock-function-name-face)))
-
-    ;; Array and matrix type declarations: e.g.
-    ;; array a 10, b(2,3,4);
-    ;; matrix x(2,1),y(3,4),z;
-    ("\\_<\\(?:array\\|matrix\\)\\_>"
-     ;; Subexp highlighter:
-     (0 font-lock-type-face)
-     ;; Anchored highlighter:
-     (,(concat "\\s-*\\(" reduce-identifier-regexp "\\)"
-               ;; Optional bounds with optional ():
-               "\\s-*\\(?:\\(?:(.*?)\\)\\|\\w*\\)\\s-*[,;$]"
-               )
-      ;; Pre-form -- return position of terminator to limit search:
-      (save-excursion (re-search-forward "[;$]"))
-      nil (1 font-lock-function-name-face)))
-
-    ;; Symbolic constants:
-    ("[^[:alpha:]_]\\(e\\|i\\|infinity\\|nil\\|pi\\|t\\)\\_>"
-     ;; Allow 5pi to match pi, etc.  Digits have word syntax.
-     ;; Must also match within i*pi/2, etc.
-     (1 font-lock-constant-face)))
-  "List of more algebraic-mode REDUCE fontification rules.
-Operator, operator type and vector declarations; array and matrix
-declarations with or without bounds; symbolic constants.")
 
 
 ;;;;; Symbolic fontification
@@ -331,7 +316,7 @@ declarations with or without bounds; symbolic constants.")
 (defconst reduce-font-lock--keywords-symbolic
   `(;; References -- module:
     (,(concat "\\<\\(module\\)\\s-+"
-              "\\(" reduce-identifier-regexp "\\)")
+              "\\(" reduce-font-lock--identifier-regexp "\\)")
      (1 font-lock-keyword-face)
      (2 font-lock-constant-face))
 
@@ -353,6 +338,8 @@ expr\\|s?macro\\|inline\\|asserted\
 \\)\\>[^!_]"
      (1 font-lock-type-face))
 
+    ,reduce-font-lock--asserted-type-rule
+    ,@reduce-font-lock--preprocessor-rules
     ,@reduce-font-lock--assert-declare/struct-rules)
   "List of more symbolic-mode REDUCE fontification sub-rules.")
 
@@ -374,7 +361,7 @@ representations of 32.")
 
 (defconst reduce-font-lock--keywords-extra
   `(;; Quoted identifiers:
-    (,(concat "'\\(" reduce-identifier-regexp "\\)")
+    (,(concat "'\\(" reduce-font-lock--identifier-regexp "\\)")
      (1 font-lock-constant-face))
 
     (;; Quoted lists (arbitrarily nested and multi-line):
@@ -389,13 +376,13 @@ representations of 32.")
 
     ;; Function calls:
     ;; fn ( ), fn { }, fn " ", fn 'data, fn << >>
-    (,(concat "\\(" reduce-identifier-regexp "\\)"
+    (,(concat "\\(" reduce-font-lock--identifier-regexp "\\)"
               "\\s-*\\(?:[\(\{\"']\\|<<\\)")
      (1 font-lock-function-name-face))
     ;; fn space variable-or-number optional-space punctuation
-    (,(concat "\\(" reduce-identifier-regexp "\\)"
+    (,(concat "\\(" reduce-font-lock--identifier-regexp "\\)"
               "\\s-+\\(?:\\(?:"
-              reduce-identifier-regexp "\\)\\|\\(?:"
+              reduce-font-lock--identifier-regexp "\\)\\|\\(?:"
               reduce-number-regexp
               "\\)\\)\\s-*\\s.")
      (1 font-lock-function-name-face))
@@ -409,11 +396,11 @@ representations of 32.")
     ;; Variable invocations:
     ;; ( var), var PUNCTUATION, var EOL, var KEYWORD, var INFIX )
     ;; (,(concat
-    ;;    "\\(" reduce-identifier-regexp "\\)"
+    ;;    "\\(" reduce-font-lock--identifier-regexp "\\)"
     ;;    "\\s *\\("
     ;;    "\\s\)\\|\\s.\\|$\\|"
-    ;;    "\\s \\<\\(" reduce-keyword-regexp
-    ;;    "\\|\\(" reduce-infix-regexp "\\)\\)\\>"
+    ;;    "\\s \\<\\(" reduce-font-lock--keyword-regexp
+    ;;    "\\|\\(" reduce-font-lock--infix-regexp "\\)\\)\\>"
     ;;    "\\)")
     ;;  (1 font-lock-variable-name-face)
     ;;  (4 font-lock-default-face nil t))
@@ -429,18 +416,18 @@ representations of 32.")
 ;;;; Not currently used.
 ;;;; ********************************************
 
-(defconst anchored-reduce-identifier-regexp
-  (concat "\\=\\s-+\\(" reduce-identifier-regexp "\\)"))
+(defconst anchored-reduce-font-lock--identifier-regexp
+  (concat "\\=\\s-+\\(" reduce-font-lock--identifier-regexp "\\)"))
 
-(defconst entire-reduce-keyword-regexp
+(defconst entire-reduce-font-lock--keyword-regexp
   (concat "\\`\\(?:"
-          reduce-keyword-regexp "\\|" reduce-type-regexp
+          reduce-font-lock--keyword-regexp "\\|" reduce-font-lock--type-regexp
           "\\|module\\|procedure\\)\\'"))
 
 (defsubst reduce-font-lock--match-keyword (num)
   "Return non-nil if ‘(match-string NUM)’ is a REDUCE keyword."
   (string-match-p                   ; avoids modifying the match data.
-   entire-reduce-keyword-regexp
+   entire-reduce-font-lock--keyword-regexp
    (match-string num)))
 
 (defsubst reduce-font-lock--match-procedure (num)
@@ -473,9 +460,10 @@ the function name(s) matched; otherwise return nil."
   ;; any particular way.
 
   ;; An identifier (function or variable name) matches
-  ;; reduce-identifier-regexp but not reduce-keyword-regexp.  Function
-  ;; names followed by a variable, function name or functional keyword
-  ;; indicates successive composed functions of the form
+  ;; reduce-font-lock--identifier-regexp but not
+  ;; reduce-font-lock--keyword-regexp.  Function names followed by a
+  ;; variable, function name or functional keyword indicates
+  ;; successive composed functions of the form
 
   ;; f1 f2 ... fn f(...)  or  f1 f2 ... fn var_or_functional_keyword
 
@@ -491,7 +479,7 @@ the function name(s) matched; otherwise return nil."
         (and
          ;; Find next identifier or stop:
          (re-search-forward
-          reduce-identifier-regexp limit t)
+          reduce-font-lock--identifier-regexp limit t)
          ;; If identifier is procedure then skip to the following
          ;; terminator and return nil:
          (if (reduce-font-lock--match-procedure 0)
@@ -511,7 +499,7 @@ the function name(s) matched; otherwise return nil."
           (and
            ;; Find next identifier or stop:
            (re-search-forward
-            anchored-reduce-identifier-regexp limit t)
+            anchored-reduce-font-lock--identifier-regexp limit t)
            ;; Check identifier:
            (if (reduce-font-lock--match-keyword 1)
                ;; keyword...
@@ -534,25 +522,25 @@ the function name(s) matched; otherwise return nil."
 ;;;; End of support for nested functions
 ;;;; ***********************************
 
-(defconst reduce-font-lock--keywords-1
-  `("reduce-font-lock--keywords-1"       ; TEMPORARY label for debugging
-    ,@reduce-font-lock--keywords-basic
-    ,@reduce-font-lock--keywords-algebraic)
-  "Standard algebraic-mode REDUCE fontification rules.")
+;; (defconst reduce-font-lock--keywords-1 ; Algebraic
+;;   `("reduce-font-lock--keywords-1"     ; TEMPORARY label for debugging
+;;     ,@reduce-font-lock--keywords-basic
+;;     ,@reduce-font-lock--keywords-algebraic)
+;;   "Standard algebraic-mode REDUCE fontification rules.")
 
-(defconst reduce-font-lock--keywords-2
-  `("reduce-font-lock--keywords-2"       ; TEMPORARY label for debugging
-    ,@reduce-font-lock--keywords-basic
-    ,@reduce-font-lock--keywords-symbolic)
-  "Standard symbolic-mode REDUCE fontification rules.")
+;; (defconst reduce-font-lock--keywords-2 ; Symbolic
+;;   `("reduce-font-lock--keywords-2"     ; TEMPORARY label for debugging
+;;     ,@reduce-font-lock--keywords-basic
+;;     ,@reduce-font-lock--keywords-symbolic)
+;;   "Standard symbolic-mode REDUCE fontification rules.")
 
-(defconst reduce-font-lock--keywords-3
-  `("reduce-font-lock--keywords-3"      ; TEMPORARY label for debugging
-    ,@reduce-font-lock--keywords-basic
-    ,@reduce-font-lock--keywords-algebraic
-    ,@reduce-font-lock--keywords-symbolic
-    ,@reduce-font-lock--keywords-extra)
-  "Full REDUCE fontification rules.")
+;; (defconst reduce-font-lock--keywords-3 ; Maximal
+;;   `("reduce-font-lock--keywords-3"     ; TEMPORARY label for debugging
+;;     ,@reduce-font-lock--keywords-basic
+;;     ,@reduce-font-lock--keywords-algebraic
+;;     ,@reduce-font-lock--keywords-symbolic
+;;     ,@reduce-font-lock--keywords-extra)
+;;   "Full REDUCE fontification rules.")
 
 
 ;;;; *********************************************************
