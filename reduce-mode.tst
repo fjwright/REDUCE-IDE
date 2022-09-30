@@ -74,7 +74,7 @@ Comment The above line no longer breaks this comment!$
 
 procedure foo; bar;
 
-procedure /* no longer breaks fontification! */ foo; bar;
+procedure /* breaks fontification of name! */ foo; bar;
 
 procedure foo x; /* OK */ bar;
 
