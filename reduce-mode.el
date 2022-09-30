@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sourceforge.net/u/fjwright>
 ;; Created: late 1992
-;; Time-stamp: <2022-09-28 14:45:41 franc>
+;; Time-stamp: <2022-09-28 17:40:56 franc>
 ;; Keywords: languages
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.8alpha
@@ -977,7 +977,8 @@ next line."
     (user-error "Next end of procedure not found")))
 
 (defconst reduce--proc-type-regexp
-  "\\(?:\\(?:algebraic\\|integer\\|real\\|symbolic\\|lisp\\|inline\\|s?macro\\)[ \t\n]+\\)"
+  "\\(?:\\(?:algebraic\\|integer\\|real\\|\
+symbolic\\|lisp\\|inline\\|s?macro\\|expr\\)[ \t\n]+\\)"
   "Regexp that matches any single possible procedural type followed
 by white space.")
 

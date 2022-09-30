@@ -45,7 +45,6 @@ Optional:
 To Do
 -----
 
-* Further rationalise and perhaps simplify the font-lock support.
 * Maybe highlight nested function calls without ().
 * Check switch-to-reduce and related commands.
 
@@ -61,3 +60,6 @@ Main Updates since REDUCE IDE 1.7 (see the manual for details)
 * Use Emacs parsing in preference to heuristics.
 * The command `reduce-kill-procedure` now takes an argument.
 * Operations based on procedures now support `matrixproc`, `listproc`, and procedure type declarations.  They report a user error if they fail.
+* Highlight group delimiters the same as block delimiters.
+* Restructure font-lock levels to be strictly inclusive.
+* Fix some font-lock errors.
