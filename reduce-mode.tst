@@ -24,7 +24,11 @@ for i := 0 : 10 do write i;
 for j := 0 step 2 until 10 do write j;
 
 e^(pi*i) = -1;
--1 = e^(pi*i);
+-2 = 2e^(pi*i);
+
+{Catalan, Euler_Gamma, Golden_Ratio, Khinchin};
+
+symbolic prin2t(t neq nil);
 
 factor x,cos,sin(x);
 remfac x,cos,sin(x);
