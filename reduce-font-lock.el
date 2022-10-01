@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sourceforge.net/u/fjwright>
 ;; Created: 6 June 2022 as a separate file (was part of reduce-mode.el)
-;; Time-stamp: <2022-10-01 14:17:21 franc>
+;; Time-stamp: <2022-10-01 17:49:21 franc>
 ;; Keywords: languages, faces
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.8alpha
@@ -44,6 +44,9 @@
 ;; you can specify different behavior using the OVERRIDE element of a
 ;; SUBEXP-HIGHLIGHTER.
 
+;; Generally, don't use OVERRIDE because then, for example,
+;; commented-out REDUCE code may be mis-highlighted.
+
 ;;; Code:
 
 (defconst reduce-font-lock--keywords
@@ -79,44 +82,50 @@ literally!")
 ;;;;; Basic fontification
 ;;;;; *******************
 
-(defconst reduce-font-lock--infix-regexp
-  "where\\|when\\|or\\|and\\|member\\|memq\\|neq\\|eq"
-  "Regular expression matching a REDUCE infix operator keyword.
-To be highlighted in ‘font-lock-keyword-face’.")
-
 (defconst reduce-font-lock--keyword-regexp
-  (mapconcat
-   #'identity
-   (list "procedure" "ws" "load_package"
-         "begin" "end" "return" "\\go\\(?:\\s-*to\\)?"
-         "if" "then" "else" "not"
-         "while" "do" "repeat" "until"
-         "collect" "join" "conc" "sum" "product"
-         "for\\(?:\\s-*\\(?:all\\|each\\)\\)?" "step"
-         "in" "on" "off" "write" "pause"
-         "such\\s-+that" "let" "match" "clear\\(?:rules\\)?"
-         "order" "factor" "remfac" "showtime"
-         "index" "mass" "mshell"
-         reduce-font-lock--infix-regexp)
-   "\\|")
+  (regexp-opt
+   '("procedure" "ws" "load_package"
+     "begin" "end" "return" "go" "to" "goto"
+     "if" "then" "else" "not" "or" "and"
+     "eq" "neq" "member" "memq"
+     "while" "do" "repeat" "until"
+     "collect" "join" "conc" "sum" "product"
+     "for" "all" "each" "forall" "foreach" "step"
+     "in" "on" "off" "write" "pause"
+     "such" "that" "where" "when"
+     "let" "match" "clear" "clearrules"
+     "order" "factor" "remfac" "showtime"
+     "index" "mass" "mshell")
+   'symbols)
   "Regular expression matching a basic REDUCE keyword.
-To be highlighted in ‘font-lock-keyword-face’.")
+It must be a distinct symbol and will be highlighted in
+‘font-lock-keyword-face’.")
+
+(defun reduce-font-lock--keyword-search (limit)
+  "Match ‘reduce-font-lock--keyword-regexp’ between point and LIMIT.
+But not if it is quoted, or preceded or followed by an escaped
+character."
+  ;; E.g. "alg/coeff.red" uses !*factor as a local variable.  Must
+  ;; repeat until no further keywords can be found; see
+  ;; "rlisp/inter.red" which contains 'pause.
+  (let (found)
+    (while
+        (and
+         (setq found (re-search-forward
+                      reduce-font-lock--keyword-regexp limit t))
+         (or (eq (char-after) ?!)
+             (let ((before (1- (match-beginning 0))))
+               (or (eq (char-after before) ?')
+                   (eq (char-before before) ?!))))))
+    found))
 
 (defconst reduce-font-lock--keywords-0
   `((reduce-font-lock--match-comment-statement
      1 font-lock-comment-face t)
-
-    ;; List of main keywords, etc:
-    (,(concat
-       ;; Ignore 'keyword, #keyword:
-       "\\(?:^\\|[^'#]\\)"
-       "\\_<\\(" reduce-font-lock--keyword-regexp "\\)\\_>")
-     (1 font-lock-keyword-face)
-     ;; Highlight subsequent keywords:
-     (,(concat "[^'#]\\_<\\(" reduce-font-lock--keyword-regexp "\\)\\_>")
-      nil nil
-      (1 font-lock-keyword-face)))
-    "<<\\|>>")                          ; group delimiters
+    ;; Basic keywords:
+    reduce-font-lock--keyword-search
+    ;; Group delimiters:
+    "<<\\|>>")
   "List of “basic” REDUCE fontification rules.
 Highlight comment statements, main syntactic keywords and group
 delimiters.")
@@ -152,11 +161,11 @@ exclamation mark in input.")
     ;; procedure name ( arg1 , arg2 , ... ) ;
     (,(concat "\\_<procedure\\_>"
               "\\s-+\\(" reduce-font-lock--identifier-regexp "\\)\\s-*\(?")
-     (1 font-lock-function-name-face t)
+     (1 font-lock-function-name-face)
      ;; Highlight arguments:
      (,(concat "\\=\\s-*\\(" reduce-font-lock--identifier-regexp "\\)\\s-*[,\)]?")
       nil nil
-      (1 font-lock-variable-name-face t)))
+      (1 font-lock-variable-name-face)))
 
     ;; General type declarations (ignore quoted keywords):
     (,(concat
@@ -338,12 +347,21 @@ get\\|put\\|deflist\\|flag\\|remprop\\|remflag\
     ("\\(?:^\\|[^']\\)\\_<\\(\
 fluid\\|global\\|switch\\|share\\|rlistat\\|asserted\
 \\)\\_>[^!]"
-     1 font-lock-type-face))
+     1 font-lock-type-face)
+
+    ;; Lambda arguments:
+    ;; lambda arg ;
+    ;; lambda ( arg1 , arg2 , ... ) ;
+    ("\\_<lambda\\_>\\s-*\(?"
+     (,(concat "\\=\\s-*\\(" reduce-font-lock--identifier-regexp "\\)\\s-*[,\)]?")
+      nil nil
+      (1 font-lock-variable-name-face))))
   "List of “symbolic” REDUCE fontification rules.
 Algebraic (‘reduce-font-lock--keywords-1’) plus preprocessor
 #-directives; quoted objects; asserted types; “declare” and
 “struct” statements, as used in “redlog”; module name and
-endmodule; symbolic-mode keywords, functions and types.")
+endmodule; symbolic-mode keywords, functions and types; lambda
+argument.")
 
 
 ;;;; *********************************************************
