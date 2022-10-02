@@ -2,9 +2,9 @@
 @c %**start of header
 @settitle GNU Emacs REDUCE Integrated Development Environment
 @c Manual last updated:
-@set UPDATED Time-stamp: <2022-09-27 16:39:51 franc>
+@set UPDATED Time-stamp: <2022-10-02 16:09:44 franc>
 @c Software version:
-@set VERSION 1.8alpha
+@set VERSION 1.8beta
 @afourpaper
 @c With different size paper the printed page breaks will need attention!
 @c Look for @page and @need commands.
@@ -1066,67 +1066,62 @@ Font-lock mode causes Emacs to select automatically the font in which
 text is displayed (``fontify'' it) so as to indicate its logical
 status.  @xref{Font Lock,, Font Lock mode, emacs, The Emacs Editor}.
 The first version of font-lock support for REDUCE mode was contributed
-by Rainer Schöpf.  The current version provides 4 levels of
-decoration, which can be selected using the standard font-lock
-facilities, or interactively most easily via the REDUCE mode font-lock
-sub-menu.  The levels and corresponding highlighting are as follows:
+by Rainer Schöpf.  The current version provides 3 strictly inclusive
+level: ``Symbolic'' includes ``Algebraic'' includes ``Basic''.  The
+level can be selected using the standard font-lock facilities, or
+interactively most easily via the REDUCE mode @emph{Syntax
+Highlighting} sub-menu.  The levels and corresponding highlighting are
+as follows:
 
 @enumerate 0
 @item
-Minimal: strings, comments, main keywords and block delimiters,
-procedure and other main type declarations, assertions and
-pre-processor @code{#}-directives;
+Basic: strings are displayed using @code{font-lock-string-face}; all
+types of comment (comment statements, comments from @code{%} to the
+end of the line, and C-style comments between @code{/*} and @code{*/}
+delimiters) are displayed using @code{font-lock-comment-face}; the
+main keywords including block delimiters and group delimiters are
+displayed using @code{font-lock-keyword-face}.
 
 @item
-Algebraic: minimal plus operator, operator type and vector
-declarations, array and matrix declarations with or without bounds,
-and symbolic constants;
+Algebraic: as basic level; additionally procedure names are displayed
+using @code{font-lock-function-name-face} and procedure parameters are
+displayed using @code{font-lock-variable-face}; general types such as
+``algebraic'' are displayed using @code{font-lock-type-face}; local
+variable types such as ``scalar'' are displayed using
+@code{font-lock-type-face} and declared local variable names are
+displayed using @code{font-lock-variable-name-face}; goto and label
+names and named constants such as ``pi'' and ``Catalan'' are displayed
+using @code{font-lock-constant-face}; declared operator, operator type
+such as ``linear'', vector, array and matrix declarations are
+displayed using @code{font-lock-type-face}; operator, vector, and
+array and matrix identifiers (with or without bounds) are displayed
+using @code{font-lock-function-face}.
 
 @item
-Symbolic: minimal plus module, endmodule, fluid, global, and other
-symbolic-mode declarations;
-
-@item
-Maximal: all the above plus quoted data, function calls with or
-without parentheses (but not nested function calls).
+Symbolic: as algebraic level; additionally preprocessor #-directives
+are displayed using @code{font-lock-preprocessor-face}; quoted objects
+are displayed using @code{font-lock-constant-face}; asserted types are
+displayed using @code{font-lock-type-face}; ``declare'' and ``struct''
+statements, as used in ``redlog'', are displayed using
+@code{font-lock-keyword-face}, @code{font-lock-function-name-face} and
+@code{font-lock-type-face}; module, endmodule and other symbolic-mode
+keywords are displayed using @code{font-lock-keyword-face}; module
+names are displayed using @code{font-lock-constant-face}; key
+symbolic-mode functions such as ``flag'' and ``get'' are displayed
+using @code{font-lock-builtin-face}; key symbolic-mode types such as
+``fluid'' and ``global'' are displayed using
+@code{font-lock-type-face}; declared lambda parameters are displayed
+using @code{font-lock-variable-face}.
 @end enumerate
 
-@noindent
-Using Emacs' default settings gives maximal highlighting, but if you
-find this too gaudy or too slow then you might prefer to select a
-lower level.
-
-REDUCE mode does not make any (user configurable) face definitions of
-its own and uses only standard font-lock faces.  The faces used to
-highlight particular syntactic elements are as follows:
-
-@vtable @var
-@item font-lock-builtin-face
-not currently used
-@item font-lock-comment-face
-%-comments and comment statements
-@item font-lock-constant-face
-symbolic constants, such as @code{pi}, and labels
-@item font-lock-function-name-face
-procedure, operator and module names
-@item font-lock-keyword-face
-main REDUCE keywords
-@item font-lock-string-face
-strings
-@item font-lock-type-face
-keywords that can be regarded as type declarations for variables or
-functions, such as @code{scalar} and @code{even}
-@item font-lock-variable-name-face
-variables being defined or declared
-@item font-lock-warning-face
-currently used only by REDUCE Run mode
-@end vtable
-
-Font-lock mode can be turned on interactively in the normal way that any
-minor mode is turned on, e.g.@: it can be toggled on and off by the
-command @code{font-lock-mode}.  It can also be turned on and off via the
-REDUCE mode font-lock sub-menu.  To turn on font-lock mode automatically
-with REDUCE mode, put this in your @file{.emacs} file:
+Using Emacs' default settings gives symbolic-level highlighting, but
+if you find this too gaudy or too slow then you might prefer to select
+a lower level.  Font-lock mode can be turned on interactively in the
+normal way that any minor mode is turned on, e.g.@: it can be toggled
+on and off by the command @code{font-lock-mode}.  It can also be
+turned on and off via the REDUCE mode @emph{Syntax Highlighting}
+sub-menu.  To turn on font-lock mode automatically with REDUCE mode,
+put this in your @file{.emacs} file:
 
 @lisp
 (add-hook 'reduce-mode-hook 'turn-on-font-lock)
