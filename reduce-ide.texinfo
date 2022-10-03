@@ -2,9 +2,9 @@
 @c %**start of header
 @settitle GNU Emacs REDUCE Integrated Development Environment
 @c Manual last updated:
-@set UPDATED Time-stamp: <2022-10-02 17:51:40 franc>
+@set UPDATED Time-stamp: <2022-10-03 15:46:14 franc>
 @c Software version:
-@set VERSION 1.8
+@set VERSION 1.9alpha
 @afourpaper
 @c With different size paper the printed page breaks will need attention!
 @c Look for @page and @need commands.
@@ -145,13 +145,6 @@ version 28 or later, which I will endeavour to support under recent
 versions of Microsoft Windows and Linux.  It should also run under
 closely related versions of GNU Emacs and on other platforms, but I
 may not be able to provide support.
-
-REDUCE IDE version 1.7 provides: support for running several different
-versions of REDUCE and automatic termination of input to REDUCE
-(@pxref{Run REDUCE,, Running@comma{} re-running and switching to
-REDUCE}); partial support for C-style @code{/**/} comments;
-improvements to the commands that move by statement, block, group,
-etc.@: (@pxref{Statements,, Commands that operate on statements}).
 
 This manual assumes that you are familiar in general with both Emacs
 and REDUCE.

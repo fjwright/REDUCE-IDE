@@ -78,16 +78,19 @@ Comment The above line no longer breaks this comment!$
 
 procedure foo; bar;
 
-procedure /* breaks fontification of name! */ foo; bar;
+procedure /* comment here OK */ foo; bar;
 
-procedure foo x; /* OK */ bar;
+procedure
+   foo /* comment here OK */ x; /* comment here OK */ bar;
 
 !Strange + var!"iable + !!names + ! spaced! ;
 
 "This is a string!";
 "It contains keywords: comment, procedure, operator, lisp, algebraic.";
 
-procedure foo(x,y); bar;
+procedure % comment here OK
+   foo % and here!
+      (x,y); bar;
 
 %%% Recommended end-of-file marker...
 

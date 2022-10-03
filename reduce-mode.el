@@ -4,10 +4,10 @@
 
 ;; Author: Francis J. Wright <https://sourceforge.net/u/fjwright>
 ;; Created: late 1992
-;; Time-stamp: <2022-10-02 17:51:40 franc>
+;; Time-stamp: <2022-10-03 14:16:37 franc>
 ;; Keywords: languages
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
-;; Package-Version: 1.8
+;; Package-Version: 1.9alpha
 
 ;; This file is part of REDUCE IDE.
 
