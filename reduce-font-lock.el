@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sourceforge.net/u/fjwright>
 ;; Created: 6 June 2022 as a separate file (was part of reduce-mode.el)
-;; Time-stamp: <2022-10-03 16:58:52 franc>
+;; Time-stamp: <2022-10-03 17:35:31 franc>
 ;; Keywords: languages, faces
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.9alpha
@@ -51,9 +51,9 @@
 
 (defconst reduce-font-lock--keywords
   '(
-    reduce-font-lock--keywords-0     ; Basic = nil
-    reduce-font-lock--keywords-1     ; Algebraic
-    reduce-font-lock--keywords-2     ; Symbolic = t
+    reduce-font-lock--keywords-0        ; Basic = nil
+    reduce-font-lock--keywords-1        ; Algebraic
+    reduce-font-lock--keywords-2        ; Symbolic = t
     )
   "A list of symbols corresponding to increasing fontification.
 Each is assigned a ‘font-lock-keywords’ value for REDUCE mode.
@@ -77,10 +77,10 @@ literally!")
                #'reduce-font-lock--extend-region-for-comment-statement)
   (reduce-font-lock--level))             ; for font-lock menu
 
-(defun reduce-font-lock--search (regexp limit)
-  "Match REGEXP between point and LIMIT.
-But not if it is quoted, or preceded or followed by an escaped
-character."
+(defun reduce-font-lock--kwd-search (regexp limit)
+  "Reliably match REGEXP for a keyword between point and LIMIT.
+Do not match if it is quoted, or preceded or followed by an
+escaped character."
   ;; E.g. "alg/coeff.red" uses !*factor as a local variable.  Must
   ;; repeat until no further keywords can be found; see
   ;; "rlisp/inter.red" which contains 'pause.
@@ -122,7 +122,7 @@ It must be a distinct symbol and will be highlighted in
      1 font-lock-comment-face t)
     ;; Basic keywords:
     (lambda (limit)
-      (reduce-font-lock--search
+      (reduce-font-lock--kwd-search
        reduce-font-lock--keyword-regexp limit))
     ;; Group delimiters:
     "<<\\|>>")
@@ -175,7 +175,7 @@ Precisely, a single white space (including newline), or a single
 
     ;; General type declarations:
     ((lambda (limit)
-       (reduce-font-lock--search
+       (reduce-font-lock--kwd-search
         "\\_<\\(?:algebraic\\|scalar\\|integer\\|real\\|\
 symbolic\\|lisp\\|inline\\|s?macro\\)\\_>"
         limit))
@@ -204,15 +204,14 @@ symbolic\\|lisp\\|inline\\|s?macro\\)\\_>"
      1 font-lock-constant-face)
 
     ;; Operator declarations of the form ‘type op1, op2, ...’
-    (,(concat "\\(?:^\\|[^']\\)\\_<\\("
-              (mapconcat #'identity
-                         '("even" "odd"
-                           "linear" "noncom"
-                           "\\(?:anti\\)?symmetric"
-                           "operator" "infix"
-                           "vector")
-                         "\\|")
-              "\\)\\_>" reduce-font-lock--whitespace-regexp)
+    ((lambda (limit)
+       (reduce-font-lock--kwd-search
+        ,(regexp-opt
+          '("even" "odd" "linear" "noncom"
+            "symmetric" "antisymmetric"
+            "operator" "infix" "vector")
+          'symbols)
+        limit))
      (1 font-lock-type-face)
      ;; Highlight function names:
      (,(concat "\\=" reduce-font-lock--whitespace-regexp "*"
@@ -225,9 +224,11 @@ symbolic\\|lisp\\|inline\\|s?macro\\)\\_>"
     ;; Array and matrix type declarations: e.g.
     ;; array a 10, b(2,3,4);
     ;; matrix x(2,1),y(3,4),z;
-    (,(concat "\\(?:^\\|[^']\\)\\_<\\(array\\|matrix\\)\\_>"
-              reduce-font-lock--whitespace-regexp)
-     (1 font-lock-type-face)
+    ((lambda (limit)
+       (reduce-font-lock--kwd-search
+        "\\_<\\(?:array\\|matrix\\)\\_>"
+        limit))
+     (0 font-lock-type-face)
      ;; Highlight array/matrix names:
      (,(concat "\\=" reduce-font-lock--whitespace-regexp "*"
                "\\(" reduce-font-lock--identifier-regexp "\\)"
@@ -294,7 +295,7 @@ constants (e.g. “pi”).")
 
 (defconst reduce-font-lock--asserted-type-rule
   `("\\_<procedure\\_>"
-     ;; anchored-highlighter to handle the rest of the statement:
+    ;; anchored-highlighter to handle the rest of the statement:
     ,(concat "[^!]:"
              reduce-font-lock--whitespace-regexp "*"
              "\\(" reduce-font-lock--identifier-regexp "\\)")
@@ -359,7 +360,7 @@ constants (e.g. “pi”).")
 
     ;; Endmodule and other symbolic-mode keywords:
     (lambda (limit)
-      (reduce-font-lock--search
+      (reduce-font-lock--kwd-search
        "\\_<\\(?:\
 endmodule\\|lambda\\|precedence\\|\
 assert\\(?:_\\(?:un\\)?install\\(?:_all\\)?\\)?\
@@ -367,7 +368,7 @@ assert\\(?:_\\(?:un\\)?install\\(?:_all\\)?\\)?\
 
     ;; Symbolic-mode functions:
     ((lambda (limit)
-       (reduce-font-lock--search
+       (reduce-font-lock--kwd-search
         "\\_<\\(?:\
 function\\|newtok\\|\
 get\\|put\\|deflist\\|flag\\|remprop\\|remflag\
@@ -376,7 +377,7 @@ get\\|put\\|deflist\\|flag\\|remprop\\|remflag\
 
     ;; Symbolic-mode types:
     ((lambda (limit)
-       (reduce-font-lock--search
+       (reduce-font-lock--kwd-search
         "\\_<\\(\
 fluid\\|global\\|switch\\|share\\|rlistat\\|asserted\
 \\)\\_>" limit))
@@ -455,7 +456,7 @@ This function is prepended to ‘font-lock-extend-region-functions’."
               ;; Or does a comment start in the font-lock region?
               (search-forward "comment" font-lock-end t))
       ;; If either of the above then...
-      (re-search-forward "[;$]" nil 1) ; if un-terminated move to EOB
+      (re-search-forward "[;$]" nil 1)  ; if un-terminated move to EOB
       ;; Do multiple comments start in the font-lock region?
       (while (and (< (point) font-lock-end)
                   (search-forward "comment" font-lock-end t))
