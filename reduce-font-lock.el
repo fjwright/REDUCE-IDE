@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sourceforge.net/u/fjwright>
 ;; Created: 6 June 2022 as a separate file (was part of reduce-mode.el)
-;; Time-stamp: <2022-10-03 15:28:37 franc>
+;; Time-stamp: <2022-10-03 16:58:52 franc>
 ;; Keywords: languages, faces
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.9alpha
@@ -77,6 +77,22 @@ literally!")
                #'reduce-font-lock--extend-region-for-comment-statement)
   (reduce-font-lock--level))             ; for font-lock menu
 
+(defun reduce-font-lock--search (regexp limit)
+  "Match REGEXP between point and LIMIT.
+But not if it is quoted, or preceded or followed by an escaped
+character."
+  ;; E.g. "alg/coeff.red" uses !*factor as a local variable.  Must
+  ;; repeat until no further keywords can be found; see
+  ;; "rlisp/inter.red" which contains 'pause.
+  (let (found)
+    (while (and
+            (setq found (re-search-forward regexp limit t))
+            (or (eq (char-after) ?!)
+                (let ((before (1- (match-beginning 0))))
+                  (or (eq (char-after before) ?')
+                      (eq (char-before before) ?!))))))
+    found))
+
 
 ;;;;; *******************
 ;;;;; Basic fontification
@@ -101,29 +117,13 @@ literally!")
 It must be a distinct symbol and will be highlighted in
 ‘font-lock-keyword-face’.")
 
-(defun reduce-font-lock--keyword-search (limit)
-  "Match ‘reduce-font-lock--keyword-regexp’ between point and LIMIT.
-But not if it is quoted, or preceded or followed by an escaped
-character."
-  ;; E.g. "alg/coeff.red" uses !*factor as a local variable.  Must
-  ;; repeat until no further keywords can be found; see
-  ;; "rlisp/inter.red" which contains 'pause.
-  (let (found)
-    (while
-        (and
-         (setq found (re-search-forward
-                      reduce-font-lock--keyword-regexp limit t))
-         (or (eq (char-after) ?!)
-             (let ((before (1- (match-beginning 0))))
-               (or (eq (char-after before) ?')
-                   (eq (char-before before) ?!))))))
-    found))
-
 (defconst reduce-font-lock--keywords-0
   `((reduce-font-lock--match-comment-statement
      1 font-lock-comment-face t)
     ;; Basic keywords:
-    reduce-font-lock--keyword-search
+    (lambda (limit)
+      (reduce-font-lock--search
+       reduce-font-lock--keyword-regexp limit))
     ;; Group delimiters:
     "<<\\|>>")
   "List of “basic” REDUCE fontification rules.
@@ -147,10 +147,6 @@ character (_) is considered a letter if it is within an
 identifier.  Special characters may be used in identifiers too,
 even as the first character, but each must be preceded by an
 exclamation mark in input.")
-
-(defconst reduce-font-lock--type-regexp
-  "algebraic\\|scalar\\|integer\\|real\\|symbolic\\|lisp\\|inline\\|s?macro"
-  "Regexp that matches any single possible procedural type.")
 
 (defconst reduce-font-lock--whitespace-regexp
   "\\(?:\\s-\\|\n\\|%.*?\n\\|/\\*.*?\\*/\\)"
@@ -177,14 +173,13 @@ Precisely, a single white space (including newline), or a single
       nil nil
       (1 font-lock-variable-name-face)))
 
-    ;; General type declarations (ignore quoted keywords):
-    (,(concat
-       "\\(?:^\\|[^']\\)\\_<\\(" reduce-font-lock--type-regexp "\\)\\_>")
-     (1 font-lock-type-face)
-     ;; Highlight subsequent types:
-     (,(concat "[^']\\_<\\(" reduce-font-lock--type-regexp "\\)\\_>")
-      nil nil
-      (1 font-lock-type-face)))
+    ;; General type declarations:
+    ((lambda (limit)
+       (reduce-font-lock--search
+        "\\_<\\(?:algebraic\\|scalar\\|integer\\|real\\|\
+symbolic\\|lisp\\|inline\\|s?macro\\)\\_>"
+        limit))
+     . font-lock-type-face)
 
     ;; Local variable type declarations, e.g.
     ;; scalar var1 , var2 , ... ;
@@ -344,7 +339,7 @@ constants (e.g. “pi”).")
     (;; Quoted lists (arbitrarily nested and multi-line):
      "'\\(\(\\)"
      (1 font-lock-constant-face)
-     ("\\(?:.\\|\n\\)"         ; match anything including \n
+     ("\\(?:.\\|\n\\)"     ; match anything including \n
       ;; This may be a hack but it seems to work!
       ;; Pre-form function sets search limit to end of list:
       (save-excursion (backward-char) (forward-sexp) (point))
@@ -363,24 +358,29 @@ constants (e.g. “pi”).")
      (2 font-lock-constant-face))
 
     ;; Endmodule and other symbolic-mode keywords:
-    ("\\(?:^\\|[^']\\)\\_<\\(\
+    (lambda (limit)
+      (reduce-font-lock--search
+       "\\_<\\(?:\
 endmodule\\|lambda\\|precedence\\|\
 assert\\(?:_\\(?:un\\)?install\\(?:_all\\)?\\)?\
-\\)\\_>[^!]"
-     1 font-lock-keyword-face)
+\\)\\_>" limit))
 
     ;; Symbolic-mode functions:
-    ("\\(?:^\\|[^']\\)\\_<\\(\
+    ((lambda (limit)
+       (reduce-font-lock--search
+        "\\_<\\(?:\
 function\\|newtok\\|\
 get\\|put\\|deflist\\|flag\\|remprop\\|remflag\
-\\)\\_>[^!]"
-     1 font-lock-builtin-face)
+\\)\\_>" limit))
+     . font-lock-builtin-face)
 
     ;; Symbolic-mode types:
-    ("\\(?:^\\|[^']\\)\\_<\\(\
+    ((lambda (limit)
+       (reduce-font-lock--search
+        "\\_<\\(\
 fluid\\|global\\|switch\\|share\\|rlistat\\|asserted\
-\\)\\_>[^!]"
-     1 font-lock-type-face)
+\\)\\_>" limit))
+     . font-lock-type-face)
 
     ;; Lambda arguments:
     ;; lambda arg ;
