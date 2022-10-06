@@ -47,22 +47,8 @@ To Do
 
 * Check switch-to-reduce and related commands.
 
-Main Updates since REDUCE IDE 1.7 (see the manual for details)
+Main Updates since REDUCE IDE 1.8 (see the manual for details)
 --------------------------------------------------------------
 
-* Use lexical scoping, which might be a little faster.
-* **INCOMPATIBLE CHANGE:** The commands `reduce-forward-sexp` and `reduce-backward-sexp` no longer accept an argument and now skip any comments or white space, but **not terminators**, between point and the "balanced expression".
-* Add the command `reduce-kill-sexp` to kill one "balanced expression" either forwards or, with any argument, backwards, bound to `C-M-k`.
-* Reliably disregard ! as an escape character at the end of a string, which would otherwise mask the end of the string.
-* Treat the escape character (!) as part of a word for motion commands.
-* Use Emacs parsing in preference to heuristics to detect whether point is in a string or (% or /**/) comment.
-* The command `reduce-kill-procedure` now accepts an argument.
-* Operations based on procedures now support `matrixproc`, `listproc`, and procedure type declarations.  They report a user error if they fail.
-* Syntax Highlighting:
-  * More robust highlighting of comment statements.
-  * There are now three strictly inclusive levels: “Symbolic” includes “Algebraic” includes “Basic”.
-  * Highlight group delimiters the same as block delimiters.
-  * Highlight named constants such as Catalan.
-  * Highlight symbolic-mode functions such as get and put as builtin functions.
-  * Highlight lambda arguments the same as procedure arguments.
-  * Fix some errors.  Should be more robust and possibly slightly faster.
+* Indentation is more reasonable.
+* **INCOMPATIBLE CHANGE:** The command `reduce-indent-line` is now idempotent and no longer successively indents.  The option `reduce-indent-line-conservative` no longer exists.

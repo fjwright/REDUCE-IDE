@@ -90,7 +90,7 @@ procedure
 
 procedure % comment here OK
    foo % and here!
-      (x,y); bar;
+   (x,y); bar;
 
 %%% Recommended end-of-file marker...
 
