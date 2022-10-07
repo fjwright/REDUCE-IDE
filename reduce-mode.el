@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sourceforge.net/u/fjwright>
 ;; Created: late 1992
-;; Time-stamp: <2022-10-06 17:59:40 franc>
+;; Time-stamp: <2022-10-07 18:00:19 franc>
 ;; Keywords: languages
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.9alpha
@@ -597,39 +597,38 @@ locally to ‘indent-line-function’ to implement
         (reduce--calculate-indent-this)
         (reduce--calculate-indent-prev))))
 
-(defconst reduce--looking-at-procedure-regexp
-  "[a-z \t\f\n]*\\_<procedure\\_>"
-  "Regexp for looking at the start of a procedure header.")
-
 (defsubst reduce--looking-at-procedure ()
   "Return t if text after point matches the start of a procedure."
-  (looking-at ".*\\_<procedure[ \t\f]+[![:alpha:]]"))
+  (looking-at "[a-z \t\f\n]*\\_<procedure\\_>"))
 
 (defun reduce--calculate-indent-proc ()
   "Return non-nil if point in or above procedure header or below body.
-If above or below then point must be within white space or
-comments.  Return 0 unless point is in a continuation of the
-procedure header onto subsequent lines, in which case return
-‘reduce-indentation’.  Otherwise return nil."
+If above or below and point is within white space or comments
+then return 0 unless point is in a continuation of the procedure
+header onto subsequent lines, in which case return
+‘reduce-indentation’; otherwise return nil."
   (save-excursion
     (beginning-of-line)
-    (or
-     ;; Point in or above procedure header?
-     (let ((start (point)))
-       (reduce-forward-statement 1)
-       (reduce-backward-statement 1)
-       (and (looking-at reduce--looking-at-procedure-regexp)
-            (if (> start (point))       ; start below "procedure"
-                reduce-indentation      ; on continuation line
-              0)))
-     ;; Point below procedure?
-     (progn
-       (reduce-backward-statement 2)
-       (and (looking-at reduce--looking-at-procedure-regexp)
-            0)))))
+    (condition-case nil
+        (let ((start (point)))
+          (or
+           ;; Point in or above procedure header?
+           (progn
+             (reduce-forward-statement 1)
+             (reduce-backward-statement 1)
+             (and (reduce--looking-at-procedure)
+                  (if (> start (point))  ; start below "procedure"
+                      reduce-indentation ; on continuation line
+                    0)))
+           ;; Point below procedure?
+           (progn
+             (reduce-backward-procedure 1)
+             (reduce-forward-procedure 1)
+             (and (>= start (point)) 0)))) ; start not above procedure end
+      (t nil))))
 
 (defun reduce--calculate-indent-this ()
-  "Handle current line BEGINNING with a special token.
+  "Return indentation for current line *beginning* with a special token.
 For an opening token (‘begin’ or ‘<<’) normally return the indentation of
 the previous non-blank line; for an intermediate token (‘then’ or ‘else’)
 return the indentation of the beginning of the statement; for a
@@ -637,38 +636,46 @@ closing token (‘end’ or ‘>>’) return the indentation of the beginning
 of the construct; otherwise return nil."
   (save-excursion
     (back-to-indentation)
-    (cond
-     ;; *** Opening tokens *** :
-     ((looking-at "[({ \t]*\\(\\<begin\\>\\|<<\\)")
-      ;; Find previous non-blank line:
-      (let ((closed (looking-at ".*\\(\\<end\\>\\|>>\\)")))
-    (skip-syntax-backward " >") ; whitespace, endcomment
-    (if (looking-at "[;$]")
-        (reduce-backward-statement 1)
-      (back-to-indentation))
-    (if (or (reduce--looking-at-procedure)
-        (and
-         (or closed     ; single-line construct
-             (looking-at "\\w+[ \t]*:=")) ; assignment
-         (not (looking-at ".*[;$]")))) ; not completed
-        (+ (current-column) reduce-indentation)
-      (current-column))
-    ))
-     ((looking-at "\\w+[ \t]*:[^=]")    ; label
-      ;; Indent to beginning of enclosing block:
-      (reduce--backward-block) (current-column))
-     ;; *** Intermediate tokens *** :
-     ((looking-at "\\<then\\>\\|\\<else\\>")
-      (reduce-find-matching-if) (current-indentation))
-     ;; *** Closing tokens *** :
-     ((looking-at "\\<end\\>")
-      (reduce--backward-block) (current-indentation))
-     ((looking-at ">>")
-      (reduce--backward-group) (current-indentation))
-     ;; ((looking-at "#\\<endif\\>")
-     ;;  (reduce--backward-group) 0)
-     ((looking-at "#\\(\\<define\\>\\|\\<if\\>\\|\\<\\elif\\>\\|\\<\\else\\>\\|\\<endif\\>\\)")
-      0))))
+    ;; Ignore % comment and skip /**/ comment:
+    (if (looking-at "%")
+        nil
+      (forward-comment (buffer-size))
+      (cond
+       ;; *** Opening tokens ***
+       ((looking-at "[\({ \t]*\\(?:\\_<begin\\_>\\|<<\\)")
+        (let ((closed (looking-at ".*\\(?:\\_<end\\_>\\|>>\\)")))
+          ;; Closed if opening and closing tokens on same line.
+          ;; Find previous non-blank line:
+          (skip-chars-backward " \t\f\n")
+          ;; Go to beginning of statement or line:
+          (if (looking-back "[;$]")
+              (reduce-backward-statement 1)
+            (back-to-indentation))
+          (cond ((reduce--looking-at-procedure)
+                 reduce-indentation)
+                ((and
+                  (or closed                   ; single-line construct
+                      (looking-at ".*:="))     ; assignment
+                  (not (looking-at ".*[;$]"))) ; not completed
+                 (+ (current-column) reduce-indentation))
+                (t
+                 (current-column)))))
+       ;; *** Label ***
+       ((looking-at ".*:[^=]")
+        ;; Indent to beginning of enclosing block:
+        (reduce--backward-block) (current-column))
+       ;; *** Intermediate tokens ***
+       ((looking-at "\\_<\\(?:then\\|else\\)\\_>")
+        (reduce-find-matching-if) (current-indentation))
+       ;; *** Closing tokens ***
+       ((looking-at "\\_<end\\_>")
+        (reduce--backward-block) (current-indentation))
+       ((looking-at ">>")
+        (reduce--backward-group) (current-indentation))
+       ;; *** Special cases ***
+       ((looking-at "\\_<\\(?:\\(?:end\\)?module\\)\\_>\\|\
+#\\(?:define\\|\\(?:el\\)?if\\|else\\|endif\\)\\_>")
+        0)))))
 
 (defun reduce-find-matching-if ()
   "Find the ‘if’ matching a ‘then’ or ‘else’."
