@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sourceforge.net/u/fjwright>
 ;; Created: late 1992
-;; Time-stamp: <2022-10-07 18:00:19 franc>
+;; Time-stamp: <2022-10-08 14:39:08 franc>
 ;; Keywords: languages
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.9alpha
@@ -628,7 +628,8 @@ header onto subsequent lines, in which case return
       (t nil))))
 
 (defun reduce--calculate-indent-this ()
-  "Return indentation for current line *beginning* with a special token.
+  "Return indentation for current line beginning with a special token.
+The indentation depends on *this* and previous non-blank lines.
 For an opening token (‘begin’ or ‘<<’) normally return the indentation of
 the previous non-blank line; for an intermediate token (‘then’ or ‘else’)
 return the indentation of the beginning of the statement; for a
@@ -636,19 +637,19 @@ closing token (‘end’ or ‘>>’) return the indentation of the beginning
 of the construct; otherwise return nil."
   (save-excursion
     (back-to-indentation)
-    ;; Ignore % comment and skip /**/ comment:
+    ;; Ignore % comment and skip leading /**/ comment:
     (if (looking-at "%")
         nil
       (forward-comment (buffer-size))
       (cond
-       ;; *** Opening tokens ***
+       ;; *** Opening token ***
        ((looking-at "[\({ \t]*\\(?:\\_<begin\\_>\\|<<\\)")
         (let ((closed (looking-at ".*\\(?:\\_<end\\_>\\|>>\\)")))
           ;; Closed if opening and closing tokens on same line.
           ;; Find previous non-blank line:
           (skip-chars-backward " \t\f\n")
           ;; Go to beginning of statement or line:
-          (if (looking-back "[;$]")
+          (if (memq (char-before) '(?\; ?$))
               (reduce-backward-statement 1)
             (back-to-indentation))
           (cond ((reduce--looking-at-procedure)
@@ -660,15 +661,12 @@ of the construct; otherwise return nil."
                  (+ (current-column) reduce-indentation))
                 (t
                  (current-column)))))
-       ;; *** Label ***
-       ((looking-at ".*:[^=]")
-        ;; Indent to beginning of enclosing block:
-        (reduce--backward-block) (current-column))
        ;; *** Intermediate tokens ***
        ((looking-at "\\_<\\(?:then\\|else\\)\\_>")
-        (reduce-find-matching-if) (current-indentation))
-       ;; *** Closing tokens ***
-       ((looking-at "\\_<end\\_>")
+        (reduce--find-matching-if) (current-indentation))
+       ;; *** Label or closing tokens ***
+       ;; Indent to beginning of enclosing block or group:
+       ((looking-at ".*:[^=]\\|\\_<end\\_>")
         (reduce--backward-block) (current-indentation))
        ((looking-at ">>")
         (reduce--backward-group) (current-indentation))
@@ -677,30 +675,37 @@ of the construct; otherwise return nil."
 #\\(?:define\\|\\(?:el\\)?if\\|else\\|endif\\)\\_>")
         0)))))
 
-(defun reduce-find-matching-if ()
-  "Find the ‘if’ matching a ‘then’ or ‘else’."
-  ;; Must skip groups, blocks and brackets.
-  ;; Detects a missing ‘if’ as early as possible as an unrecoverable error.
-  (let ((pattern "\\<\\(if\\|else\\|end\\|begin\\)\\>\\|>>\\|\\s)\\|<<\\|\\s(\\|[^!][;$]"))
+(defun reduce--find-matching-if ()
+  "Search backwards for the ‘if’ matching a ‘then’ or ‘else’.
+Return non-nil if found; otherwise report a user error."
+  ;; Must skip groups, blocks and brackets.  Also search for invalid
+  ;; tokens such as ‘begin’ so as to detect a missing ‘if’ ASAP.
+  (let ((pattern
+         "\\_<\\(?:\\(if\\)\\|\\(else\\)\\|\\(end\\)\\|begin\\)\\_>\
+\\|\\(>>\\)\\|\\(\\s\)\\)\\|<<\\|\\s\(\\|[^!][\;$]"))
     (or (and
-     (reduce--re-search-backward pattern)
-     (cond
-      ((looking-at "if"))       ; found it – return t
-      ((looking-at "else")      ; nested conditional
-       (reduce-find-matching-if) (reduce-find-matching-if))
-      ((= (following-char) ?>)  ; end of group
-       (reduce--backward-group) (reduce-find-matching-if))
-      ((looking-at "end")       ; end of block
-       (reduce--backward-block) (reduce-find-matching-if))
-      ((= (char-syntax (following-char)) ?\) )
-       (forward-char) (backward-list) ; skip balanced brackets
-       (reduce-find-matching-if))))
-    ;; begin, <<, opening bracket, ‘;’, ‘$’ or beginning of buffer
-    (error "‘if’ matching ‘then’ or ‘else’ not found"))
-    ))
+         (reduce--re-search-backward pattern)
+         (cond
+          ((match-end 1))               ; if – return t
+          ((match-end 2)                ; else – nested conditional
+           (reduce--find-matching-if)
+           (reduce--find-matching-if))
+          ((match-end 3)                ; end of block
+           (reduce--backward-block)
+           (reduce--find-matching-if))
+          ((match-end 4)                ; end of group
+           (reduce--backward-group)
+           (reduce--find-matching-if))
+          ((match-end 5)                  ; closing bracket
+           (forward-char) (backward-list) ; skip balanced brackets
+           (reduce--find-matching-if))))
+        ;; Found begin, <<, opening bracket, terminator or beginning
+        ;; of buffer, so...
+        (user-error "Cannot find ‘if’ matching ‘then’ or ‘else’"))))
 
 (defun reduce--calculate-indent-prev ()
-  "Return indentation based on previous non-blank line."
+  "Return indentation for current line based on previous lines.
+The indentation depends only on *previous* non-blank line."
   ;; Should comments be ignored, esp. if they begin the line?
   ;; e.g. they may indicate a commented-out region!
   (save-excursion
@@ -770,12 +775,12 @@ of the construct; otherwise return nil."
 ;       (if (looking-at ".*\\<if\\>")
 ;       ()
 ;         (goto-char (match-beginning 1))
-;         (reduce-find-matching-if))
+;         (reduce--find-matching-if))
 ;       (+ (current-indentation) reduce-indentation))
        ;; ... but the ‘if’ must be embedded ...
        ((looking-at ".+\\<if\\>.*\\(\\<then\\>\\|\\<else\\>\\)[ \t]*[%\n]")
         (goto-char (match-beginning 1))
-        (reduce-find-matching-if)
+        (reduce--find-matching-if)
         (+ (current-indentation) reduce-indentation))
        ;; Otherwise continuing previous line, so ...
        (t (+ previous-indentation reduce-indentation))
