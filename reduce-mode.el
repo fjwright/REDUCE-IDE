@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sourceforge.net/u/fjwright>
 ;; Created: late 1992
-;; Time-stamp: <2022-10-10 14:38:40 franc>
+;; Time-stamp: <2022-10-10 16:30:52 franc>
 ;; Keywords: languages
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.9alpha
@@ -594,12 +594,13 @@ locally to ‘indent-line-function’ to implement
 (defun reduce--calculate-indent ()
   "Return appropriate indentation for current line as REDUCE code."
   (let ((case-fold-search t)
-        (indent-comment (reduce--calculate-indent-comment)))
-    ;; indent-comment is t in the first line of a comment
-    (or (and (numberp indent-comment) indent-comment)
-        (unless indent-comment
-          (or (reduce--calculate-indent-proc)
-              (reduce--calculate-indent-this)))
+        ;; Check whether point is in a comment first:
+        (comment-indent (reduce--calculate-indent-comment)))
+    ;; comment-indent is t for the first line of a comment and
+    ;; numerical for subsequent lines of a multi-line comment:
+    (or (and (numberp comment-indent) comment-indent)
+        (reduce--calculate-indent-proc)
+        (unless comment-indent (reduce--calculate-indent-this))
         (reduce--calculate-indent-prev))))
 
 (defun reduce--calculate-indent-comment ()
@@ -678,43 +679,39 @@ closing token (‘end’ or ‘>>’) return the indentation of the beginning
 of the construct; otherwise return nil."
   (save-excursion
     (back-to-indentation)
-    ;; Ignore line beginning with % comment or comment statement:
-    (unless (looking-at "%\\|\\_<comment\\_>")
-      ;; Skip leading /**/ comment:
-      (forward-comment (buffer-size))
-      (cond
-       ;; *** Opening token ***
-       ((looking-at "[\({ \t]*\\(?:\\_<begin\\_>\\|<<\\)")
-        (let ((closed (looking-at ".*\\(?:\\_<end\\_>\\|>>\\)")))
-          ;; Closed if opening and closing tokens on same line.
-          ;; Find previous non-blank line:
-          (skip-chars-backward " \t\f\n")
-          ;; Go to beginning of statement or line:
-          (if (memq (char-before) '(?\; ?$))
-              (reduce-backward-statement 1)
-            (back-to-indentation))
-          (cond ((reduce--looking-at-procedure)
-                 reduce-indentation)
-                ((and
-                  (or closed                   ; single-line construct
-                      (looking-at ".*:="))     ; assignment
-                  (not (looking-at ".*[;$]"))) ; not completed
-                 (+ (current-column) reduce-indentation))
-                (t
-                 (current-column)))))
-       ;; *** Intermediate tokens ***
-       ((looking-at "\\_<\\(?:then\\|else\\)\\_>")
-        (reduce--find-matching-if) (current-indentation))
-       ;; *** Label or closing tokens ***
-       ;; Indent to beginning of enclosing block or group:
-       ((looking-at ".*:[^=]\\|\\_<end\\_>")
-        (reduce--backward-block) (current-indentation))
-       ((looking-at ">>")
-        (reduce--backward-group) (current-indentation))
-       ;; *** Special cases ***
-       ((looking-at "\\_<\\(?:\\(?:end\\)?module\\)\\_>\\|\
+    (cond
+     ;; *** Opening token ***
+     ((looking-at "[\({ \t]*\\(?:\\_<begin\\_>\\|<<\\)")
+      (let ((closed (looking-at ".*\\(?:\\_<end\\_>\\|>>\\)")))
+        ;; Closed true if opening and closing tokens on same line.
+        ;; Find previous non-blank line:
+        (skip-chars-backward " \t\f\n")
+        ;; Go to beginning of statement or line:
+        (if (memq (char-before) '(?\; ?$))
+            (reduce-backward-statement 1)
+          (back-to-indentation))
+        (cond ((reduce--looking-at-procedure)
+               reduce-indentation)
+              ((and
+                (or closed                     ; single-line construct
+                    (looking-at ".*:="))       ; assignment
+                (not (looking-at ".*[;$]")))   ; not completed
+               (+ (current-column) reduce-indentation))
+              (t
+               (current-column)))))
+     ;; *** Intermediate tokens ***
+     ((looking-at "\\_<\\(?:then\\|else\\)\\_>")
+      (reduce--find-matching-if) (current-indentation))
+     ;; *** Label or closing tokens ***
+     ;; Indent to beginning of enclosing block or group:
+     ((looking-at ".*:[^=]\\|\\_<end\\_>")
+      (reduce--backward-block) (current-indentation))
+     ((looking-at ">>")
+      (reduce--backward-group) (current-indentation))
+     ;; *** Special cases ***
+     ((looking-at "\\_<\\(?:\\(?:end\\)?module\\)\\_>\\|\
 #\\(?:define\\|\\(?:el\\)?if\\|else\\|endif\\)\\_>")
-        0)))))
+      0))))
 
 (defun reduce--find-matching-if ()
   "Search backwards for the ‘if’ matching a ‘then’ or ‘else’.
@@ -777,7 +774,8 @@ The indentation depends only on *previous* non-blank line."
             (setq extra-indentation
                   (cond
                    ;; *** Tokens at beginning of the line *** :
-                   ((looking-at "%") 0) ; % comment (HANDLE THIS FIRST!)
+                   ;; Comment (not /**/!) (HANDLE THIS FIRST!)
+                   ((looking-at "%\\|\\_<comment\\_>") 0)
                    ;; ((looking-at "\\w+[ \t]*:[^=]") ; label
                    ;;  (if (looking-at ".*\\<if\\>") ; what else?
                    ;;      (* 2 reduce-indentation)
@@ -834,28 +832,28 @@ sub-expression ending with ‘+’, ‘-’, ‘or’ or ‘and’ then indent t
 previous statement or element unless it is a first argument ..."
   (if (looking-at ".*\\(\\([,+-]\\|\\<or\\|\\<and\\)\\|[\;$]\\)[ \t]*[%\n]")
       (let* ((second_arg (match-string 2))
-         (open (or second_arg
-               (not (looking-at
-                 ".*\\(\\<end\\>\\|>>\\)[\;$][ \t]*[%\n]")))))
-    (end-of-line)
-    (reduce-backward-statement 1)
-    (if second_arg
-        (setq second_arg
-          (save-excursion
-            (reduce--re-search-backward "[^ \t\f\n]")
-            (not (looking-at "\\(,\\|\\s(\\)[ \t]*[%\n]"))
-            )))
-    (back-to-indentation)
-    (if (or second_arg
-        (and open
-             (looking-at
-              ;; ... procedure / begin, << / label
-              ".*\\<procedure\\>\
+             (open (or second_arg
+                       (not (looking-at
+                             ".*\\(\\<end\\>\\|>>\\)[\;$][ \t]*[%\n]")))))
+        (end-of-line)
+        (reduce-backward-statement 1)
+        (if second_arg
+            (setq second_arg
+                  (save-excursion
+                    (reduce--re-search-backward "[^ \t\f\n]")
+                    (not (looking-at "\\(,\\|\\s(\\)[ \t]*[%\n]"))
+                    )))
+        (back-to-indentation)
+        (if (or second_arg
+                (and open
+                     (looking-at
+                      ;; ... procedure / begin, << / label
+                      ".*\\<procedure\\>\
 \\|\\<begin\\>\\|<<\
-\\|\\w+[ \t]*:[^=]"))           ; ???
-        (looking-at "\\w+[ \t]*:[^=]")) ; label
-        (+ (current-column) reduce-indentation)
-      (current-column)))))
+\\|\\w+[ \t]*:[^=]"))                   ; ???
+                (looking-at "\\w+[ \t]*:[^=]")) ; label
+            (+ (current-column) reduce-indentation)
+          (current-column)))))
 
 (defun reduce-unindent-line (arg)
   "Unindent current line; if ARG indent whole statement rigidly.
