@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sourceforge.net/u/fjwright>
 ;; Created: late 1992
-;; Time-stamp: <2022-10-10 16:30:52 franc>
+;; Time-stamp: <2022-10-11 17:13:51 franc>
 ;; Keywords: languages
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.9alpha
@@ -570,6 +570,8 @@ Mark ! followed by \" as having punctuation syntax (syntax-code
 ;;;; Indentation commands
 ;;;; ********************
 
+;; This section updated 11 October 2022, but needs a lot more work!
+
 (defun reduce-indent-line (&optional arg)
   "Indent current line; if ARG indent whole statement rigidly.
 Indents to fixed style determined by current and previous
@@ -770,36 +772,43 @@ The indentation depends only on *previous* non-blank line."
             (setq previous-indentation (current-column))))
         ;; Point is now at start of statement text in the previous
         ;; non-blank line.
-        (or extra-indentation
-            (setq extra-indentation
-                  (cond
-                   ;; *** Tokens at beginning of the line *** :
-                   ;; Comment (not /**/!) (HANDLE THIS FIRST!)
-                   ((looking-at "%\\|\\_<comment\\_>") 0)
-                   ;; ((looking-at "\\w+[ \t]*:[^=]") ; label
-                   ;;  (if (looking-at ".*\\<if\\>") ; what else?
-                   ;;      (* 2 reduce-indentation)
-                   ;;    reduce-indentation))
-                   ;; *** Tokens anywhere in the line *** :
-                   ((or (reduce--looking-at-procedure)
-                        (and (looking-at ".*\\<begin\\>")
-                             (not (looking-at ".*\\<end\\>")))
-                        (and (looking-at ".*<<") (not (looking-at ".*>>"))))
-                    (if (looking-at ".*,[ \t]*[%\n]") ; line ends with ,
-                        (* 2 reduce-indentation)
-                      reduce-indentation))
-                   ;; *** Tokens at the end of the (logical) line *** :
-                   ((looking-at ".*\\<\\(if\\|for\\|do\\|collect\\|join\\|sum\\product\\)\\>[ \t]*[%\n]")
-                    reduce-indentation)
-                   ;; Otherwise, extra indentation undefined
-                   )))
+
+        (when (looking-at
+               "#\\_<\\(?:define\\|if\\|elif\\|else\\|endif\\)\\_>")
+          (cl-return (current-indentation)))
+
+        (unless extra-indentation
+          (setq extra-indentation
+                (cond
+                 ;; *** Tokens at beginning of the line ***
+                 ;; Comment (not /**/!)
+                 ((looking-at "%\\|\\_<comment\\_>") 0)
+                 ;; ((looking-at "\\w+[ \t]*:[^=]") ; label
+                 ;;  (if (looking-at ".*\\<if\\>") ; what else?
+                 ;;      (* 2 reduce-indentation)
+                 ;;    reduce-indentation))
+                 ;; *** Tokens anywhere in the line ***
+                 ((or (reduce--looking-at-procedure)
+                      (and (looking-at ".*\\<begin\\>")
+                           (not (looking-at ".*\\<end\\>")))
+                      (and (looking-at ".*<<") (not (looking-at ".*>>"))))
+                  (if (looking-at ".*,[ \t]*[%\n]") ; line ends with ,
+                      (* 2 reduce-indentation)
+                    reduce-indentation))
+                 ;; *** Tokens at the end of the (logical) line *** :
+                 ((looking-at ".*\\<\\(if\\|for\\|do\\|collect\\|join\\|sum\\product\\)\\>[ \t]*[%\n]")
+                  reduce-indentation)
+                 ;; Otherwise, extra indentation undefined
+                 )))
+
         (cond
-         ((looking-at "#\\<endif\\>")
-          (current-indentation))
-         ((looking-at "#\\(\\<define\\>\\|\\<if\\>\\|\\<\\elif\\>\\|\\<\\else\\>\\)")
-          (current-indentation))
          ;; If extra indentation determined then use it ...
          (extra-indentation (+ previous-indentation extra-indentation))
+         ;; Indent successive lines of a comma-separated sequence by
+         ;; the same amount if both previous lines end with , :
+         ((and (looking-at ".*,\\s-*[%\n]")
+               (looking-back ",\\s-*[%\n]\\s-*" nil))
+          (current-indentation))
          ;; If beginning new statement or comma-separated element
          ;; then indent to previous statement or element
          ;; unless it is a first argument ...
@@ -827,33 +836,34 @@ The indentation depends only on *previous* non-blank line."
 
 (defun reduce--calculate-indent-prev1 ()
   "Sub-function of ‘reduce--calculate-indent-prev’.
-If beginning new statement or comma-separated element or
-sub-expression ending with ‘+’, ‘-’, ‘or’ or ‘and’ then indent to
-previous statement or element unless it is a first argument ..."
-  (if (looking-at ".*\\(\\([,+-]\\|\\<or\\|\\<and\\)\\|[\;$]\\)[ \t]*[%\n]")
-      (let* ((second_arg (match-string 2))
-             (open (or second_arg
-                       (not (looking-at
-                             ".*\\(\\<end\\>\\|>>\\)[\;$][ \t]*[%\n]")))))
-        (end-of-line)
-        (reduce-backward-statement 1)
-        (if second_arg
-            (setq second_arg
-                  (save-excursion
-                    (reduce--re-search-backward "[^ \t\f\n]")
-                    (not (looking-at "\\(,\\|\\s(\\)[ \t]*[%\n]"))
-                    )))
-        (back-to-indentation)
-        (if (or second_arg
-                (and open
-                     (looking-at
-                      ;; ... procedure / begin, << / label
-                      ".*\\<procedure\\>\
+If beginning new statement or continuing comma-separated sequence
+or sub-expression ending with ‘+’, ‘-’, ‘or’ or ‘and’ then indent
+to previous statement or element unless it is the first element."
+  ;; Point now at start of previous non-blank line.
+  (when (looking-at
+         ".*\\(?:\\([,+-]\\|\\_<\\(?:or\\|and\\)\\_>\\)\\|[\;$]\\)[ \t]*[%\n]")
+    (let* ((not-first-el (match-end 1))
+           (open (or not-first-el ; not end of block, group or statement
+                     (not (looking-at
+                           ".*\\(?:\\_<end\\_>\\|>>\\)[\;$][ \t]*[%\n]")))))
+      (end-of-line)
+      (reduce-backward-statement 1)
+      (when not-first-el
+        (setq not-first-el
+              (save-excursion
+                (reduce--re-search-backward "[^ \t\f\n]")
+                (not (looking-at "\\(,\\|\\s(\\)[ \t]*[%\n]")))))
+      (back-to-indentation)
+      (if (or not-first-el
+              (and open
+                   (looking-at
+                    ;; ... procedure, begin, <<, label
+                    ".*\\<procedure\\>\
 \\|\\<begin\\>\\|<<\
-\\|\\w+[ \t]*:[^=]"))                   ; ???
-                (looking-at "\\w+[ \t]*:[^=]")) ; label
-            (+ (current-column) reduce-indentation)
-          (current-column)))))
+\\|\\w+[ \t]*:[^=]"))                           ; ???
+              (looking-at "\\w+[ \t]*:[^=]"))   ; label
+          (+ (current-indentation) reduce-indentation)
+        (current-indentation)))))
 
 (defun reduce-unindent-line (arg)
   "Unindent current line; if ARG indent whole statement rigidly.
