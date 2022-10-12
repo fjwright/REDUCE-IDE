@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sourceforge.net/u/fjwright>
 ;; Created: 6 June 2022 as a separate file (was part of reduce-mode.el)
-;; Time-stamp: <2022-10-03 17:35:31 franc>
+;; Time-stamp: <2022-10-12 14:44:37 franc>
 ;; Keywords: languages, faces
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.9alpha
@@ -333,6 +333,16 @@ constants (e.g. “pi”).")
   `(;; Apply specific rules before more general rules:
     ,@reduce-font-lock--preprocessor-rules
 
+    ;; Fluid and global type declarations, which involve special cases
+    ;; of quoted lists:
+    (,(concat "\\_<\\(fluid\\|global\\)\\_>"
+              reduce-font-lock--whitespace-regexp "*" "'\(")
+     (1 font-lock-type-face)
+     (,(concat "\\=" reduce-font-lock--whitespace-regexp "*"
+               "\\(" reduce-font-lock--identifier-regexp "\\)")
+      nil nil
+      (1 font-lock-variable-name-face)))
+
     ;; Quoted identifiers:
     (,(concat "'\\(" reduce-font-lock--identifier-regexp "\\)")
      (1 font-lock-constant-face))
@@ -378,9 +388,7 @@ get\\|put\\|deflist\\|flag\\|remprop\\|remflag\
     ;; Symbolic-mode types:
     ((lambda (limit)
        (reduce-font-lock--kwd-search
-        "\\_<\\(\
-fluid\\|global\\|switch\\|share\\|rlistat\\|asserted\
-\\)\\_>" limit))
+        "\\_<\\(?:switch\\|share\\|rlistat\\|asserted\\)\\_>" limit))
      . font-lock-type-face)
 
     ;; Lambda arguments:
