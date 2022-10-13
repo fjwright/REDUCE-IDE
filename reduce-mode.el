@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sourceforge.net/u/fjwright>
 ;; Created: late 1992
-;; Time-stamp: <2022-10-11 17:13:51 franc>
+;; Time-stamp: <2022-10-13 15:13:55 franc>
 ;; Keywords: languages
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.9alpha
@@ -289,8 +289,9 @@ Update after ‘reduce-show-proc-delay’ seconds of Emacs idle time."
   (let ((map (make-sparse-keymap)))
     ;; (define-key map ">" 'reduce-self-insert-and-blink-matching-group-open)
     (define-key map "\C-j" 'reindent-then-newline-and-indent)
-    ;; (define-key map [(shift tab)] 'reduce-unindent-line) ; backtab
-    (define-key map [backtab] 'reduce-unindent-line)
+    (define-key map "\M-i" 'reduce-indent-line)
+    (define-key map [(control tab)] 'reduce-indent-line-always)
+    (define-key map [backtab] 'reduce-unindent-line) ; [(shift tab)]
     (define-key map [del] 'backward-delete-char-untabify)
     (define-key map "\C-c\C-n" 'reduce-forward-statement)
     (define-key map "\C-c\C-p" 'reduce-backward-statement)
@@ -305,8 +306,7 @@ Update after ‘reduce-show-proc-delay’ seconds of Emacs idle time."
     (define-key map "\C-\M-h" 'reduce-mark-procedure)
     (define-key map "\C-xnd" 'reduce-narrow-to-procedure)
     (define-key map "\C-ck" 'reduce-kill-procedure)
-    ;; (define-key map "\e;" 'reduce-indent-comment) ; via global map
-    (define-key map "\C-\M-\\" 'reduce-indent-region)
+    ;; (define-key map "\C-\M-\\" 'reduce-indent-region)
     (define-key map "\C-\M-q" 'reduce-indent-procedure)
     (define-key map "\C-c;" 'reduce-comment-region)
     (define-key map "\C-c:" 'reduce-comment-procedure)
@@ -472,10 +472,9 @@ Text highlighting is supported via the command ‘font-lock-mode’, and
 the style of highlighting may be controlled by setting
 ‘font-lock-maximum-decoration’ to one of:
 
-  0, nil : basic keyword highlighting;
-  1      : algebraic-mode highlighting;
-  2      : symbolic-mode highlighting;
-  3, t   : full highlighting – of almost everything!
+  0, nil – basic keyword highlighting;
+  1      – algebraic-mode highlighting;
+  2, t   – symbolic-mode highlighting.
 
 Text highlighting may also be controlled using the REDUCE menu.
 
@@ -523,7 +522,8 @@ also affects this mode.  Entry to this mode runs the hooks on
               (concat paragraph-start "\\|^%")) ; RS
   ;; so that comments at beginning of a line do not disturb reformatting.
   (setq-local paragraph-ignore-fill-prefix t)
-  (setq-local indent-line-function 'reduce-indent-line)
+  (setq-local indent-line-function #'reduce-indent-line
+              indent-region-function #'reduce-indent-region)
   (setq-local comment-start "% ")
   (setq-local comment-start-skip
               "\\(?:^\\|[^!]\\)%+ *")   ; "%+ *" but not !%
@@ -570,7 +570,7 @@ Mark ! followed by \" as having punctuation syntax (syntax-code
 ;;;; Indentation commands
 ;;;; ********************
 
-;; This section updated 11 October 2022, but needs a lot more work!
+;; This section updated 13 October 2022, but needs a lot more work!
 
 (defun reduce-indent-line (&optional arg)
   "Indent current line; if ARG indent whole statement rigidly.
@@ -831,8 +831,7 @@ The indentation depends only on *previous* non-blank line."
           (reduce--find-matching-if)
           (+ (current-indentation) reduce-indentation))
          ;; Otherwise continuing previous line, so ...
-         (t (+ previous-indentation reduce-indentation))
-         )))))
+         (t (+ previous-indentation reduce-indentation)))))))
 
 (defun reduce--calculate-indent-prev1 ()
   "Sub-function of ‘reduce--calculate-indent-prev’.
@@ -865,59 +864,72 @@ to previous statement or element unless it is the first element."
           (+ (current-indentation) reduce-indentation)
         (current-indentation)))))
 
+(defun reduce-indent-line-always (arg)
+  "Indent current line; with ARG indent whole statement rigidly.
+Add ‘reduce-indentation’ spaces at the beginning of the line.
+With any argument, indent any additional lines of the same
+statement rigidly along with this one."
+  (interactive "*P")                    ; error if buffer read-only
+  (let ((start-marker (point-marker)))
+    (set-marker-insertion-type start-marker t)
+    (indent-rigidly
+     (1- (line-beginning-position))     ; to include first line
+     (if arg
+         (reduce-forward-statement 1)
+       (line-end-position))
+     reduce-indentation)
+    (goto-char start-marker)
+    (set-marker start-marker nil)))
+
 (defun reduce-unindent-line (arg)
-  "Unindent current line; if ARG indent whole statement rigidly.
-Delete ‘reduce-indentation’ spaces from beginning of line.
-With argument, unindent any additional lines of the same statement
-rigidly along with this one."
-  (interactive "*P")            ; error if buffer read-only
+  "Unindent current line; with ARG unindent whole statement rigidly.
+Delete ‘reduce-indentation’ spaces from the beginning of the
+line.  With any argument, unindent any additional lines of the
+same statement rigidly along with this one."
+  (interactive "*P")                    ; error if buffer read-only
   (let ((start-marker (point-marker))
-    (indentation (progn (back-to-indentation) (current-column))))
-    (if (bolp)
-    ()
+        (indentation (progn (back-to-indentation) (current-indentation))))
+    ;; Point now at first non-blank character of current line.
+    (unless (bolp)
       (backward-delete-char-untabify reduce-indentation)
-      (if arg
-      (save-excursion
-        (setq indentation (- (current-column) indentation))
-        (indent-rigidly
-         (point) (progn (reduce-forward-statement 1) (point)) indentation)
-        ))
-      (if (< (point) start-marker) (goto-char start-marker))
-      (set-marker start-marker nil)
-      )))
+      (when arg
+        (progn
+          (setq indentation (- (current-column) indentation))
+          (indent-rigidly
+           (point) (reduce-forward-statement 1) indentation)))
+      (goto-char start-marker)
+      (set-marker start-marker nil))))
 
 (defun reduce-comment-indent ()
-  "Value of ‘comment-indent-function’."
-  ;; Called only by indent-for-comment and
-  ;; (hence) indent-new-comment-line.
-  (if (looking-at "%%%")
-      (current-column)
-    (if (looking-at "%%")
-    (reduce--calculate-indent)
-      (skip-chars-backward " \t")
-      ;; (bolp) needed by indent-new-comment-line:
-      (max (if (bolp) 0 (1+ (current-column))) comment-column)
-      )))
+  "Return indent for %-comment depending on number of % characters.
+Assigned to ‘comment-indent-function’."
+  ;; Called only by indent-for-comment and (hence)
+  ;; indent-new-comment-line.
+  (cond ((looking-at "%%%") (current-column))
+        ((looking-at "%%") (reduce--calculate-indent))
+        (t (skip-chars-backward " \t")
+           ;; (bolp) needed by indent-new-comment-line:
+           (max (if (bolp) 0 (1+ (current-column))) comment-column))))
 
 (defun reduce-indent-procedure (arg)
-  "Indent this and following ARG procedures.
-Indent the procedure (and trailing white space) ending after point.
-With arg, indent the following arg procedures including this one."
-  (interactive "*p")            ; error if buffer read-only
-  (save-excursion
-    (if (reduce-mark-procedure arg)
-    ;; Leaves mark at end of procedure, point at start.
-    (reduce-indent-region (point) (mark))
-      )))
+  "Indent the procedure ending after point.
+With positive ARG, indent that many procedures ending after point.
+Put mark at the first non-blank character or next line after the
+ARGth end of procedure after point.  If this fails, do not indent
+anything and report a user error.  Leave point at the start of
+the first procedure before any preceding blank lines."
+  (interactive "*p")                    ; error if buffer read-only
+  (reduce-mark-procedure arg)
+  (reduce-indent-region (point) (mark)))
 
 (defun reduce-indent-region (beg-region end-region)
   "Interactively indent region; otherwise BEG-REGION to END-REGION.
 Interactively with prefix arg, indent the whole buffer."
-  ;; (interactive "*r")         ; error if buffer read-only
   (interactive
    (if current-prefix-arg
        (list (point-min) (point-max))
      (list (region-beginning) (region-end))))
+  (barf-if-buffer-read-only)
   ;; Indent lines between beg-region and end-region
   ;; and return point to where it started.
   ;; This version is not very efficient.
@@ -928,7 +940,7 @@ Interactively with prefix arg, indent the whole buffer."
     (goto-char beg-region)
     (while (< (point) end-region-mark)
       (reduce-indent-line)
-      ;; Strip trailing white space from lines
+      ;; Strip trailing white space from lines:
       (end-of-line) (delete-horizontal-space)
       (forward-line))
     (goto-char save-point)
