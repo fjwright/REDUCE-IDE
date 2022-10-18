@@ -4,10 +4,10 @@
 
 ;; Author: Francis J. Wright <https://sourceforge.net/u/fjwright>
 ;; Created: 6 June 2022 as a separate file (was part of reduce-mode.el)
-;; Time-stamp: <2022-10-12 14:44:37 franc>
+;; Time-stamp: <2022-10-17 18:18:49 franc>
 ;; Keywords: languages, faces
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
-;; Package-Version: 1.9alpha
+;; Package-Version: 1.9beta
 ;; Package-Requires: ((reduce-mode "1.6"))
 
 ;; This file is part of REDUCE IDE.
@@ -495,23 +495,24 @@ This function is prepended to ‘font-lock-extend-region-functions’."
 It is used only to control the font-lock menu and is set for each
 new buffer from the value of ‘font-lock-maximum-decoration’,
 which must be done in ‘reduce-mode’."
-  (set (make-local-variable 'reduce-font-lock--level)
-       ;; The value of ‘font-lock-maximum-decoration’ may be an alist,
-       ;; non-negative integer, t (meaning max) or nil (meaning 0).
-       (let (level)
-         (if (consp font-lock-maximum-decoration) ; alist
-             (if (setq level (or (assoc 'reduce-mode font-lock-maximum-decoration)
-                                 (assoc t font-lock-maximum-decoration)))
-                 (setq level (cdr level)))
-           (setq level font-lock-maximum-decoration)) ; not alist
-         ;; level = integer, t or nil
-         (cond ((numberp level)
-                (cond ((< level 0) 0)
-                      ((> level reduce-font-lock--level-max)
-                       reduce-font-lock--level-max)
-                      (t level)))
-               ((eq level t) reduce-font-lock--level-max) ; t means max
-               (t 0)))))                ; nil means 0
+  (setq-local
+   reduce-font-lock--level
+   ;; The value of ‘font-lock-maximum-decoration’ may be an alist,
+   ;; non-negative integer, t (meaning max) or nil (meaning 0).
+   (let (level)
+     (if (consp font-lock-maximum-decoration) ; alist
+         (when (setq level (or (assoc 'reduce-mode font-lock-maximum-decoration)
+                               (assoc t font-lock-maximum-decoration)))
+           (setq level (cdr level)))
+       (setq level font-lock-maximum-decoration)) ; not alist
+     ;; level = integer, t or nil
+     (cond ((numberp level)
+            (cond ((< level 0) 0)
+                  ((> level reduce-font-lock--level-max)
+                   reduce-font-lock--level-max)
+                  (t level)))
+           ((eq level t) reduce-font-lock--level-max) ; t means max
+           (t 0)))))                ; nil means 0
 
 (defconst reduce-font-lock--submenu
   '("Syntax Highlighting"
@@ -539,15 +540,9 @@ which must be done in ‘reduce-mode’."
   [Fontification] (cons "Syntax Highlighting" reduce-fontification-submenu)
   t)                                    ; was 'Make\ Proc\ Menu
 
-(defconst reduce-font-lock--level-names
-  '("minimal" "algebraic" "symbolic" "maximal"))
-
 (defun reduce-font-lock--change (level)
   "Re-fontify at the specified LEVEL."
-  ;; Do messages need to be saved in the messages buffer?
-  ;; If interactive then needs to be more robust.
-  ;; (interactive)
-  (let ((name (nth level reduce-font-lock--level-names)))
+  (let ((name (elt ["basic" "algebraic" "symbolic"] level)))
     (if (eq reduce-font-lock--level level)
         (message "REDUCE Font Lock decoration unchanged (level %d : %s)."
                  level name)
@@ -556,21 +551,6 @@ which must be done in ‘reduce-mode’."
       (setq reduce-font-lock--level level)
       (message "REDUCE Font Lock decoration set to level %d : %s."
                level name))))
-;; (let ((name (nth (1- level) reduce-font-lock--level-names))
-;;       (keywords (eval (nth (1- level) (car font-lock-defaults)))))
-;;   ;; ‘font-lock-defaults’ is used in order to support both
-;;   ;; reduce-mode and reduce-run with the same code!
-;;   (setq keywords (font-lock-compile-keywords keywords)) ; Emacs 20 only!
-;;   (if (and font-lock-mode (equal font-lock-keywords keywords))
-;;       (message "REDUCE Font Lock decoration unchanged (level %d : %s)."
-;;                level name)
-;;     (font-lock-mode 0)
-;;     (font-lock-set-defaults)
-;;     (setq font-lock-keywords keywords)
-;;     (font-lock-mode 1)
-;;     (setq reduce-font-lock--level level)
-;;     (message "REDUCE Font Lock decoration set to level %d : %s."
-;;              level name))))
 
 (provide 'reduce-font-lock)
 
