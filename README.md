@@ -55,3 +55,4 @@ Main Updates since REDUCE IDE 1.8 (see the manual for details)
 * **INCOMPATIBLE CHANGE:** The command `reduce-indent-line` is now idempotent and no longer successively indents.  Hence, the option `reduce-indent-line-conservative` no longer exists.
 * The new command `reduce-indent-line-always` bound to `C-TAB` indents by one step, and replaces the effect of executing `reduce-indent-line` repeatedly.
 * The command `reduce-indent-line` is now bound indirectly to `TAB` but is also bound directly to `M-i`, which allows it to be run with a prefix argument to indent the whole of the current statement rigidly.
+* The command `reduce-indent-procedure` preserves point and no longer leaves the procedure selected.

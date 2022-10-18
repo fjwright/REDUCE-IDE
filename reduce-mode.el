@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sourceforge.net/u/fjwright>
 ;; Created: late 1992
-;; Time-stamp: <2022-10-17 18:18:49 franc>
+;; Time-stamp: <2022-10-18 16:38:43 franc>
 ;; Keywords: languages
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.9beta
@@ -919,8 +919,10 @@ ARGth end of procedure after point.  If this fails, do not indent
 anything and report a user error.  Leave point at the start of
 the first procedure before any preceding blank lines."
   (interactive "*p")                    ; error if buffer read-only
-  (reduce-mark-procedure arg)
-  (reduce-indent-region (point) (mark)))
+  (save-excursion
+    (reduce-mark-procedure arg)
+    (reduce-indent-region (point) (mark))
+    (deactivate-mark)))
 
 (defun reduce-indent-region (beg-region end-region)
   "Interactively indent region; otherwise BEG-REGION to END-REGION.
