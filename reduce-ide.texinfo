@@ -2,7 +2,7 @@
 @c %**start of header
 @settitle GNU Emacs REDUCE Integrated Development Environment
 @c Manual last updated:
-@set UPDATED Time-stamp: <2022-10-18 16:42:16 franc>
+@set UPDATED Time-stamp: <2022-10-18 18:23:40 franc>
 @c Software version:
 @set VERSION 1.9beta
 @afourpaper
@@ -908,7 +908,7 @@ step.  With an argument, it rigidly unindents by one step the current
 line and the rest of the logical statement.
 
 @table @kbd
-@itemx C-TAB
+@item C-TAB
 @kindex C-TAB
 @itemx M-x reduce-indent-line-always
 @findex reduce-indent-line-always
@@ -919,7 +919,7 @@ statement rigidly along with this one.
 
 @item BACKTAB
 @kindex BACKTAB
-@itemx S-TAB
+@item S-TAB
 @kindex S-TAB
 @itemx M-x reduce-unindent-line
 @findex reduce-unindent-line
@@ -1092,19 +1092,21 @@ using @code{font-lock-function-face}.
 
 @item
 Symbolic: as algebraic level; additionally preprocessor #-directives
-are displayed using @code{font-lock-preprocessor-face}; variable names
-declared fluid or global are displayed using
-@code{font-lock-variable-name-face}; all other quoted objects are
-displayed using @code{font-lock-constant-face}; asserted types are
-displayed using @code{font-lock-type-face}; ``declare'' and ``struct''
-statements, as used in ``redlog'', are displayed using
-@code{font-lock-keyword-face}, @code{font-lock-function-name-face} and
-@code{font-lock-type-face}; module, endmodule and other symbolic-mode
-keywords are displayed using @code{font-lock-keyword-face}; module
-names are displayed using @code{font-lock-constant-face}; key
-symbolic-mode functions such as ``flag'' and ``get'' are displayed
-using @code{font-lock-builtin-face}; key symbolic-mode types such as
-``fluid'' and ``global'' are displayed using
+are displayed using @code{font-lock-preprocessor-face}; the key
+symbolic-mode ``types'' @code{fluid} and @code{global} are displayed
+using @code{font-lock-type-face} and the variable names declared fluid
+or global are displayed using @code{font-lock-variable-name-face}; all
+other quoted objects are displayed using
+@code{font-lock-constant-face}; asserted types are displayed using
+@code{font-lock-type-face}; ``declare'' and ``struct'' statements, as
+used in ``redlog'', are displayed using @code{font-lock-keyword-face},
+@code{font-lock-function-name-face} and @code{font-lock-type-face};
+module, endmodule and other symbolic-mode keywords are displayed using
+@code{font-lock-keyword-face}; module names are displayed using
+@code{font-lock-constant-face}; key symbolic-mode functions such as
+``flag'' and ``get'' are displayed using
+@code{font-lock-builtin-face}; other symbolic-mode ``types'' such as
+``switch'' and ``share'' are displayed using
 @code{font-lock-type-face}; declared lambda parameters are displayed
 using @code{font-lock-variable-face}.
 @end enumerate

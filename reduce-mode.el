@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sourceforge.net/u/fjwright>
 ;; Created: late 1992
-;; Time-stamp: <2022-10-18 16:38:43 franc>
+;; Time-stamp: <2022-10-18 18:34:06 franc>
 ;; Keywords: languages
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.9beta
@@ -337,8 +337,8 @@ Update after ‘reduce-show-proc-delay’ seconds of Emacs idle time."
     :help "Fill the current comment"]
    ["(Un)Comment Region" reduce-comment-region :active mark-active
     :help "Toggle the commenting of the current region"]
-   ;; "-- PROCEDURES --" ; not good in ntemacs
    "--"
+   "Procedures:"
    ["Forward Procedure" reduce-forward-procedure :active t
     :help "Move forward to the nearest end of a procedure"]
    ["Backward Procedure" reduce-backward-procedure :active t
@@ -373,8 +373,8 @@ Update after ‘reduce-show-proc-delay’ seconds of Emacs idle time."
     ["Tag Dir & Subdirs..." reduce-tagify-dir-recursively :active t
      :help "Tag all REDUCE files under this directory"]
     )
-   ;;   "-- TEMPLATES --" ; not good in ntemacs
    "--"
+   "Templates:"
    ["Insert If-Then" reduce-insert-if-then :active t
     :help "Insert an ‘if-then’ template"]
    ["Insert Block" reduce-insert-block :active t
@@ -388,7 +388,7 @@ Update after ‘reduce-show-proc-delay’ seconds of Emacs idle time."
     :keys "C-u M-C-\\" :active t
     :help "Re-indent the current buffer"]
    "--"
-   ["Command Mini Help" (apropos-command "reduce") :active t
+   ["Command Mini Help" (apropos-command "\\`reduce\\|reduce\\'") :active t
     :help "Show a REDUCE Mode command summary"]
    ["Customize..." (customize-group 'reduce) :active t
     :help "Customize REDUCE Mode"]
