@@ -2,9 +2,9 @@
 @c %**start of header
 @settitle GNU Emacs REDUCE Integrated Development Environment
 @c Manual last updated:
-@set UPDATED Time-stamp: <2022-10-18 18:23:40 franc>
+@set UPDATED Time-stamp: <2022-10-20 16:04:10 franc>
 @c Software version:
-@set VERSION 1.9beta
+@set VERSION 1.9
 @afourpaper
 @c With different size paper the printed page breaks will need attention!
 @c Look for @page and @need commands.

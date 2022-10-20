@@ -19,7 +19,7 @@ Use the information found to update ‘reduce--comment-alist’."
             (push (cons (match-beginning 0) t) alist)
             (when (re-search-forward "[\;$]" nil t)
               (push (cons (match-end 0) nil) alist))))))
-    (setq reduce--comment-alist (reverse alist))))
+    (setq reduce--comment-alist (nreverse alist))))
 
 (defun reduce--highlight-comment-statements ()
   "Highlight all comment statements in the buffer.
@@ -34,3 +34,23 @@ Purely intended for testing."
               (end (or (caadr alist) (point-max))))
           (setq alist (cddr alist))
           (add-face-text-property start end 'highlight))))))
+
+(defun reduce--in-comment-statement-p (&optional pos)
+  "Return non-nil if POS is within a comment statement.
+If POS is omitted then it defaults to point."
+  (unless pos (setq pos (point)))
+  (let ((alist (or reduce--comment-alist
+                   (reduce--update-comment-alist)))
+        value)
+    (while alist
+      (let ((start (caar alist))
+            (end (or (caadr alist) (point-max))))
+        (cond ((< end pos)              ; comment before pos
+               (setq alist (cddr alist)))
+              ((eq end pos)             ; comment ends at pos
+               (setq alist nil value nil))
+              ((< pos start)            ; pos before comment
+               (setq alist nil value nil))
+              ;; start <= pos < end -- within comment
+              (t (setq alist nil value t)))))
+    value))

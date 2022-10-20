@@ -5,7 +5,7 @@ Major modes for editing and running REDUCE source code
 
 **[Francis Wright](https://sites.google.com/site/fjwcentaur)**
 
-Version 1.9beta, October 2022
+Version 1.9, October 2022
 
 REDUCE IDE is a package that provides an Integrated Development Environment for the REDUCE computer algebra system within the GNU Emacs editor.  Its two major components are Emacs Lisp libraries that provide major modes for editing REDUCE source code and running a *command-line version* of REDUCE in an Emacs window.  It assumes that Emacs is running under a GUI such as Microsoft Windows or the X Window System under some flavour of UNIX or Linux, and displays Unicode character sets correctly.
 
@@ -50,10 +50,10 @@ To Do
 Main Updates since REDUCE IDE 1.8 (see the manual for details)
 --------------------------------------------------------------
 
-* Highlight fluid and global calls as variable type declarations rather than as quoted data.
-* Indentation is more reasonable.
+* Highlight fluid and global forms as variable type declarations rather than as quoted data.
+* Some menu improvements.
+* Indentation is now more reasonable.
 * **INCOMPATIBLE CHANGE:** The command `reduce-indent-line` is now idempotent and no longer successively indents.  Hence, the option `reduce-indent-line-conservative` no longer exists.
-* The new command `reduce-indent-line-always` bound to `C-TAB` indents by one step, and replaces the effect of executing `reduce-indent-line` repeatedly.
 * The command `reduce-indent-line` is now bound indirectly to `TAB` but is also bound directly to `M-i`, which allows it to be run with a prefix argument to indent the whole of the current statement rigidly.
+* The new command `reduce-indent-line-always` bound to `C-TAB` indents by one step, and replaces the effect of executing `reduce-indent-line` repeatedly.
 * The command `reduce-indent-procedure` preserves point and no longer leaves the procedure selected.
-* Minor menu improvements.
