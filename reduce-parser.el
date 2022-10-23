@@ -1,4 +1,25 @@
-;; An analogue of syntax-ppss for REDUCE comment statements.
+;;; reduce-parser.el --- Analogue of syntax-ppss for REDUCE comment statements  -*- lexical-binding: t; -*-
+
+;; Copyright (C) 2022 Francis J. Wright
+
+;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
+;; Created: October 2022
+;; Time-stamp: <2022-10-23 14:10:50 franc>
+;; Keywords: languages
+;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
+;; Package-Version: 1.10alpha
+
+;; This file is part of REDUCE IDE.
+
+;;; Commentary:
+
+;; Build a sequence of start and finish positions for REDUCE comment
+;; statements and use it to detect efficiently whether a position is
+;; within such a statement.
+
+;; CURRENTLY VERY EXPERIMENTAL!
+
+;;; Code:
 
 (defvar-local reduce--comment-seq nil
   "A sequence of elements of the form (start . finish), or nil.
@@ -26,6 +47,7 @@ Use the information found to build ‘reduce--comment-seq’."
   "Highlight all comment statements in the buffer.
 Only works reliably with font-lock off, so turns font-lock off.
 Purely intended for testing."
+  (interactive)
   (let ((seq (or reduce--comment-seq (reduce--build-comment-seq))))
     (when seq                           ; nil if no comment statements
       (font-lock-mode 0)
@@ -36,18 +58,21 @@ Purely intended for testing."
          seq)))))
 
 (defun reduce--in-comment-statement-p (&optional pos)
-  "Return t if POS is within a comment statement; nil otherwise.
-If POS is omitted then it defaults to point."
+  "Return a cons if POS is within a comment statement; nil otherwise.
+If POS is omitted then it defaults to point.  The cons has the
+form (start . finish), where start is the position at the start
+of the comment statement containing POS and finish is the
+position immediately after the end of that comment statement."
+  (interactive)
   (let ((seq (or reduce--comment-seq (reduce--build-comment-seq))))
     (when seq                           ; nil if no comment statements
       (unless pos (setq pos (point)))
-      (let ((lower 0) (upper (1- (length seq))) value (count 0))
+      (let ((lower 0) (upper (1- (length seq))) value)
         ;; seq is a sequence of integer intervals.  Use bisection to
         ;; search seq for an interval surrounding POS.  lower < mid <
         ;; upper are indices into seq and mid is the (integer) mid-point
         ;; between lower and upper.  ivl is the mid-point interval.
         (while (<= lower upper)
-          ;; (setq count (1+ count))
           (let* ((mid (/ (+ lower upper) 2)) (ivl (elt seq mid))
                  (start (car ivl)) (finish (cdr ivl)))
             (cond ((< finish pos)       ; interval < pos
@@ -58,6 +83,10 @@ If POS is omitted then it defaults to point."
                    (setq lower (1+ upper))) ; -- stop loop
                   ;; interval-start <= pos < interval-finish
                   ;; so pos within interval -- stop loop
-                  (t (setq lower (1+ upper) value t)))))
-        ;; (message "intervals: %s; searches: %s" (length seq) count)
+                  (t (setq lower (1+ upper) value ivl)))))
+        (when (called-interactively-p 'interactive) (message "%s" value))
         value))))
+
+(provide 'reduce-parser)
+
+;;; reduce-parser.el ends here
