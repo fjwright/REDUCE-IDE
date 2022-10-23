@@ -2,13 +2,11 @@
 
 ;; Copyright (C) 1998-2001, 2012, 2017-2019, 2022 Francis J. Wright
 
-;; Author: Francis J. Wright <https://sourceforge.net/u/fjwright>
+;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1998
-;; Time-stamp: <2022-10-20 16:04:10 franc>
-;; Keywords: languages, processes
+;; Time-stamp: <2022-10-23 17:02:23 franc>
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
-;; Package-Version: 1.9
-;; Package-Requires: ((reduce-mode "1.5"))
+;; Package-Version: 1.10alpha
 
 ;; This file is part of REDUCE IDE.
 

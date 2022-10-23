@@ -1,9 +1,9 @@
 #! /bin/bash
 
-# Author: Francis J. Wright <https://sourceforge.net/u/fjwright>
-# Time-stamp: <2022-06-18 16:23:21 franc>
+# Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
+# Time-stamp: <2022-10-23 17:23:53 franc>
 
-# Construct a reduce-ide package archive.
+# Construct a REDUCE IDE package archive.
 # Usage: make-package.sh version-number
 
 if [ -z $1 ]; then
@@ -19,7 +19,7 @@ if [ reduce-ide.info -ot reduce-ide.texinfo ]; then
 fi
 
 pkg1='(define-package "reduce-ide" "'
-pkg2='" "REDUCE Integrated Development Environment")
+pkg2='" "REDUCE Integrated Development Environment" (cl-lib))
 '
 
 # Construct the reduce-ide-vv directory:

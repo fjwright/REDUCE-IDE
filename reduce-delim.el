@@ -2,13 +2,11 @@
 
 ;; Copyright (C) 2018, 2022 Francis J. Wright
 
-;; Author: Francis J. Wright <https://sourceforge.net/u/fjwright>
+;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: 22 March 2018
-;; Time-stamp: <2022-10-20 16:04:11 franc>
-;; Keywords: languages, faces
+;; Time-stamp: <2022-10-23 16:59:42 franc>
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
-;; Package-Version: 1.9
-;; Package-Requires: ((reduce-mode "1.54"))
+;; Package-Version: 1.10alpha
 
 ;; This file is part of REDUCE IDE.
 

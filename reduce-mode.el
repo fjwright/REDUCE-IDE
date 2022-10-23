@@ -2,12 +2,12 @@
 
 ;; Copyright (C) 1998-2001, 2012, 2017-2019, 2022 Francis J. Wright
 
-;; Author: Francis J. Wright <https://sourceforge.net/u/fjwright>
+;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1992
-;; Time-stamp: <2022-10-20 16:04:10 franc>
-;; Keywords: languages
+;; Time-stamp: <2022-10-23 17:48:00 franc>
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
-;; Package-Version: 1.9
+;; Package-Version: 1.10alpha
+;; Package-Requires: (cl-lib)
 
 ;; This file is part of REDUCE IDE.
 
@@ -52,6 +52,7 @@
 
 ;;; Code:
 (eval-when-compile (require 'cl-lib))
+(require 'reduce-parser)
 
 (defconst reduce-mode-version
   ;; Extract version from Package-Version in file header:
@@ -538,7 +539,10 @@ also affects this mode.  Entry to this mode runs the hooks on
    ;; attention to ‘syntax-table’ text properties:
    parse-sexp-lookup-properties t
    ;; Treat escape char (!) as part of word:
-   words-include-escapes t))
+   words-include-escapes t)
+  ;; This is needed for the comment statement parser:
+  (add-hook 'before-change-functions
+            'reduce--comment-seq-reset nil t))
 
 (defun reduce--syntax-propertize (start end)
   "Syntax-propertize buffer text between START and END.

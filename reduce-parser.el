@@ -1,21 +1,36 @@
-;;; reduce-parser.el --- Analogue of syntax-ppss for REDUCE comment statements  -*- lexical-binding: t; -*-
+;;; reduce-parser.el --- Parser for REDUCE comment statements  -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2022 Francis J. Wright
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: October 2022
-;; Time-stamp: <2022-10-23 14:10:50 franc>
-;; Keywords: languages
+;; Time-stamp: <2022-10-23 17:42:49 franc>
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.10alpha
 
 ;; This file is part of REDUCE IDE.
 
+;; REDUCE IDE is free software: you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published
+;; by the Free Software Foundation, either version 3 of the License,
+;; or (at your option) any later version.
+
+;; REDUCE IDE is distributed in the hope that it will be useful, but
+;; WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+;; General Public License for more details.
+
+;; You should have received a copy of the GNU General Public License
+;; along with REDUCE IDE.  If not, see <https://www.gnu.org/licenses/>.
+
 ;;; Commentary:
 
-;; Build a sequence of start and finish positions for REDUCE comment
-;; statements and use it to detect efficiently whether a position is
-;; within such a statement.
+;; This file provides an analogue of syntax-ppss for REDUCE comment
+;; statements, which cannot be handled by the Emacs parser.  The code
+;; here builds a sequence of start and finish positions for comment
+;; statements and uses it to detect efficiently whether a position is
+;; within such a statement and if so to determine its start and
+;; finish.
 
 ;; CURRENTLY VERY EXPERIMENTAL!
 
@@ -42,6 +57,14 @@ Use the information found to build ‘reduce--comment-seq’."
                         (or (re-search-forward "[\;$]" nil t) (point-max)))
                   lst)))))
     (setq reduce--comment-seq (and lst (nreverse (vconcat lst))))))
+
+(defun reduce--comment-seq-reset (_beg &rest _ignored-args)
+  "Reset ‘reduce--comment-seq’ to nil, currently ignoring all args.
+It *should* flush ‘reduce--comment-seq’ from position BEG.  The
+remaining arguments, IGNORED-ARGS, are ignored; this function
+accepts them so that it can be directly used on the hook
+‘before-change-functions’, which is set up  in ‘reduce-mode’."
+  (setq reduce--comment-seq nil))
 
 (defun reduce--highlight-comment-statements ()
   "Highlight all comment statements in the buffer.
