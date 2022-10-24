@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1992
-;; Time-stamp: <2022-10-23 17:48:00 franc>
+;; Time-stamp: <2022-10-24 15:52:11 franc>
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.10alpha
 ;; Package-Requires: (cl-lib)
@@ -1556,164 +1556,6 @@ If unable to kill a balanced expression, throw a user error."
   (kill-region (point) (if arg
                            (reduce-backward-sexp)
                          (reduce-forward-sexp))))
-
-
-;;;; *****************
-;;;; Skipping comments
-;;;; *****************
-
-;; This section revised 24 September 2022.
-;; It handles /*...*/ comments.
-
-(defun reduce--skip-comments-forward ()
-  "Move forwards across comments and white space of all types."
-  (save-match-data
-    (let ((case-fold-search t))
-      (forward-comment (buffer-size)) ; syntactic comments & white space
-      (while (and (looking-at "comment")
-                  (re-search-forward "[\;$]" nil t))
-        (forward-comment (buffer-size))))))
-
-(defun reduce--skip-comments-backward ()
-  "Move backwards across comments and white space of all types."
-  ;; Find a comment statement backwards by matching the form <bob or
-  ;; terminator> <white space or syntactic comments> COMMENT
-  ;; ... <terminator>.  The syntactic comments might contain
-  ;; terminator characters that are not terminators.
-  (save-match-data
-    (forward-comment (-(buffer-size))) ; syntactic comments & white space
-    ;; Look for a preceding comment statement:
-    (let ((start (point)) (case-fold-search t) found)
-      (when (re-search-backward "[\;$]\\=" nil t) ; search anchored to point
-        ;; At end of possible comment statement immediately before terminator.
-        (setq found (reduce--previous-terminator))
-        (if (or found (bobp))          ; at previous terminator or bob
-            (progn
-              ;; Look forwards for the word "comment" after any syntactic
-              ;; comments and white space:
-              (if found (goto-char found)) ; after previous terminator
-              (forward-comment (buffer-size))
-              (if (looking-at "\\_<comment\\_>") ; comment statement skipped
-                  (if found
-                      ;; Skip again from after previous terminator:
-                      (progn
-                        (goto-char found)
-                        (reduce--skip-comments-backward))
-                    (goto-char (point-min)))
-                (goto-char start)))
-          (goto-char start))))))
-
-(defun reduce--previous-terminator ()
-  "Move to previous terminator and return the position after it.
-If the terminator is in a string then move to it but return nil.
-Ignore terminators in % or /**/ comments.  If no terminator is
-found then move to beginning of buffer and return nil."
-  (let (found)
-    (while
-        (and (re-search-backward "[\;$]" nil 'move)
-             (let ((parse-state (syntax-ppss)))
-               (cond ((nth 3 parse-state) ; in string, so terminator not found
-                      nil)                ; break
-                     ((nth 4 parse-state) ; in % or /**/ comment
-                      (goto-char (nth 8 parse-state)) ; go to its start
-                      t)                         ; and search again
-                     ((setq found (match-end 0)) ; terminator found
-                      nil)))))                   ; break
-    found))
-
-
-;;;; *****************************************************************
-;;;; Searching for syntactic elements ignoring comments, strings, etc.
-;;;; *****************************************************************
-
-;; This section revised 24 September 2022.
-;; It now handles /*...*/ comments.
-
-(defun reduce--re-search-forward (regexp &optional MOVE)
-  "Syntactic search forwards for REGEXP.
-If no match and MOVE is non-nil then move to end.
-Skip comments, strings, escaped and quoted tokens.
-Return t if match found, nil otherwise."
-  (let ((start (point))
-        (pattern (concat regexp "\\|\\(?100:\\_<comment\\_>\\)"))
-        (move (if MOVE 'move t)))
-    (if (reduce--re-search-forward1 pattern move)
-        t
-      (unless MOVE (goto-char start))
-      nil)))
-
-(defun reduce--re-search-forward1 (pattern move)
-  "Search forwards for PATTERN; if no match and MOVE then move to end.
-Recursive sub-function of ‘reduce--re-search-forward’.
-Process match to skip comments, strings, etc.
-Return t if match found, nil otherwise."
-  (if (re-search-forward pattern nil move)
-      (let ((parse-state (syntax-ppss)))
-        (if (cond                   ; check match -- t => search again
-             ((memq (char-before (match-beginning 0)) '(?! ?'))) ; escaped or quoted
-             ((nth 3 parse-state)       ; string
-              (goto-char (nth 8 parse-state))
-              (forward-sexp) t)
-             ((nth 4 parse-state)       ; % or /*...*/ comment
-              (goto-char (nth 8 parse-state))
-              (forward-comment 1) t)
-             ((match-beginning 100)     ; comment statement
-              (re-search-forward "[;$]" nil 'move) t))
-            (reduce--re-search-forward1 pattern move) ; search again
-          t))))                         ; match for original regexp found
-
-
-(defun reduce--re-search-backward (regexp &optional MOVE)
-  "Syntactic search backwards for REGEXP.
-If no match and MOVE is non-nil then move to end.
-Skip comments, strings, escaped and quoted tokens.
-Return t if match found, nil otherwise."
-  (let ((start (point))
-        (move (if MOVE 'move t)))
-    (if (reduce--re-search-backward1 regexp move)
-        t
-      (unless MOVE (goto-char start))
-      nil)))
-
-(defun reduce--re-search-backward1 (regexp move)
-  "Search backwards for REGEXP; if no match and MOVE then move to end.
-Recursive sub-function of ‘reduce--re-search-backward’.
-Process match to skip comments, strings, etc.
-Return t if match found, nil otherwise."
-  (if (re-search-backward regexp nil move)
-      (let ((parse-state (syntax-ppss)))
-        (if (cond                   ; check match -- t => search again
-             ((memq (preceding-char) '(?! ?'))) ; escaped or quoted
-             ((or (nth 3 parse-state) (nth 4 parse-state))
-              ;; In string or % or /**/ comment.
-              (goto-char (nth 8 parse-state)) ; skip it
-              t)
-             ((reduce--back-to-comment-statement-start))) ; skip comment statement
-            (reduce--re-search-backward1 regexp move) ; search again
-          t))))                         ; match for original regexp found
-
-(defun reduce--back-to-comment-statement-start ()
-  "If point is in a comment statement, move to and return its start position.
-Otherwise do not move and return nil."
-  ;; Find a comment statement backwards by matching the form <bob or
-  ;; terminator> <white space or syntactic comments> COMMENT
-  ;; ... <point>.  The syntactic comments might contain terminator
-  ;; characters that are not terminators.
-  (save-match-data
-    (let ((start (point)) (found (reduce--previous-terminator)))
-        (if (or found (bobp))          ; at previous terminator or bob
-            (progn
-              ;; Look forwards for the word "comment" after any syntactic
-              ;; comments and white space:
-              (if found (goto-char found)) ; after previous terminator
-              (forward-comment (buffer-size))
-              (if (looking-at "\\_<comment\\_>") ; comment statement skipped
-                  (if found
-                      ;; Skip to after previous terminator:
-                      (goto-char found) ; goto-char returns its argument
-                    (goto-char (point-min)))
-                (goto-char start) nil))
-          (goto-char start) nil))))
 
 
 ;;;; ****************

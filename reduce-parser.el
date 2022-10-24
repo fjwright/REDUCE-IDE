@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: October 2022
-;; Time-stamp: <2022-10-23 17:42:49 franc>
+;; Time-stamp: <2022-10-24 17:17:49 franc>
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.10alpha
 
@@ -50,12 +50,13 @@ Use the information found to build ‘reduce--comment-seq’."
     (save-excursion
       (save-restriction
         (widen) (goto-char (point-min))
-        (while (re-search-forward "\\_<comment\\_>" nil t)
-          ;; Unless in a string or syntactic comment...
-          (unless (nth 8 (syntax-ppss))
-            (push (cons (match-beginning 0)
-                        (or (re-search-forward "[\;$]" nil t) (point-max)))
-                  lst)))))
+        (save-match-data
+          (while (re-search-forward "\\_<comment\\_>" nil t)
+            ;; Unless in a string or syntactic comment...
+            (unless (nth 8 (syntax-ppss))
+              (push (cons (match-beginning 0)
+                          (or (re-search-forward "[\;$]" nil t) (point-max)))
+                    lst))))))
     (setq reduce--comment-seq (and lst (nreverse (vconcat lst))))))
 
 (defun reduce--comment-seq-reset (_beg &rest _ignored-args)
@@ -109,6 +110,98 @@ position immediately after the end of that comment statement."
                   (t (setq lower (1+ upper) value ivl)))))
         (when (called-interactively-p 'interactive) (message "%s" value))
         value))))
+
+
+;;;; *****************************************************************
+;;;; Searching for syntactic elements ignoring comments, strings, etc.
+;;;; *****************************************************************
+
+(defun reduce--re-search-forward (regexp &optional MOVE)
+  "Syntactic search forwards for REGEXP.
+Skip comments, strings, escaped and quoted tokens.  If match
+found then move point to end of match and return t, else return
+nil.  If no match found and MOVE is non-nil then move point as
+far as possible, otherwise do not move point at all."
+  (let ((start (point))
+        (move (if MOVE 'move t)))
+    (if (reduce--re-search-forward1 regexp move)
+        t
+      (unless MOVE (goto-char start))
+      nil)))
+
+(defun reduce--re-search-forward1 (regexp move)
+  "Search forwards for REGEXP; if no match and MOVE then move to EOB.
+Recursive sub-function of ‘reduce--re-search-forward’.
+Process match to skip comments, strings, etc.
+Return t if match found, nil otherwise."
+  (when (re-search-forward regexp nil move)
+    (let (tmp)
+      (if (cond                     ; check match -- t => search again
+           ((memq (char-before (match-beginning 0)) '(?! ?'))) ; escaped or quoted
+           ((nth 3 (setq tmp (syntax-ppss))) ; in string
+            (goto-char (nth 8 tmp))
+            (forward-sexp) t)
+           ((nth 4 tmp)                 ; in % or /*...*/ comment
+            (goto-char (nth 8 tmp))
+            (forward-comment 1) t)
+           ((setq tmp (reduce--in-comment-statement-p
+                       (match-beginning 0))) ; comment statement
+            (goto-char (cdr tmp)) t))
+          (reduce--re-search-forward1 regexp move) ; search again
+        t))))                         ; match for original regexp found
+
+
+(defun reduce--re-search-backward (regexp &optional MOVE)
+  "Syntactic search backwards for REGEXP.
+Skip comments, strings, escaped and quoted tokens.  If match
+found then move point to beginning of match and return t, else
+return nil.  If no match found and MOVE is non-nil then move
+point as far as possible, otherwise do not move point at all."
+  (let ((start (point))
+        (move (if MOVE 'move t)))
+    (if (reduce--re-search-backward1 regexp move)
+        t
+      (unless MOVE (goto-char start))
+      nil)))
+
+(defun reduce--re-search-backward1 (regexp move)
+  "Search backwards for REGEXP; if no match and MOVE then move to BOB.
+Recursive sub-function of ‘reduce--re-search-backward’.
+Process match to skip comments, strings, etc.
+Return t if match found, nil otherwise."
+  (when (re-search-backward regexp nil move)
+    (let (tmp)
+      (if (cond                     ; check match -- t => search again
+           ((memq (preceding-char) '(?! ?'))) ; escaped or quoted
+           ((setq tmp (nth 8 (syntax-ppss)))
+            ;; in string or % or /**/ comment
+            (goto-char tmp) t)          ; skip it
+           ((setq tmp (reduce--in-comment-statement-p))
+            ;; in comment statement
+            (goto-char (car tmp)) t))               ; skip it
+          (reduce--re-search-backward1 regexp move) ; search again
+        t))))                         ; match for original regexp found
+
+
+;;;; **********************************************
+;;;; Skipping comments and white space of all types
+;;;; **********************************************
+
+(defun reduce--skip-comments-forward ()
+  "Move forwards across comments and white space of all types."
+  (let (cmnt)
+    (forward-comment (buffer-size)) ; syntactic comments & white space
+    (while (setq cmnt (reduce--in-comment-statement-p))
+      (goto-char (cdr cmnt))
+      (forward-comment (buffer-size))))) ; syntactic comments & white space
+
+(defun reduce--skip-comments-backward ()
+  "Move backwards across comments and white space of all types."
+  (let (cmnt)
+    (forward-comment (-(buffer-size))) ; syntactic comments & white space
+    (while (setq cmnt (reduce--in-comment-statement-p (1- (point))))
+      (goto-char (car cmnt))
+      (forward-comment (-(buffer-size)))))) ; syntactic comments & white space
 
 (provide 'reduce-parser)
 
