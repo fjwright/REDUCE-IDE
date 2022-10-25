@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: October 2022
-;; Time-stamp: <2022-10-24 17:17:49 franc>
+;; Time-stamp: <2022-10-25 17:30:30 franc>
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.10alpha
 
@@ -59,6 +59,11 @@ Use the information found to build ‘reduce--comment-seq’."
                     lst))))))
     (setq reduce--comment-seq (and lst (nreverse (vconcat lst))))))
 
+;; Resetting reduce--comment-seq to nil before every edit is somewhat
+;; crude!  But it seems to work for now and not be noticeably slow.
+;; It should be possible (later) to re-parse only from the start of
+;; the change, rather than from the start of the buffer.
+
 (defun reduce--comment-seq-reset (_beg &rest _ignored-args)
   "Reset ‘reduce--comment-seq’ to nil, currently ignoring all args.
 It *should* flush ‘reduce--comment-seq’ from position BEG.  The
@@ -110,6 +115,18 @@ position immediately after the end of that comment statement."
                   (t (setq lower (1+ upper) value ivl)))))
         (when (called-interactively-p 'interactive) (message "%s" value))
         value))))
+
+(defsubst reduce--in-string-or-comment-p (&optional pos)
+  "Return non-nil if POS is within a string or comment; nil otherwise.
+If POS is omitted then it defaults to point.  If POS is inside a
+string, return the position where the string began; if inside a %
+or /**/ comment, return the position where the comment began; if
+inside a comment statement return a cons of the form (start
+. finish), where start is the position at the start of the
+comment statement and finish is the position immediately after
+the end of that comment statement."
+  (or (nth 8 (syntax-ppss pos))
+      (reduce--in-comment-statement-p pos)))
 
 
 ;;;; *****************************************************************

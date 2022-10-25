@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1992
-;; Time-stamp: <2022-10-24 15:52:11 franc>
+;; Time-stamp: <2022-10-25 17:32:02 franc>
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.10alpha
 ;; Package-Requires: (cl-lib)
@@ -1050,8 +1050,8 @@ user error.  Skip to the start of any procedural types."
   ;; heuristic allows point to be within the procedure keyword or
   ;; procedural types, which might be on different lines.  First,
   ;; check point is not in a string or syntactic comment:
-  (let ((case-fold-search t) (parse-state (syntax-ppss)))
-    (unless (or (nth 3 parse-state) (nth 4 parse-state))
+  (let ((case-fold-search t))
+    (unless (reduce--in-string-or-comment-p)
       (let ((start (point)) (tries 0) (max-tries 3)
             (regexp (concat reduce--proc-type-regexp "*"
                             reduce--proc-kwd-regexp)))
