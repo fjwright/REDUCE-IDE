@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1992
-;; Time-stamp: <2022-10-25 17:32:02 franc>
+;; Time-stamp: <2022-10-26 16:21:32 franc>
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.10alpha
 ;; Package-Requires: (cl-lib)
@@ -621,29 +621,17 @@ any type of comment."
      ;; % comment:
      ((looking-at "%")
       (if (and (eq (forward-line -1) 0)
-               (looking-at "%"))
-          (current-indentation)
-        t))
-     ;; /**/ comment:
+               (looking-at "\\s-*%"))
+          (current-indentation)         ; later line
+        t))                             ; first line
+     ;; First line of /**/ comment:
      ((looking-at "/\\*") t)
-     ((nth 4 (syntax-ppss))
-      (skip-chars-backward " \t\f\n")
-      (current-indentation))
-     ;; Comment statement:
+     ;; First line of comment statement:
      ((looking-at "\\_<comment\\_>") t)
-     (t
-      (let ((start (point)))
-        (when (reduce--re-search-backward "[\;$]" t)
-          (forward-char))
-        (forward-comment (buffer-size))
-        (when (and
-               (looking-at "\\_<comment\\_>")
-               (> start (point))
-               (re-search-forward "[\;$]" nil t)
-               (< start (point)))
-          (goto-char start)
-          (forward-line -1)
-          (current-indentation)))))))
+     ;; Later line of /**/ comment or comment statement:
+     ((or (nth 4 (syntax-ppss)) (reduce--in-comment-statement-p))
+      (forward-line -1)
+      (current-indentation)))))
 
 (defsubst reduce--looking-at-procedure ()
   "Return t if text after point matches the start of a procedure."
