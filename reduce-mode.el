@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1992
-;; Time-stamp: <2022-10-26 16:21:32 franc>
+;; Time-stamp: <2022-10-27 10:22:37 franc>
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.10alpha
 ;; Package-Requires: (cl-lib)
@@ -1617,49 +1617,43 @@ or following point (cf. minor modes)."
 If JUSTIFY is non-nil (interactively, with prefix argument), justify as well."
   (interactive "*P")
   (save-excursion
-    (let (first)
+    (let (first)                        ; nil unless first line found
       ;; If in empty line then move to start of next non-empty line:
       (beginning-of-line)
-      (while (and (looking-at "[ \t]*$")
+      (while (and (looking-at "\\s-*$")
                   (= (forward-line) 0)
                   (setq first (point))))
-      ;; Is point within a comment statement?
-      (if (or (and (looking-at "[ \t]*comment")
-                   (setq first (point)))
-              ;; (See ‘reduce-font-lock-extend-region-for-comment-statement’.)
-              (save-excursion
-                (and (re-search-backward "\\(comment\\)\\|\\(;\\)" nil t)
-                     (match-beginning 1)
-                     (setq first (point)))))
-          ;; Yes – use normal text-mode fill, but only within the
-          ;; comment statement, which might be within code:
-          (save-restriction
-            (narrow-to-region first (save-excursion (search-forward ";")))
-            (fill-paragraph justify))
-        ;;No...
-        ;; If point is in a %-comment then find its prefix and fill it:
-        (if (looking-at "[ \t]*%")
-            (let (fill-prefix last)
-              ;; Code modified from ‘set-fill-prefix’ in fill.el.
-              (setq fill-prefix (buffer-substring
-                                 (point)
-                                 (progn (skip-chars-forward " \t%") (point))))
-              (if (equal fill-prefix "")
-                  (setq fill-prefix nil))
-              ;; Find the last line of the comment:
-              (while (and (= (forward-line) 0)
-                          (looking-at "[ \t]*%")))
-              (setq last (point))
-              ;; Move to the first line of the comment:
-              (if first
-                  (goto-char first)
-                (while (and (= (forward-line -1) 0)
-                            (looking-at "[ \t]*%")) )
-                ;; Might have reached BOB, so ...
-                (if (not (looking-at "[ \t]*%"))
-                    (forward-line)))
-              ;; Fill region as one paragraph: break lines to fit fill-column.
-              (fill-region-as-paragraph (point) last justify)))))))
+      (back-to-indentation)
+      (cond
+       ;; If point is in a comment statement then use normal text-mode
+       ;; fill, but only within the comment statement, which might be
+       ;; within code:
+       ((setq first (reduce--in-comment-statement-p))
+        (save-restriction
+          (narrow-to-region (car first) (cdr first))
+          (fill-paragraph justify)))
+       ;; If point is in a %-comment then find its prefix and fill it:
+       ((looking-at "%")
+        ;; Code modified from ‘set-fill-prefix’ in fill.el.
+        (let ((fill-prefix (buffer-substring-no-properties
+                            (line-beginning-position)
+                            (progn (skip-chars-forward " \t%") (point))))
+              last)
+          (when (equal fill-prefix "") (setq fill-prefix nil))
+          ;; Find the last line of the comment:
+          (while (and (= (forward-line) 0)
+                      (looking-at "\\s-*%")))
+          (setq last (point))
+          ;; Move to the first line of the comment:
+          (if first
+              (goto-char first)
+            (while (and (= (forward-line -1) 0)
+                        (looking-at "\\s-*%")))
+            ;; Might have reached BOB, so ...
+            (unless (looking-at "\\s-*%") (forward-line)))
+          ;; Fill region as one paragraph breaking lines to fit
+          ;; fill-column:
+          (fill-region-as-paragraph (point) last justify)))))))
 
 
 ;;;; ***************************
