@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1992
-;; Time-stamp: <2022-10-27 10:22:37 franc>
+;; Time-stamp: <2022-10-29 15:34:25 franc>
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.10alpha
 ;; Package-Requires: (cl-lib)
@@ -422,7 +422,7 @@ Update after ‘reduce-show-proc-delay’ seconds of Emacs idle time."
     (modify-syntax-entry ?% "<" table)  ; comment starter
     (modify-syntax-entry ?& "." table)  ; punctuation
     (modify-syntax-entry ?' "'" table)  ; expression prefix
-    (modify-syntax-entry ?* ". 23" table) ; C-style comment
+    (modify-syntax-entry ?* ". 23b" table) ; C-style comment
     (modify-syntax-entry ?+ "." table)
     (modify-syntax-entry ?- "." table)
     (modify-syntax-entry ?/ ". 14" table) ; C-style comment
@@ -1625,13 +1625,6 @@ If JUSTIFY is non-nil (interactively, with prefix argument), justify as well."
                   (setq first (point))))
       (back-to-indentation)
       (cond
-       ;; If point is in a comment statement then use normal text-mode
-       ;; fill, but only within the comment statement, which might be
-       ;; within code:
-       ((setq first (reduce--in-comment-statement-p))
-        (save-restriction
-          (narrow-to-region (car first) (cdr first))
-          (fill-paragraph justify)))
        ;; If point is in a %-comment then find its prefix and fill it:
        ((looking-at "%")
         ;; Code modified from ‘set-fill-prefix’ in fill.el.
@@ -1653,7 +1646,22 @@ If JUSTIFY is non-nil (interactively, with prefix argument), justify as well."
             (unless (looking-at "\\s-*%") (forward-line)))
           ;; Fill region as one paragraph breaking lines to fit
           ;; fill-column:
-          (fill-region-as-paragraph (point) last justify)))))))
+          (fill-region-as-paragraph (point) last justify)))
+       ;; If point is in a comment statement then use normal text-mode
+       ;; fill, but only within the comment statement, which might be
+       ;; within code:
+       ((setq first (reduce--in-comment-statement-p))
+        (save-restriction
+          (narrow-to-region (car first) (cdr first))
+          (fill-paragraph justify)))
+       ;; Ditto for /**/ comment:
+       ((or (looking-at "/\\*")         ; only within comment after /*
+            (prog1
+                (nth 4 (setq first (syntax-ppss)))
+              (goto-char (nth 8 first))))
+        (save-restriction
+          (narrow-to-region (point) (progn (forward-comment 1) (point)))
+          (fill-paragraph justify)))))))
 
 
 ;;;; ***************************
