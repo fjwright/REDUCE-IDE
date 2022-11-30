@@ -4,7 +4,8 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1998
-;; Time-stamp: <2022-10-23 17:02:23 franc>
+;; Time-stamp: <2022-11-27 17:57:00 franc>
+;; Keywords: languages, processes
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.10alpha
 
@@ -115,7 +116,8 @@ Each drive must be specified as ‘X:’, where X is a letter A-Z." invalid))
 
 (defcustom reduce-run-installation-directory
   (if (eq system-type 'windows-nt)
-      (let ((drives reduce-run-MSWin-drives)
+      (let ((drives (eval 'reduce-run-MSWin-drives))
+	        ;; because reduce-run-MSWin-drives is undefined except on MS Windows
             (skeleton "/Program Files/Reduce/")
             dir d)
         (while drives
