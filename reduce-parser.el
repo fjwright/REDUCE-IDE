@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: October 2022
-;; Time-stamp: <2022-10-25 17:30:30 franc>
+;; Time-stamp: <2022-12-03 17:27:41 franc>
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.10alpha
 
@@ -72,19 +72,19 @@ accepts them so that it can be directly used on the hook
 ‘before-change-functions’, which is set up  in ‘reduce-mode’."
   (setq reduce--comment-seq nil))
 
-(defun reduce--highlight-comment-statements ()
-  "Highlight all comment statements in the buffer.
-Only works reliably with font-lock off, so turns font-lock off.
-Purely intended for testing."
-  (interactive)
-  (let ((seq (or reduce--comment-seq (reduce--build-comment-seq))))
-    (when seq                           ; nil if no comment statements
-      (font-lock-mode 0)
-      (with-silent-modifications
-        (mapc
-         (lambda (i)                    ; i = (start . finish)
-           (add-face-text-property (car i) (cdr i) 'highlight))
-         seq)))))
+;; (defun reduce--highlight-comment-statements ()
+;;   "Highlight all comment statements in the buffer.
+;; Only works reliably with font-lock off, so turns font-lock off.
+;; Purely intended for testing."
+;;   (interactive)
+;;   (let ((seq (or reduce--comment-seq (reduce--build-comment-seq))))
+;;     (when seq                           ; nil if no comment statements
+;;       (font-lock-mode 0)
+;;       (with-silent-modifications
+;;         (mapc
+;;          (lambda (i)                    ; i = (start . finish)
+;;            (add-face-text-property (car i) (cdr i) 'highlight))
+;;          seq)))))
 
 (defun reduce--in-comment-statement-p (&optional pos)
   "Return a cons if POS is within a comment statement; nil otherwise.

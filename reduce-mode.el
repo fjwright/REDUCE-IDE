@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1992
-;; Time-stamp: <2022-12-02 18:13:22 franc>
+;; Time-stamp: <2022-12-03 17:40:57 franc>
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.10alpha
 ;; Package-Requires: (cl-lib)
@@ -752,7 +752,9 @@ The indentation depends only on *previous* non-blank line."
       (when (and (bobp) (looking-at "[ \t\f]*$"))
         (cl-return 0))                  ; no previous non-blank line
       (back-to-indentation)
+
       ;; Point is now at first text in the previous non-blank line.
+
       (let ((previous-indentation (current-column))
             extra-indentation)
         ;; Skip any label:
@@ -762,6 +764,7 @@ The indentation depends only on *previous* non-blank line."
           (if (eolp)                    ; label alone on line
               (setq extra-indentation reduce-indentation)
             (setq previous-indentation (current-column))))
+
         ;; Point is now at start of statement text in the previous
         ;; non-blank line.
 
@@ -772,9 +775,12 @@ The indentation depends only on *previous* non-blank line."
         (unless extra-indentation
           (setq extra-indentation
                 (cond
+                 ;; *** Comments ***
+                 ((or (looking-at "%\\|/\\*") ; before % or /**/ comment
+                      (reduce--in-comment-statement-p) ; in comment statement
+                      (nth 4 (syntax-ppss))) ; within /**/ comment after /*
+                  0)
                  ;; *** Tokens at beginning of the line ***
-                 ;; Comment (not /**/!)
-                 ((looking-at "%\\|\\_<comment\\_>") 0)
                  ;; ((looking-at "\\w+[ \t]*:[^=]") ; label
                  ;;  (if (looking-at ".*\\<if\\>") ; what else?
                  ;;      (* 2 reduce-indentation)
