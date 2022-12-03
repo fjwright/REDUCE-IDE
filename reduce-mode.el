@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1992
-;; Time-stamp: <2022-10-29 15:34:25 franc>
+;; Time-stamp: <2022-12-02 18:13:22 franc>
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.10alpha
 ;; Package-Requires: (cl-lib)
@@ -1617,7 +1617,8 @@ or following point (cf. minor modes)."
 If JUSTIFY is non-nil (interactively, with prefix argument), justify as well."
   (interactive "*P")
   (save-excursion
-    (let (first)                        ; nil unless first line found
+    (let (first                          ; nil unless first line found
+          fill-paragraph-handle-comment) ; don't!
       ;; If in empty line then move to start of next non-empty line:
       (beginning-of-line)
       (while (and (looking-at "\\s-*$")
@@ -1655,12 +1656,13 @@ If JUSTIFY is non-nil (interactively, with prefix argument), justify as well."
           (narrow-to-region (car first) (cdr first))
           (fill-paragraph justify)))
        ;; Ditto for /**/ comment:
-       ((or (looking-at "/\\*")         ; only within comment after /*
-            (prog1
+       ((or (looking-at "/\\*")         ; before /**/ comment
+            (when                       ; within /**/ comment after /*
                 (nth 4 (setq first (syntax-ppss)))
-              (goto-char (nth 8 first))))
+              (goto-char (nth 8 first)) t))
         (save-restriction
-          (narrow-to-region (point) (progn (forward-comment 1) (point)))
+          (narrow-to-region (point)
+                            (save-excursion (forward-comment 1) (point)))
           (fill-paragraph justify)))))))
 
 
