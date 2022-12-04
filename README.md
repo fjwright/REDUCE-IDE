@@ -52,5 +52,6 @@ Main Updates since REDUCE IDE 1.9 (see the manual for details)
 
 * Fix a trivial compilation error on Linux.
 * Parse comment statements robustly starting from the top of the buffer.
-* Fontify multi-line `/**/` comments correctly
+* Fontify multi-line `/**/` comments correctly.
 * Support filling of `/**/` comments.
+* Improved indentation.

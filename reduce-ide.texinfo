@@ -2,7 +2,7 @@
 @c %**start of header
 @settitle GNU Emacs REDUCE Integrated Development Environment
 @c Manual last updated:
-@set UPDATED Time-stamp: <2022-10-23 14:25:27 franc>
+@set UPDATED Time-stamp: <2022-12-04 16:19:37 franc>
 @c Software version:
 @set VERSION 1.10alpha
 @afourpaper
@@ -632,12 +632,13 @@ comments can contain statement terminators, which do not have any
 syntactic significance.)  There is currently no way to use any of the
 REDUCE syntax-directed commands on comment statements.
 
-There is no other support for comment statements or @code{/**/}
-comments.  There is considerably more support for %-comments, much of
-which is already built into Emacs because %-comments are very similar
-to the comments used in Emacs Lisp.  Indeed, the comment conventions
-supported by REDUCE mode are modelled primarily on those used in Emacs
-Lisp mode.
+The REDUCE mode indentation and fill commands support all three
+comment types, but there is no other support for comment statements or
+@code{/**/} comments.  There is considerably more support for
+%-comments, much of which is already built into Emacs because
+%-comments are very similar to the comments used in Emacs Lisp.
+Indeed, the comment conventions supported by REDUCE mode are modelled
+primarily on those used in Emacs Lisp mode.
 
 The comment commands are intimately related to the automatic comment
 indentation conventions.  (These are the indentation conventions
@@ -696,16 +697,16 @@ normally fills or justifies a paragraph to the command
 @code{reduce-fill-comment}.  This should be completely safe to use in
 REDUCE code (unlike @code{fill-paragraph} etc., which would be a
 potential disaster were there no undo facility!), and makes it easy to
-keep comments formatted tidily.  Currently this command fills or
-justifies only @code{%}-comments.
+keep comments formatted tidily.
 
 @table @kbd
 @item  M-q
 @kindex M-q
 @itemx M-x reduce-fill-comment
 @findex reduce-fill-comment
-Fill successive @code{%}-comment lines around or immediately following
-point.  A prefix argument means justify as well.
+Fill a comment statement, successive @code{%}-comment lines or a
+@code{/**/} comment around or immediately following point.  A prefix
+argument means justify as well.
 @end table
 
 REDUCE mode also provides commands for turning sections of text into
