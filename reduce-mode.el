@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1992
-;; Time-stamp: <2022-12-04 17:13:49 franc>
+;; Time-stamp: <2022-12-04 18:03:30 franc>
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.10alpha
 ;; Package-Requires: (cl-lib)
@@ -844,19 +844,21 @@ header onto subsequent lines, in which case return
     (condition-case nil
         (let ((start (point)))
           (or
-           ;; Point in or above procedure header?
+           ;; Point in or above procedure header, separated only by
+           ;; white space or comments?
            (progn
              (reduce-forward-statement 1)
              (reduce-backward-statement 1)
-             (and (reduce--looking-at-procedure)
-                  (if (> start (point))  ; start below "procedure"
-                      reduce-indentation ; on continuation line
-                    0)))
-           ;; Point below procedure?
+             (when (reduce--looking-at-procedure)
+               (if (> start (point))    ; start below "procedure"
+                   reduce-indentation   ; on continuation line
+                 0)))
+           ;; Point below procedure, separated only by white space or
+           ;; comments?
            (progn
-             (reduce-backward-procedure 1)
-             (reduce-forward-procedure 1)
-             (and (>= start (point)) 0)))) ; start not above procedure end
+             (goto-char start)
+             (reduce-backward-statement 2)
+             (when (reduce--looking-at-procedure) 0))))
       (t nil))))
 
 (defun reduce--calculate-indent-this ()
