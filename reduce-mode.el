@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1992
-;; Time-stamp: <2022-12-03 17:40:57 franc>
+;; Time-stamp: <2022-12-03 18:16:12 franc>
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.10alpha
 ;; Package-Requires: (cl-lib)
@@ -702,9 +702,14 @@ of the construct; otherwise return nil."
       (reduce--backward-block) (current-indentation))
      ((looking-at ">>")
       (reduce--backward-group) (current-indentation))
-     ;; *** Special cases ***
+     ;; *** Symbolic mode tokens ***
      ((looking-at "\\_<\\(?:\\(?:end\\)?module\\)\\_>\\|\
 #\\(?:define\\|\\(?:el\\)?if\\|else\\|endif\\)\\_>")
+      0)
+     ;; *** Within continuation of multi-line string ***
+     ((let ((state (syntax-ppss)))
+        (and (nth 3 state)              ; within string
+             (< (nth 8 state) (line-beginning-position))))
       0))))
 
 (defun reduce--find-matching-if ()
