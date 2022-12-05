@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1992
-;; Time-stamp: <2022-12-04 18:03:30 franc>
+;; Time-stamp: <2022-12-05 14:07:45 franc>
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.10alpha
 ;; Package-Requires: (cl-lib)
@@ -896,8 +896,9 @@ of the construct; otherwise return nil."
       (reduce--find-matching-if) (current-indentation))
      ;; *** Label or closing tokens ***
      ;; Indent to beginning of enclosing block or group:
-     ((looking-at ".*:[^=]\\|\\_<end\\_>")
-      (reduce--backward-block) (current-indentation))
+     ((and (looking-at "[^:]+:[^=]\\|\\_<end\\_>")
+           (save-excursion              ; check really in block
+             (and (reduce--backward-block) (current-indentation)))))
      ((looking-at ">>")
       (reduce--backward-group) (current-indentation))
      ;; *** Symbolic mode tokens ***
