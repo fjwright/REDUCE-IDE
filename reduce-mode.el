@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1992
-;; Time-stamp: <2022-12-05 14:07:45 franc>
+;; Time-stamp: <2022-12-05 18:08:23 franc>
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.10alpha
 ;; Package-Requires: (cl-lib)
@@ -858,7 +858,10 @@ header onto subsequent lines, in which case return
            (progn
              (goto-char start)
              (reduce-backward-statement 2)
-             (when (reduce--looking-at-procedure) 0))))
+             (when (reduce--looking-at-procedure)
+               ;; Check start not within procedure body:
+               (reduce-forward-statement 2)
+               (when (> start (point)) 0)))))
       (t nil))))
 
 (defun reduce--calculate-indent-this ()
