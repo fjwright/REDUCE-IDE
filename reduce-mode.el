@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1992
-;; Time-stamp: <2022-12-06 16:57:39 franc>
+;; Time-stamp: <2022-12-06 17:41:50 franc>
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.10alpha
 ;; Package-Requires: (cl-lib)
@@ -1028,11 +1028,14 @@ The indentation depends only on *previous* non-blank line."
          ;; Indent successive continuation lines of a multi-line
          ;; expression, where this line ends or the next line (that
          ;; being indented) begins with a simple operator, by the same
-         ;; amount.  Now looking at *previous* line.
-         ((and (or (looking-at ".*[=*/,]\\s-*[%\n]")
-                   (looking-at ".*\n\\s-*[=*/,]"))
+         ;; amount.  Now looking at *previous* line.  (Beware:
+         ;; incomplete comment support!)
+         ((and (or (looking-at ".*[=+-*/]\\s-*[%\n]")
+                   (looking-at ".*\n\\s-*[=+-*/]"))
                ;; and this is not the first line
-               (not (looking-back "[;$]\\(?:\\s-*[%\n]\\)+\\s-*" nil)))
+               (save-excursion
+                 (reduce--skip-comments-backward)
+                 (not (looking-back "[;$]" nil))))
           (current-indentation))
          ;; If beginning new statement or comma-separated element
          ;; then indent to previous statement or element
