@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1992
-;; Time-stamp: <2022-12-05 18:08:23 franc>
+;; Time-stamp: <2022-12-06 16:57:39 franc>
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.10alpha
 ;; Package-Requires: (cl-lib)
@@ -517,9 +517,10 @@ also affects this mode.  Entry to this mode runs the hooks on
   (setq-local add-log-current-defun-function
               #'reduce-current-proc)
   ;; (setq-local paragraph-start (concat "^$\\|" page-delimiter))
-  (setq-local paragraph-separate
-              ;; paragraph-start)
-              (concat paragraph-start "\\|^%")) ; RS
+  ;; (setq-local paragraph-separate
+  ;;             ;; paragraph-start)
+  ;;             (concat paragraph-start "\\|^%"))
+                                        ; RS
   ;; so that comments at beginning of a line do not disturb reformatting.
   (setq-local paragraph-ignore-fill-prefix t)
   (setq-local indent-line-function #'reduce-indent-line
@@ -1008,10 +1009,13 @@ The indentation depends only on *previous* non-blank line."
                       (* 2 reduce-indentation)
                     reduce-indentation))
                  ;; *** Tokens at the end of the (logical) line *** :
-                 ((looking-at ".*\\<\\(if\\|for\\|do\\|collect\\|join\\|sum\\product\\)\\>[ \t]*[%\n]")
+                 ((looking-at ".*\\<\\(?:if\\|for\\|do\\|collect\\|join\\|sum\\product\\)\\>[ \t]*[%\n]")
                   reduce-indentation)
                  ;; Otherwise, extra indentation undefined
                  )))
+
+        ;; Point is still at start of statement text in the *previous*
+        ;; non-blank line.
 
         (cond
          ;; If extra indentation determined then use it ...
@@ -1020,6 +1024,15 @@ The indentation depends only on *previous* non-blank line."
          ;; the same amount if both previous lines end with , :
          ((and (looking-at ".*,\\s-*[%\n]")
                (looking-back ",\\s-*[%\n]\\s-*" nil))
+          (current-indentation))
+         ;; Indent successive continuation lines of a multi-line
+         ;; expression, where this line ends or the next line (that
+         ;; being indented) begins with a simple operator, by the same
+         ;; amount.  Now looking at *previous* line.
+         ((and (or (looking-at ".*[=*/,]\\s-*[%\n]")
+                   (looking-at ".*\n\\s-*[=*/,]"))
+               ;; and this is not the first line
+               (not (looking-back "[;$]\\(?:\\s-*[%\n]\\)+\\s-*" nil)))
           (current-indentation))
          ;; If beginning new statement or comma-separated element
          ;; then indent to previous statement or element
