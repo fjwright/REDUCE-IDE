@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1992
-;; Time-stamp: <2022-12-06 17:41:50 franc>
+;; Time-stamp: <2022-12-06 17:50:15 franc>
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.10alpha
 ;; Package-Requires: (cl-lib)
@@ -1030,8 +1030,8 @@ The indentation depends only on *previous* non-blank line."
          ;; being indented) begins with a simple operator, by the same
          ;; amount.  Now looking at *previous* line.  (Beware:
          ;; incomplete comment support!)
-         ((and (or (looking-at ".*[=+-*/]\\s-*[%\n]")
-                   (looking-at ".*\n\\s-*[=+-*/]"))
+         ((and (or (looking-at ".*[=*/+-]\\s-*[%\n]") ; - must be at end of []!
+                   (looking-at ".*\n\\s-*[=*/+-]"))
                ;; and this is not the first line
                (save-excursion
                  (reduce--skip-comments-backward)
