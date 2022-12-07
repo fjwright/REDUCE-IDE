@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1992
-;; Time-stamp: <2022-12-06 17:50:15 franc>
+;; Time-stamp: <2022-12-07 16:26:35 franc>
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.10alpha
 ;; Package-Requires: (cl-lib)
@@ -279,6 +279,27 @@ Update after ‘reduce-show-proc-delay’ seconds of Emacs idle time."
 (defvar reduce-imenu-done nil
   "Buffer-local: set to true if ‘reduce-imenu-add-to-menubar’ has been called.")
 (make-variable-buffer-local 'reduce-imenu-done)
+
+;; The following two constants are also used in reduce-font-lock.el.
+
+(defconst reduce-identifier-regexp
+  "\\(?:[[:alpha:]]\\|!.\\)\
+\\(?:\\w\\|\\s_\\|!.\\)*"
+  ;; Digits have word syntax and identifier cannot begin with a digit.
+  "Regular expression matching a REDUCE identifier.
+An identifier consists of one or more alphanumeric
+characters (i.e. alphabetic letters or decimal digits), the first
+of which must be alphabetic.  In addition, the underscore
+character (_) is considered a letter if it is within an
+identifier.  Special characters may be used in identifiers too,
+even as the first character, but each must be preceded by an
+exclamation mark in input.")
+
+(defconst reduce-whitespace-regexp
+  "\\(?:\\s-\\|\n\\|%.*?\n\\|/\\*.*?\\*/\\)"
+  "Regexp that matches a white space or comment.
+Precisely, a single white space (including newline), or a single
+%- or /**/-comment.")
 
 
 ;;;; **********************
@@ -865,6 +886,12 @@ header onto subsequent lines, in which case return
                (when (> start (point)) 0)))))
       (t nil))))
 
+(defconst reduce--label-or-end-regexp
+  ;; "[^:\n]+:[^=]\\|\\_<end\\_>"
+  (concat reduce-identifier-regexp reduce-whitespace-regexp "*"
+          ":[^=]\\|\\_<end\\_>")
+  "Regexp that matches a label or end token.")
+
 (defun reduce--calculate-indent-this ()
   "Return indentation for current line beginning with a special token.
 The indentation depends on *this* and previous non-blank lines.
@@ -900,7 +927,7 @@ of the construct; otherwise return nil."
       (reduce--find-matching-if) (current-indentation))
      ;; *** Label or closing tokens ***
      ;; Indent to beginning of enclosing block or group:
-     ((and (looking-at "[^:]+:[^=]\\|\\_<end\\_>")
+     ((and (looking-at reduce--label-or-end-regexp)
            (save-excursion              ; check really in block
              (and (reduce--backward-block) (current-indentation)))))
      ((looking-at ">>")
