@@ -54,4 +54,8 @@ Main Updates since REDUCE IDE 1.9 (see the manual for details)
 * Parse comment statements robustly starting from the top of the buffer.
 * Fontify multi-line `/**/` comments correctly.
 * Support filling of `/**/` comments.
-* Improved indentation.
+* Improve indentation.
+
+* Treat reduce-mode and reduce-run more as parts of an integrated REDUCE IDE package.
+  * Include a stub Run REDUCE menu in REDUCE mode buffers, which can only run REDUCE or explicitly load reduce-run.  Replace it with the full menu when reduce-run loads.
+  * Remove require-reduce-run as an option on reduce-mode-load-hook.

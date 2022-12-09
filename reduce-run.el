@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1998
-;; Time-stamp: <2022-11-27 17:57:00 franc>
+;; Time-stamp: <2022-12-09 15:16:20 franc>
 ;; Keywords: languages, processes
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.10alpha
@@ -29,8 +29,8 @@
 ;; This file is intended to be installed as part of the REDUCE IDE
 ;; package; see the homepage for guidance on installing REDUCE IDE.
 
-;; REDUCE Run mode is a package for running the REDUCE computer
-;; algebra system, which is Open Source and available from
+;; REDUCE Run is a major mode for running the REDUCE computer algebra
+;; system, which is Open Source and available from
 ;; <https://sourceforge.net/projects/reduce-algebra>.
 
 ;; Hacked from inf-lisp.el by Olin Shivers <shivers@cs.cmu.edu>
@@ -45,32 +45,13 @@
 ;; For documentation on the functionality provided by comint mode, and
 ;; the hooks available for customising it, see the file comint.el.
 
-;; REDUCE Run mode requires ‘reduce-mode.el’.
-
 ;;; To do:
 
 ;; control echoing from input of statement, proc or region?
 
 ;;; Code:
 
-;; Declare variables and functions defined in reduce-mode.el to avoid
-;; compiler warnings:
-(defvar reduce-mode-map)
-(declare-function reduce-backward-statement "reduce-mode")
-(declare-function reduce-forward-procedure "reduce-mode")
-(declare-function reduce-backward-procedure "reduce-mode")
-
-(require 'reduce-mode);; (if load-in-progress (require 'reduce-mode))
-
-(defconst reduce-run-version
-  ;; Extract version from Package-Version in file header:
-  (eval-when-compile
-    (require 'lisp-mnt)
-    (save-excursion (lm-header "package-version")))
-  "Version information for REDUCE Run mode.")
-
-;; (message "Loading reduce-run")       ; TEMPORARY!
-
+(require 'reduce-mode)
 (require 'comint)
 
 ;;; Customizable user options
@@ -164,10 +145,10 @@ It must be in this directory; if it cannot be found then nil.")
 ;; Construct "reduce-run-redpsl.bat" in this directory.  Doing this
 ;; every time this file is loaded allows for changes between loads.
 
-(if reduce-run--reduce-run-redpsl-bat-filename
-    (with-temp-file
-        reduce-run--reduce-run-redpsl-bat-filename
-      (insert "@echo off\r\n\"" reduce-run--redpsl-bat-filename "\"")))
+(when reduce-run--reduce-run-redpsl-bat-filename
+  (with-temp-file
+      reduce-run--reduce-run-redpsl-bat-filename
+    (insert "@echo off\r\n\"" reduce-run--redpsl-bat-filename "\"")))
 
 
 (defcustom reduce-run-commands
@@ -302,7 +283,7 @@ send REDUCE input.")
 (easy-menu-define                       ; (symbol maps doc menu)
   reduce-mode-run-menu
   nil
-  "REDUCE Mode Run Menu."
+  "REDUCE Mode Run Menu -- updates stub when this file is loaded."
   `("Run REDUCE"
     ["Run REDUCE" run-reduce :active t
      :help "Start a new REDUCE process if necessary"]
@@ -321,21 +302,13 @@ send REDUCE input.")
     ,@reduce-run-menu2
     ["Switch To REDUCE" switch-to-reduce :active t
      :help "Select and switch to a REDUCE process"]
-    "--"
-    ["Show Version" reduce-run-show-version :active t
-     :help "Show the REDUCE Run version"]
     ))
 
-(defun reduce-run-show-version ()
-  "Echo version information for REDUCE Run mode."
-  (interactive)
-  (message "REDUCE Run mode – REDUCE IDE Package Version: %s" reduce-run-version))
-
-;; Put the Run REDUCE menu on the menu bar AFTER the REDUCE menu:
-(define-key-after
+;; Redefine the Run REDUCE menu stub:
+(define-key
   (lookup-key reduce-mode-map [menu-bar])
-  [Run\ REDUCE]
-  (cons "Run REDUCE" reduce-mode-run-menu) 'REDUCE)
+  [run\ reduce]                         ; MUST be lower case!
+  (cons "Run REDUCE" reduce-mode-run-menu))
 
 (defun reduce-run-install-letter-bindings ()
   "Bind many REDUCE run commands to ‘C-c’ <letter> bindings.

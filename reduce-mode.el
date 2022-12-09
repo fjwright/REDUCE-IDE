@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1992
-;; Time-stamp: <2022-12-07 16:26:35 franc>
+;; Time-stamp: <2022-12-09 15:18:15 franc>
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.10alpha
 ;; Package-Requires: (cl-lib)
@@ -91,11 +91,9 @@
 
 (defcustom reduce-mode-load-hook nil
   "List of functions to be called when REDUCE mode is loaded.
-For example, ‘require-reduce-run’ to automatically load REDUCE
-Run mode.  It can be used to customize global features of REDUCE
-mode and so is a good place to put keybindings."
+It can be used to customize global features of REDUCE mode and so
+is a good place to put keybindings."
   :type 'hook
-  :options '(require-reduce-run)
   :group 'reduce)
 
 (defcustom reduce-mode-hook nil
@@ -342,12 +340,24 @@ Precisely, a single white space (including newline), or a single
     map)
   "Keymap for REDUCE mode.")
 
+;; REDUCE-run menu bar and pop-up menu stub
+(easy-menu-define                       ; (symbol maps doc menu)
+  reduce-mode-run-menu
+  reduce-mode-map
+  "REDUCE Mode Run Menu stub -- updated when REDUCE Run is loaded."
+  '("Run REDUCE"
+    ["Run REDUCE" run-reduce :active t
+     :help "Start a new REDUCE process"]
+    ["Load REDUCE Run" (require 'reduce-run) :active t
+     :help "Load the full REDUCE Run mode functionality"]
+    ))
+
 ;; REDUCE-mode menu bar and pop-up menu
 (easy-menu-define           ; (symbol maps doc menu)
  reduce-mode-menu
  reduce-mode-map
  "REDUCE Mode Menu."
- `("REDUCE"
+ '("REDUCE"
    ["Indent Line" indent-for-tab-command :active t
     :help "Re-indent the current line"]
    ["Unindent Line" reduce-unindent-line :active t
@@ -413,8 +423,8 @@ Precisely, a single white space (including newline), or a single
     :help "Show a REDUCE Mode command summary"]
    ["Customize..." (customize-group 'reduce) :active t
     :help "Customize REDUCE Mode"]
-   ["Show Version" reduce-mode-show-version :active t
-    :help "Show the REDUCE Mode version"]
+   ["Show Version" reduce-ide-show-version :active t
+    :help "Show the REDUCE IDE version"]
    ;; This seems to be obsolete in Emacs 26!
    ;; ["Outline" outline-minor-mode
    ;;  :style toggle :selected outline-minor-mode :active t
@@ -423,10 +433,10 @@ Precisely, a single white space (including newline), or a single
     :help "Add change log entry other window"]
    ))
 
-(defun reduce-mode-show-version ()
-  "Echo version information for REDUCE mode."
+(defun reduce-ide-show-version ()
+  "Echo version information for REDUCE IDE."
   (interactive)
-  (message "REDUCE mode – REDUCE IDE Package Version: %s" reduce-mode-version))
+  (message "REDUCE IDE Version: %s" reduce-mode-version))
 
 
 ;;;; ************
@@ -990,7 +1000,7 @@ The indentation depends only on *previous* non-blank line."
 
       ;; Point is now at first text in the previous non-blank line.
 
-      ;; In comment -- indent to its start:
+      ;; If in comment then indent to its start:
       (when (looking-at "%\\|/\\*") ; immediately before % or /**/ comment
         (cl-return (current-column)))
       (let ((state (reduce--in-comment-statement-p))) ; in comment statement

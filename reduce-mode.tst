@@ -65,7 +65,8 @@ begin begin end end;  begin begin end;  beginning begin noend end;
 
 % *** INDENTATION PROBLEMS IN FOLLOWING BLOCK: ***
 
-/* before block */ begin /* in block */ scalar var; % in block
+/* before block */
+begin /* in block */ scalar var; % in block
    comment What an ugly block!$
    var /* in block */ := /* in block */ x^2; % in block
    comment That was a pointless assignment.;
