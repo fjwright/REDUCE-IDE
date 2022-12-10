@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1992
-;; Time-stamp: <2022-12-09 15:18:15 franc>
+;; Time-stamp: <2022-12-10 17:09:28 franc>
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.10alpha
 ;; Package-Requires: (cl-lib)
@@ -70,9 +70,7 @@
   :tag "REDUCE"
   :group 'languages
   :link '(custom-manual "(reduce-ide)Top")
-  :link '(url-link "https://reduce-algebra.sourceforge.io/reduce-ide/")
-  ;; Include the REDUCE Run customization group:
-  :load "reduce-run")
+  :link '(url-link "https://reduce-algebra.sourceforge.io/reduce-ide/"))
 
 (defgroup reduce-interface nil
   "Interface options for editing and running REDUCE code."
@@ -88,6 +86,15 @@
   "Format options for editing and running REDUCE code."
   :tag "REDUCE Format"
   :group 'reduce)
+
+(defgroup reduce-run nil
+  "Support for running REDUCE code.
+Note that REDUCE Run inherits from comint."
+  :tag "REDUCE Run"
+  :group 'reduce
+  :link '(custom-group-link comint)
+  ;; Include the REDUCE Run customization options:
+  :load "reduce-run")
 
 (defcustom reduce-mode-load-hook nil
   "List of functions to be called when REDUCE mode is loaded.
@@ -261,6 +268,20 @@ Update after ‘reduce-show-proc-delay’ seconds of Emacs idle time."
   :type 'number
   :group 'reduce-display)
 
+;; Run:
+
+(defcustom autoload-reduce-run 'menu
+  "Whether, and if so how, to autoload REDUCE Run.
+Loading it is necessary only if you plan to run REDUCE within
+REDUCE IDE.  If the value is t then load ‘reduce-run’ after
+‘reduce-mode’ has loaded; if it is ‘menu’ (the default) then
+display a Run REDUCE menu stub that can load ‘reduce-run’; if it
+is nil then do nothing."
+  :type '(choice (const :tag "Load REDUCE Run" t)
+                 (const :tag "Display Run REDUCE menu stub" menu)
+                 (const :tag "Do nothing" nil))
+  :group 'reduce-run)
+
 ;; External variables:
 
 ;; Due to improvements of byte compilation around 2003 the compiler
@@ -341,16 +362,16 @@ Precisely, a single white space (including newline), or a single
   "Keymap for REDUCE mode.")
 
 ;; REDUCE-run menu bar and pop-up menu stub
-(easy-menu-define                       ; (symbol maps doc menu)
-  reduce-mode-run-menu
-  reduce-mode-map
-  "REDUCE Mode Run Menu stub -- updated when REDUCE Run is loaded."
-  '("Run REDUCE"
-    ["Run REDUCE" run-reduce :active t
-     :help "Start a new REDUCE process"]
-    ["Load REDUCE Run" (require 'reduce-run) :active t
-     :help "Load the full REDUCE Run mode functionality"]
-    ))
+(when (eq autoload-reduce-run 'menu)
+  (easy-menu-define                     ; (symbol maps doc menu)
+    reduce-mode-run-menu
+    reduce-mode-map
+    "REDUCE Mode Run Menu stub -- updated when REDUCE Run is loaded."
+    '("Run REDUCE"
+      ["Run REDUCE" run-reduce :active t
+       :help "Start a new REDUCE process"]
+      ["Load REDUCE Run" (require 'reduce-run) :active t
+       :help "Load the full REDUCE Run mode functionality"])))
 
 ;; REDUCE-mode menu bar and pop-up menu
 (easy-menu-define           ; (symbol maps doc menu)
@@ -2328,9 +2349,17 @@ Each file name appears in the returned list relative to directory
 ;;; Load Hook
 (defun require-reduce-run ()
   "Require REDUCE Run mode.  Useful on ‘reduce-mode-load-hook’."
-  (require 'reduce-run))
+  (require 'reduce-run)
+  (warn "‘require-reduce-run’ is obsolete; \
+please customize ‘autoload-reduce-run’ instead."))
+
+(make-obsolete 'require-reduce-run
+               "please customize ‘autoload-reduce-run’ instead."
+               "v1.10")
 
 (provide 'reduce-mode)
+
+(when (eq autoload-reduce-run t) (require 'reduce-run))
 
 (run-hooks 'reduce-mode-load-hook)
 

@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1998
-;; Time-stamp: <2022-12-09 15:16:20 franc>
+;; Time-stamp: <2022-12-09 18:11:53 franc>
 ;; Keywords: languages, processes
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.10alpha
@@ -56,13 +56,6 @@
 
 ;;; Customizable user options
 ;;; =========================
-
-(defgroup reduce-run nil
-  "Support for running REDUCE code.
-Note that REDUCE Run inherits from comint."
-  :tag "REDUCE Run"
-  :group 'reduce
-  :link '(custom-group-link comint))
 
 ;; Define this variable only on Microsoft Windows:
 (eval-and-compile
@@ -304,11 +297,18 @@ send REDUCE input.")
      :help "Select and switch to a REDUCE process"]
     ))
 
-;; Redefine the Run REDUCE menu stub:
-(define-key
-  (lookup-key reduce-mode-map [menu-bar])
-  [run\ reduce]                         ; MUST be lower case!
-  (cons "Run REDUCE" reduce-mode-run-menu))
+(let ((keymap (lookup-key reduce-mode-map [menu-bar]))
+      (definition (cons "Run REDUCE" reduce-mode-run-menu)))
+  ;; Redefine the Run REDUCE menu stub if it exists:
+  (if (lookup-key keymap [run\ reduce])
+      (define-key keymap
+        [run\ reduce]                   ; MUST be lower case!
+        definition)
+    ;; Otherwise, put the Run REDUCE menu on the menu bar AFTER the
+    ;; REDUCE menu:
+    (define-key-after keymap
+      [Run\ REDUCE]
+      definition 'REDUCE)))
 
 (defun reduce-run-install-letter-bindings ()
   "Bind many REDUCE run commands to ‘C-c’ <letter> bindings.
