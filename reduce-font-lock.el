@@ -4,9 +4,9 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: 6 June 2022 as a separate file (was part of reduce-mode.el)
-;; Time-stamp: <2022-12-07 16:47:49 franc>
+;; Time-stamp: <2022-12-10 17:47:45 franc>
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
-;; Package-Version: 1.10alpha
+;; Package-Version: 1.10beta
 
 ;; This file is part of REDUCE IDE.
 

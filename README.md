@@ -5,7 +5,7 @@ Major modes for editing and running REDUCE source code
 
 **[Francis Wright](https://sites.google.com/site/fjwcentaur)**
 
-Version 1.10alpha, December 2022
+Version 1.10beta, December 2022
 
 REDUCE IDE is a package that provides an Integrated Development Environment for the [REDUCE computer algebra system](https://reduce-algebra.sourceforge.io/) within the GNU Emacs editor.  Its two major components are Emacs Lisp libraries that provide major modes for editing REDUCE source code and running a *command-line version* of REDUCE in an Emacs window.  It assumes that Emacs is running under a GUI such as Microsoft Windows or the X Window System under some flavour of UNIX or Linux, and displays Unicode character sets correctly.  REDUCE IDE does not include REDUCE, which is available separately from [SourceForge](https://sourceforge.net/projects/reduce-algebra/).  You don't need to install REDUCE in order to edit REDUCE source code using REDUCE IDE, but if you want to run REDUCE in REDUCE IDE then you do need to install REDUCE.
 
@@ -55,7 +55,8 @@ Main Updates since REDUCE IDE 1.9 (see the manual for details)
 * Fontify multi-line `/**/` comments correctly.
 * Support filling of `/**/` comments.
 * Improve indentation.
-
-* Treat reduce-mode and reduce-run more as parts of an integrated REDUCE IDE package.
-  * Include a stub Run REDUCE menu in REDUCE mode buffers, which can only run REDUCE or explicitly load reduce-run.  Replace it with the full menu when reduce-run loads.
-  * Remove require-reduce-run as an option on reduce-mode-load-hook.
+* Treat REDUCE mode and REDUCE Run mode more as parts of an integrated REDUCE IDE package.
+  * Add a new option `autoload-reduce-run` to control whether, and if so how, to autoload REDUCE Run mode.
+  * Remove `require-reduce-run` as an option on `reduce-mode-load-hook`.
+  * **Note that `require-reduce-run` is now deprecated and will be removed in the next release**; please use `autoload-reduce-run` instead.
+  * Optionally include in REDUCE mode buffers either the full Run REDUCE menu or a Run REDUCE menu stub, which can only run REDUCE or explicitly load REDUCE Run mode.  Replace the stub with the full menu when REDUCE Run mode loads.

@@ -4,9 +4,9 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1992
-;; Time-stamp: <2022-12-10 17:09:28 franc>
+;; Time-stamp: <2022-12-10 17:47:44 franc>
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
-;; Package-Version: 1.10alpha
+;; Package-Version: 1.10beta
 ;; Package-Requires: (cl-lib)
 
 ;; This file is part of REDUCE IDE.
@@ -271,13 +271,13 @@ Update after ‘reduce-show-proc-delay’ seconds of Emacs idle time."
 ;; Run:
 
 (defcustom autoload-reduce-run 'menu
-  "Whether, and if so how, to autoload REDUCE Run.
+  "Whether, and if so how, to autoload REDUCE Run mode.
 Loading it is necessary only if you plan to run REDUCE within
-REDUCE IDE.  If the value is t then load ‘reduce-run’ after
+REDUCE IDE.  If the value is t then load REDUCE Run mode after
 ‘reduce-mode’ has loaded; if it is ‘menu’ (the default) then
-display a Run REDUCE menu stub that can load ‘reduce-run’; if it
-is nil then do nothing."
-  :type '(choice (const :tag "Load REDUCE Run" t)
+display a Run REDUCE menu stub that can load REDUCE Run mode; if
+it is nil then do nothing."
+  :type '(choice (const :tag "Load REDUCE Run mode" t)
                  (const :tag "Display Run REDUCE menu stub" menu)
                  (const :tag "Do nothing" nil))
   :group 'reduce-run)
@@ -2347,6 +2347,7 @@ Each file name appears in the returned list relative to directory
 ;;;; **********************************************************************
 
 ;;; Load Hook
+
 (defun require-reduce-run ()
   "Require REDUCE Run mode.  Useful on ‘reduce-mode-load-hook’."
   (require 'reduce-run)
@@ -2355,7 +2356,7 @@ please customize ‘autoload-reduce-run’ instead."))
 
 (make-obsolete 'require-reduce-run
                "please customize ‘autoload-reduce-run’ instead."
-               "v1.10")
+               "REDUCE IDE v1.10")
 
 (provide 'reduce-mode)
 

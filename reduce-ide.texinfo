@@ -2,9 +2,9 @@
 @c %**start of header
 @settitle GNU Emacs REDUCE Integrated Development Environment
 @c Manual last updated:
-@set UPDATED Time-stamp: <2022-12-04 16:19:37 franc>
+@set UPDATED Time-stamp: <2022-12-11 16:17:29 franc>
 @c Software version:
-@set VERSION 1.10alpha
+@set VERSION 1.10beta
 @afourpaper
 @c With different size paper the printed page breaks will need attention!
 @c Look for @page and @need commands.
@@ -1460,8 +1460,9 @@ emulations is to put the following code in your @file{.emacs} file:
 REDUCE IDE supports a small amount of customization.  The following
 REDUCE mode options can be changed using the standard Emacs
 customization facilities.  The main REDUCE customization group is
-called ``REDUCE'', under which are two hooks and the two sub-groups
-``REDUCE Format & Display'' and ``REDUCE Interface''.
+called ``REDUCE'', under which are two hooks and the four sub-groups
+``REDUCE Display'', ``REDUCE Format'', ``REDUCE Interface'' and
+``REDUCE Run.
 
 REDUCE mode inherits from @code{prog-mode}, so some of its options
 also affects this mode.  The @code{prog-mode} customization group can
@@ -1514,10 +1515,15 @@ mode locally.
 
 @item reduce-mode-load-hook
 Default value @code{nil}.  List of functions to be called when REDUCE
-mode is loaded, e.g.@: @code{require-reduce-run} to automatically load
-@code{reduce-run}.  It can be used to customize global features of
-REDUCE mode such as its key map, i.e.@: it is a good place to put
-key bindings.
+mode is loaded.  It can be used to customize global features of REDUCE
+mode such as its key map, i.e.@: it is a good place to put key
+bindings.
+
+Adding the function @code{require-reduce-run} to this hook to
+automatically load @code{reduce-run} is now deprecated and the
+function will be removed in the next release; instead, please
+customize the new option @code{autoload-reduce-run}.  @xref{Run
+Customization}.
 @end vtable
 
 @c -------------------------------------------------------------------
@@ -2109,6 +2115,14 @@ mode.  The @code{comint} customization group can be accessed via a
 link in the REDUCE Run customization group.
 
 @vtable @code
+@item autoload-reduce-run
+Whether, and if so how, to autoload REDUCE Run mode.  Loading it is
+necessary only if you plan to run REDUCE within REDUCE IDE@.  If the
+value is @code{t} then load REDUCE Run mode after @code{reduce-mode}
+has loaded; if it is @code{menu} (the default) then display a Run
+REDUCE menu stub that can load REDUCE Run mode; if it is @code{nil}
+then do nothing.
+
 @item reduce-input-filter
 Default value @code{"\\`\\([ \t;$]*\\|[ \t]*.[ \t]*\\)\\'"}.  What not
 to save on REDUCE Run mode's input history.  The value is a regular
