@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1992
-;; Time-stamp: <2022-12-10 17:47:44 franc>
+;; Time-stamp: <2022-12-12 15:49:23 franc>
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.10beta
 ;; Package-Requires: (cl-lib)
@@ -53,12 +53,12 @@
 ;;; Code:
 (eval-when-compile (require 'cl-lib))
 
-(defconst reduce-mode-version
+(defconst reduce-ide-version
   ;; Extract version from Package-Version in file header:
   (eval-when-compile
     (require 'lisp-mnt)
     (save-excursion (lm-header "package-version")))
-  "Version information for REDUCE mode.")
+  "Version information for REDUCE IDE.")
 
 ;; (message "Loading reduce-mode")  ; TEMPORARY!
 
@@ -332,7 +332,7 @@ Precisely, a single white space (including newline), or a single
     (define-key map "\M-i" 'reduce-indent-line)
     (define-key map [(control tab)] 'reduce-indent-line-always)
     (define-key map [backtab] 'reduce-unindent-line) ; [(shift tab)]
-    (define-key map [del] 'backward-delete-char-untabify)
+    ;; (define-key map [del] 'backward-delete-char-untabify)
     (define-key map "\C-c\C-n" 'reduce-forward-statement)
     (define-key map "\C-c\C-p" 'reduce-backward-statement)
     (define-key map "\C-c\C-d" 'reduce-down-block-or-group)
@@ -370,7 +370,7 @@ Precisely, a single white space (including newline), or a single
     '("Run REDUCE"
       ["Run REDUCE" run-reduce :active t
        :help "Start a new REDUCE process"]
-      ["Load REDUCE Run" (require 'reduce-run) :active t
+      ["Load REDUCE Run Mode" (require 'reduce-run) :active t
        :help "Load the full REDUCE Run mode functionality"])))
 
 ;; REDUCE-mode menu bar and pop-up menu
@@ -444,7 +444,7 @@ Precisely, a single white space (including newline), or a single
     :help "Show a REDUCE Mode command summary"]
    ["Customize..." (customize-group 'reduce) :active t
     :help "Customize REDUCE Mode"]
-   ["Show Version" reduce-ide-show-version :active t
+   ["Show Version" reduce-ide-version :active t
     :help "Show the REDUCE IDE version"]
    ;; This seems to be obsolete in Emacs 26!
    ;; ["Outline" outline-minor-mode
@@ -454,10 +454,10 @@ Precisely, a single white space (including newline), or a single
     :help "Add change log entry other window"]
    ))
 
-(defun reduce-ide-show-version ()
+(defun reduce-ide-version ()
   "Echo version information for REDUCE IDE."
   (interactive)
-  (message "REDUCE IDE Version: %s" reduce-mode-version))
+  (message "REDUCE IDE Version: %s" reduce-ide-version))
 
 
 ;;;; ************
@@ -496,7 +496,7 @@ Precisely, a single white space (including newline), or a single
 ;;;###autoload
 (define-derived-mode reduce-mode prog-mode "REDUCE"
   "Major mode for editing REDUCE source code – part of REDUCE IDE.
-Version: see ‘reduce-mode-version’.\\<reduce-mode-map>
+Version: see ‘reduce-ide-version’.\\<reduce-mode-map>
 Author: Francis J. Wright (URL ‘https://sites.google.com/site/fjwcentaur’).
 Website: URL ‘https://reduce-algebra.sourceforge.io/reduce-ide/’.
 Comments, suggestions, bug reports, etc. are welcome.
@@ -1582,11 +1582,13 @@ argument minus (-) is equivalent to -1."
 
 (defun reduce-up-block-or-group (arg)
   "Move backwards up one level of block or group; if ARG move forwards.
-Move to the beginning of the nearest unpaired “begin” or “<<”.  A
-universal argument means move forwards to the end of the nearest
-unpaired “end” or “>>”.  Throw an error if the move fails.  With
-a numeric argument, do it that many times, where a negative
-argument means move forwards instead of backwards."
+That is, move backwards to the beginning of the “begin” or “<<”
+at the start of the block or group containing point.  A universal
+argument means move forwards to the end of the “end” or “>>” at
+the end of the block or group containing point.  Throw an error
+if the move fails.  With a numeric argument, do it that many
+times, where a negative argument means move forwards instead of
+backwards."
   (interactive "P")
   (let ((case-fold-search t))
     (setq arg (reduce--prefix-numeric-value arg))
@@ -1637,11 +1639,13 @@ Recursive sub-function of ‘reduce-up-block-or-group’."
 
 (defun reduce-down-block-or-group (arg)
   "Move forwards down one level of block or group; if ARG move backwards.
-Move to the end of the nearest unpaired “begin” or “<<”.  A
-universal argument means move backwards to the beginning of the
-nearest unpaired “end” or “>>”.  Throw an error if the move
-fails.  With a numeric argument, do it that many times, where a
-negative argument means move backwards instead of forward."
+That is, move forwards to the end of the nearest “begin” or “<<”
+within the current block or group, if any.  A universal argument
+means move backwards to the beginning of the nearest “end” or
+“>>” within the current block or group, if any.  Throw an error
+if the move fails.  With a numeric argument, do it that many
+times, where a negative argument means move backwards instead of
+forward."
   (interactive "P")
   (let ((case-fold-search t))
     (setq arg (reduce--prefix-numeric-value arg))
