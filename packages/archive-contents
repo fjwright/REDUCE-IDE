@@ -1,0 +1,10 @@
+(1
+ (reduce-ide .
+			 [(1 10 -2) nil
+              ;; See function `version-to-list':
+              ;; git = -4, alpha = -3, beta = -2, pre = -1
+              "REDUCE Integrated Development Environment" tar
+              ((:url . "https://reduce-algebra.sourceforge.io/reduce-ide/")
+	           (:keywords "languages" "faces" "processes")
+	           (:maintainer "Francis J. Wright")
+	           (:authors ("Francis J. Wright")))]))
