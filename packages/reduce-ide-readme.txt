@@ -1,6 +1,3 @@
-Website: https://reduce-algebra.sourceforge.io/reduce-ide/
-Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
-
 REDUCE IDE is an Integrated Development Environment for the REDUCE
 computer algebra system.  It provides major modes for editing REDUCE
 source code and running a command-line version of REDUCE in an Emacs
@@ -14,5 +11,5 @@ versions.
 
 The manual is installed automatically as part of this package as an
 Info document, which should appear at the top of your Info directory.
-It is also available as a PDF document or a multi-page HTML document
+It is also available as a PDF document and a multi-page HTML document
 via the website.

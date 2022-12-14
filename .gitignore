@@ -3,7 +3,8 @@
 reduce-packages
 REDUCE 3.3/
 REDUCE/
-packages/reduce-ide*
+packages/reduce-ide-*
+!packages/reduce-ide-readme.txt
 reduce-ide*/
 reduce-ide.info
 reduce-ide.pdf

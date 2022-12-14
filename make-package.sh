@@ -1,7 +1,7 @@
 #! /bin/bash
 
 # Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
-# Time-stamp: <2022-12-11 17:29:23 franc>
+# Time-stamp: <2022-12-14 14:30:13 franc>
 
 # Construct a REDUCE IDE package archive.
 # Usage: make-package.sh version-number
@@ -25,13 +25,16 @@ pkg2="\" \"REDUCE Integrated Development Environment\" '((emacs \"27\")))"
 dir=reduce-ide-$1
 mkdir $dir
 cd $dir
-ln -s ../package-info-dir dir
-ln -s ../package-README README
+echo 'Website: https://reduce-algebra.sourceforge.io/reduce-ide/
+Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
+' > README
+cat ../packages/reduce-ide-readme.txt >> README
 ln -s ../reduce-delim.el
 ln -s ../reduce-font-lock.el
-ln -s ../reduce-ide.info
 ln -s ../reduce-mode.el
 ln -s ../reduce-run.el
+ln -s ../dir dir
+ln -s ../reduce-ide.info
 echo $pkg1$1$pkg2 > reduce-ide-pkg.el
 cd ..
 
