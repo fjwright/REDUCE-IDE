@@ -1,12 +1,12 @@
 ;;; reduce-mode.el --- Major mode to edit REDUCE computer-algebra code  -*- lexical-binding: t; -*-
 
-;; Copyright (C) 1998-2001, 2012, 2017-2019, 2022 Francis J. Wright
+;; Copyright (C) 1998-2001, 2012, 2017-2019, 2022-2023 Francis J. Wright
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1992
-;; Time-stamp: <2022-12-14 15:40:10 franc>
+;; Time-stamp: <2023-01-14 17:21:24 franc>
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
-;; Package-Version: 1.10
+;; Package-Version: 1.10.1alpha
 ;; Package-Requires: (cl-lib)
 
 ;; This file is part of REDUCE IDE.
@@ -358,6 +358,7 @@ Precisely, a single white space (including newline), or a single
     (define-key map "\C-\M-i" 'reduce-complete-symbol)
     (define-key map "\C-c\t" 'reduce-complete-symbol)
                                         ; since C-M-i used by flyspell
+    (define-key map [(meta R)] 'run-reduce)
     map)
   "Keymap for REDUCE mode.")
 

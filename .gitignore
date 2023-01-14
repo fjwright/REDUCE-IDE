@@ -1,12 +1,13 @@
 *.elc
 *~
-reduce-packages
-REDUCE 3.3/
-REDUCE/
+old/
 packages/reduce-ide-*
 !packages/reduce-ide-readme.txt
+REDUCE/
+REDUCE-2018/
+REDUCE 3.3/
 reduce-ide*/
 reduce-ide.info
 reduce-ide.pdf
+reduce-packages
 reduce-run-redpsl.bat
-old/
