@@ -1,13 +1,13 @@
 ;;; reduce-run.el --- Run the REDUCE computer-algebra system in a buffer  -*- lexical-binding: t; -*-
 
-;; Copyright (C) 1998-2001, 2012, 2017-2019, 2022 Francis J. Wright
+;; Copyright (C) 1998-2001, 2012, 2017-2019, 2022-2023 Francis J. Wright
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1998
-;; Time-stamp: <2022-12-14 15:40:09 franc>
+;; Time-stamp: <2023-01-15 17:32:46 franc>
 ;; Keywords: languages, processes
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
-;; Package-Version: 1.10
+;; Package-Version: 1.10.1alpha
 
 ;; This file is part of REDUCE IDE.
 
@@ -262,8 +262,8 @@ send REDUCE input.")
   "REDUCE Run Menu."
   `("Run REDUCE"
     ,@reduce-run-menu2
-    ["Re-Run REDUCE" re-run-reduce :active t
-     :help "Stop a running REDUCE process and then restart REDUCE"]
+    ["(Re)Run REDUCE" rerun-reduce :active t
+     :help "Stop REDUCE if running in this buffer, then (re)start it"]
     ["Run File" reduce-run-file :active t
      :help "Run a file in a new REDUCE process"]
     ["Customize..." (customize-group 'reduce-run) :active t
@@ -703,8 +703,8 @@ buffer."
       (get-buffer-window
        (switch-to-buffer-other-window (current-buffer)))))
 
-(defun re-run-reduce ()
-  "Re-run REDUCE in the current buffer, killing it first if necessary."
+(defun rerun-reduce ()
+  "Rerun REDUCE in the current buffer, killing it first if necessary."
   (interactive)
   (if (not (eq major-mode 'reduce-run-mode))
       (user-error "This is not a REDUCE process buffer")
@@ -716,10 +716,11 @@ buffer."
     (insert ?\n)
     (let* ((buf-name (buffer-name (current-buffer)))
            (proc-name (substring buf-name 1 -1))
-           (cmd (substring proc-name 0 3)) ; "CSL" or "PSL"
-           (cmd (cdr (assoc cmd reduce-run-commands))))
-      ;; This may be overkill!
-      (reduce-run-reduce-1 cmd proc-name buf-name))))
+           (cmd (when (> (length proc-name) 7) ; strip off " REDUCE"
+                  (cdr (assoc (substring proc-name 0 -7)
+                              reduce-run-commands)))))
+      (reduce-run-reduce-1
+       (or cmd (car reduce-run-history)) proc-name buf-name))))
 
 
 (defvar reduce-prev-dir/file nil
