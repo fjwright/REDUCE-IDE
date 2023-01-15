@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1992
-;; Time-stamp: <2023-01-14 17:21:24 franc>
+;; Time-stamp: <2023-01-15 11:17:44 franc>
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.10.1alpha
 ;; Package-Requires: (cl-lib)
@@ -1506,19 +1506,21 @@ unsuccessful."
         (start (point))
         (pattern "\\([\;$]\\)\\|\\(<<\\|\\_<begin\\_>\\)\
 \\|\\(>>\\)\\|\\(\\_<end\\_>\\)\\|\\(\\s\)\\)\\|\\(\\s\(\\)")
-        reduce--outside-block-or-group
-        ;; Check whether after end in end-of-file marker, “;end;”, to
-        ;; avoid skipping a non-existent block to the top of the file!
-        (at-eof (save-excursion
-                   (re-search-forward "\\=[\;$]" nil t)
-                   (reduce--skip-comments-forward)
-                   (eobp))))
+        reduce--outside-block-or-group at-eof)
     ;; Skip to the preceding syntactically relevant character:
     (reduce--skip-comments-backward)
     ;; If a terminator or opening bracket then skip it:
     (re-search-backward "\\(?:[\;$]\\|\\s\(\\)\\=" nil t)
     ;; Now within a statement or at the end of the preceding
-    ;; statement.  Skip arg statements backwards to immediately before
+    ;; statement.  But check whether after “end” in end-of-file
+    ;; marker, “;end;”, which must be at start of line, to avoid
+    ;; skipping a non-existent block to the top of the file!
+    (setq at-eof (and (looking-back "^[\;$]?end" nil)
+                      (save-excursion
+                        (re-search-forward "\\=[\;$]" nil t)
+                        (reduce--skip-comments-forward)
+                        (eobp))))
+    ;; Skip arg statements backwards to immediately before
     ;; the preceding terminator or other delimiter:
     (while (and (> arg 0)
                 (reduce--backward-statement1 pattern at-eof))
