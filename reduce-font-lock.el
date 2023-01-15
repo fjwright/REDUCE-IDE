@@ -1,12 +1,12 @@
 ;;; reduce-font-lock.el --- Syntax highlighting for REDUCE source code  -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2022 Francis J. Wright
+;; Copyright (C) 2022-2023 Francis J. Wright
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: 6 June 2022 as a separate file (was part of reduce-mode.el)
-;; Time-stamp: <2022-12-14 15:40:11 franc>
+;; Time-stamp: <2023-01-15 18:12:25 franc>
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
-;; Package-Version: 1.10
+;; Package-Version: 1.10.1alpha
 
 ;; This file is part of REDUCE IDE.
 
@@ -321,7 +321,8 @@ constants (e.g. “pi”).")
      (1 font-lock-type-face)
      (,(concat "\\=" reduce-whitespace-regexp "*"
                "\\(" reduce-identifier-regexp "\\)")
-      nil nil
+      ;; Pre-form -- return position of terminator to limit search:
+      (save-excursion (re-search-forward "[\;$]")) nil
       (1 font-lock-variable-name-face)))
 
     ;; Quoted identifiers:
