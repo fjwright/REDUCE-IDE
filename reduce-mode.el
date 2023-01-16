@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1992
-;; Time-stamp: <2023-01-15 11:17:44 franc>
+;; Time-stamp: <2023-01-16 12:18:07 franc>
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.10.1alpha
 ;; Package-Requires: (cl-lib)
@@ -1851,36 +1851,34 @@ If unable to kill a balanced expression, throw a user error."
 ;;;; Comment commands
 ;;;; ****************
 
-(defun reduce-comment-region (beg-region end-region arg)
-  "Comment/uncomment every line in region, from BEG-REGION to END-REGION.
+(defun reduce-comment-region (beg end arg)
+  "Comment/uncomment every line in region, from BEG to END.
 With interactive ARG, comment if non-negative, uncomment if null
-or negative (cf. minor modes).
-Put ‘reduce-comment-region-string’ at the beginning of every line in the region.
-First two args specify the region boundaries, third arg is interactive."
+or negative (cf. minor modes).  Put ‘reduce-comment-region-string’
+at the beginning of every line in the region."
   ;; Taken almost directly from fortran.el
   ;; by Michael D. Prange (prange@erl.mit.edu).
-  (interactive "*r\nP")         ; error if buffer read-only
+  (interactive "*r\nP")                 ; error if buffer read-only
   (let ((end-region-mark (make-marker)) (save-point (point-marker)))
-    (set-marker end-region-mark end-region)
-    (goto-char beg-region)
+    (set-marker end-region-mark end)
+    (goto-char beg)
     (beginning-of-line)
     (if (if arg
-        (< (reduce--prefix-numeric-value arg) 0)
-      (looking-at "%")) ; FJW
-    ;; Uncomment the region:
-    (let ((com "%+ ?"))
-      (if (looking-at com)
-          (delete-region (point) (match-end 0)))
-      (while (and  (= (forward-line 1) 0)
-               (< (point) end-region-mark))
-        (if (looking-at com)
-        (delete-region (point) (match-end 0)))))
+            (< (reduce--prefix-numeric-value arg) 0)
+          (looking-at "%"))             ; FJW
+        ;; Uncomment the region:
+        (let ((com "%+ ?"))
+          (if (looking-at com)
+              (delete-region (point) (match-end 0)))
+          (while (and  (= (forward-line 1) 0)
+                       (< (point) end-region-mark))
+            (if (looking-at com)
+                (delete-region (point) (match-end 0)))))
       ;; Comment the region:
       (progn (insert reduce-comment-region-string)
-         (while (and (= (forward-line 1) 0)
-             (< (point) end-region-mark))
-           (insert reduce-comment-region-string)))
-      )
+             (while (and (= (forward-line 1) 0)
+                         (< (point) end-region-mark))
+               (insert reduce-comment-region-string))))
     (goto-char save-point)
     (set-marker end-region-mark nil)
     (set-marker save-point nil)))
@@ -1888,34 +1886,35 @@ First two args specify the region boundaries, third arg is interactive."
 
 (defun reduce-comment-procedure (arg)
   "Comment/uncomment every line of this procedure.
-This procedure is the one that ends after point.
-With interactive arg, if non-negative comment out procedure, if null
-or negative uncomment all consecutive commented-out lines containing
-or following point (cf. minor modes)."
-  (interactive "*P")            ; error if buffer read-only
+This procedure is the one that ends after point.  With
+interactive arg, if non-negative comment out procedure, if null
+or negative uncomment all consecutive commented-out lines
+containing or following point (cf. minor modes)."
+  (interactive "*P")                    ; error if buffer read-only
   (save-excursion
     (beginning-of-line)
     (if (if arg
-        (< (reduce--prefix-numeric-value arg) 0)
-      (looking-at "%"))
-    (let (start)            ; uncomment lines
-      (if (looking-at "%")      ; necessary ???
-          (if (re-search-backward "^[^%]" nil t) (forward-line 1))
-        (re-search-forward "^%" nil t))
-      (setq start (point))
-      (re-search-forward "^[^%]" nil t)
-      (reduce-comment-region start (point) -1)) ; UNCOMMENT
-      (if (reduce-mark-procedure 1) ; comment out procedure
-      (progn            ; first back up to real
-        (exchange-point-and-mark)   ; end of procedure
-        (skip-chars-backward " \t\n")
-        (reduce-comment-region (region-beginning) (region-end) nil))))
-    ))
+            (< (reduce--prefix-numeric-value arg) 0)
+          (looking-at "%"))
+        ;; Uncomment lines:
+        (let (start)
+          (if (looking-at "%")
+              (if (re-search-backward "^[^%]" nil t) (forward-line 1))
+            (re-search-forward "^%" nil t))
+          (setq start (point))
+          (re-search-forward "^[^%]" nil t)
+          (reduce-comment-region start (point) -1)) ; UNCOMMENT
+      ;; Comment out procedure:
+      (reduce-mark-procedure 1)
+      ;; Move forwards to real start of procedure:
+      (skip-chars-forward " \t\n")
+      (reduce-comment-region (region-beginning) (region-end) nil))))
 
 
 (defun reduce-fill-comment (justify)
   "Fill %-comment or comment statement paragraph at or after point.
-If JUSTIFY is non-nil (interactively, with prefix argument), justify as well."
+If JUSTIFY is non-nil (interactively, with prefix argument),
+justify as well."
   (interactive "*P")
   (save-excursion
     (let (first                          ; nil unless first line found
