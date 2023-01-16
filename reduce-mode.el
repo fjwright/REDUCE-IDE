@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1992
-;; Time-stamp: <2023-01-16 12:18:07 franc>
+;; Time-stamp: <2023-01-16 16:17:43 franc>
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.10.1alpha
 ;; Package-Requires: (cl-lib)
@@ -2117,36 +2117,47 @@ If ‘nosplit’ is true then put ‘open’ and ‘close’ on the same line."
 ;;;; Support for reposition-window
 ;;;; *****************************
 
-;; The next two functions should probably be built into
-;; reduce-forward/backward-procedure:
+;; This section updated January 2023.
 
-(defun reduce-beginning-of-defun (&optional arg)
-  (if (null arg) (setq arg 1))
-  (if (> arg 0)
-      (reduce-backward-procedure arg)
-    (reduce-forward-procedure (- 1 arg))
-    (reduce-backward-procedure 1)))
+(defun reduce-beginning-of-proc (&optional arg)
+  "REDUCE analogue of ‘beginning-of-defun’.
+Move backwards to the next beginning of a procedure definition.
+With ARG, do it that many times.  Negative ARG -N means move
+forwards to Nth following beginning of a procedure definition.
 
-(defun reduce-end-of-defun (&optional arg)
-  (if (null arg) (setq arg 1))
-  (if (> arg 0)
-      (reduce-forward-procedure arg)
-    (reduce-backward-procedure (- 1 arg))
-    (reduce-forward-procedure 1)))
+If successful, move point to the beginning of the procedure
+header line and return t.  Otherwise, return nil, but never
+report an error."
+  (ignore-errors
+    (if (null arg) (setq arg 1))
+    (if (> arg 0)
+        (reduce-backward-procedure arg)
+      (reduce-forward-procedure (- 1 arg))
+      (reduce-backward-procedure 1))
+    t))                              ; return value probably not used!
+
+(defun reduce-end-of-proc (&optional arg)
+  "REDUCE analogue of ‘end-of-defun’.
+Move forwards to the next end of a procedure definition.  With
+ARG, do it that many times.  Negative ARG -N means move backwards
+to Nth preceding end of a procedure definition.
+
+If successful, move point to the beginning of the line
+immediately after the procedure definition.  Never report an
+error."
+  (ignore-errors
+    (if (null arg) (setq arg 1))
+    (if (> arg 0)
+        (reduce-forward-procedure arg)
+      (reduce-backward-procedure (- 1 arg))
+      (reduce-forward-procedure 1))))
 
 (defun reduce-reposition-window ()
-  "See ‘reposition-window’ for details."
+  "REDUCE analogue of ‘reposition-window’."
   (interactive)
-  (let ((beginning-of-defun (symbol-function 'beginning-of-defun))
-    (end-of-defun (symbol-function 'end-of-defun)))
-    (fset 'beginning-of-defun 'reduce-beginning-of-defun)
-    (fset 'end-of-defun 'reduce-end-of-defun)
-    (condition-case nil
-    (reposition-window)
-      (error (message "Error trapped in reposition-window")))
-    (fset 'beginning-of-defun beginning-of-defun)
-    (fset 'end-of-defun end-of-defun)
-    ))
+  (let ((beginning-of-defun-function #'reduce-beginning-of-proc)
+        (end-of-defun-function #'reduce-end-of-proc))
+    (reposition-window)))
 
 
 ;;;; ******************************************************

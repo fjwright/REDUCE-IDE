@@ -55,4 +55,4 @@ Main Updates since REDUCE IDE 1.10
 * Revise detection of end-of-file marker, which must now be at start of line.
 * Repair `re-run-reduce` to support general REDUCE command names and no name (i.e. an explicit command), rename it to `rerun-reduce` and revise the wording of the menu item to (Re)Run REDUCE.
 * Correct highlighting of fluid variables in a vertical list, such as at start of `int/driver.red`.
-* Repair `reduce-comment-procedure`.
+* Repair `reduce-comment-procedure` and `reduce-reposition-window`.
