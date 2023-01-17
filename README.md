@@ -51,8 +51,10 @@ To Do
 Main Updates since REDUCE IDE 1.10
 ----------------------------------
 
-* Define key Meta-R in the REDUCE mode key map to run REDUCE.
+* Define key `Meta-R` in the REDUCE mode key map to run REDUCE.
 * Revise detection of end-of-file marker, which must now be at start of line.
 * Repair `re-run-reduce` to support general REDUCE command names and no name (i.e. an explicit command), rename it to `rerun-reduce` and revise the wording of the menu item to (Re)Run REDUCE.
 * Correct highlighting of fluid variables in a vertical list, such as at start of `int/driver.red`.
 * Repair `reduce-comment-procedure` and `reduce-reposition-window`.
+* Revise manual and move customization of REDUCE Run mode into the chapter on general customization of REDUCE IDE.
+* Remove `require-reduce-run`, and run `reduce-mode-load-hook` before requiring `reduce-run`.

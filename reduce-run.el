@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1998
-;; Time-stamp: <2023-01-15 17:32:46 franc>
+;; Time-stamp: <2023-01-17 15:21:24 franc>
 ;; Keywords: languages, processes
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.10.1alpha
@@ -721,6 +721,8 @@ buffer."
                               reduce-run-commands)))))
       (reduce-run-reduce-1
        (or cmd (car reduce-run-history)) proc-name buf-name))))
+
+(define-obsolete-function-alias 're-run-reduce 'rerun-reduce "REDUCE IDE 1.10.1")
 
 
 (defvar reduce-prev-dir/file nil

@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1992
-;; Time-stamp: <2023-01-16 16:17:43 franc>
+;; Time-stamp: <2023-01-17 15:52:31 franc>
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.10.1alpha
 ;; Package-Requires: (cl-lib)
@@ -2365,20 +2365,10 @@ Each file name appears in the returned list relative to directory
 
 ;;; Load Hook
 
-(defun require-reduce-run ()
-  "Require REDUCE Run mode.  Useful on ‘reduce-mode-load-hook’."
-  (require 'reduce-run)
-  (warn "‘require-reduce-run’ is obsolete; \
-please customize ‘autoload-reduce-run’ instead."))
-
-(make-obsolete 'require-reduce-run
-               "please customize ‘autoload-reduce-run’ instead."
-               "REDUCE IDE v1.10")
-
 (provide 'reduce-mode)
 
-(when (eq autoload-reduce-run t) (require 'reduce-run))
-
 (run-hooks 'reduce-mode-load-hook)
+
+(when (eq autoload-reduce-run t) (require 'reduce-run))
 
 ;;; reduce-mode.el ends here
