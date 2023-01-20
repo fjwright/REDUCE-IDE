@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1998
-;; Time-stamp: <2023-01-17 15:21:24 franc>
+;; Time-stamp: <2023-01-20 17:57:27 franc>
 ;; Keywords: languages, processes
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.10.1alpha
@@ -221,36 +221,37 @@ these commands to determine defaults."
 ;;; Internal variables
 ;;; ==================
 
-(defvar reduce-run-buffer-alist nil
+(defvar reduce-run--buffer-alist nil
   "This variable holds an alist of REDUCE process buffers (RPBs).
 It is used to name new RPBs appropriately and decide where to
 send REDUCE input.")
+
+(defun reduce-run--add-common-keys-to-map (map)
+  "Add common key bindings to keymap MAP.
+Bindings are common to REDUCE mode and REDUCE Run mode."
+  (define-key map [?\C-x ?\C-e] 'reduce-eval-last-statement) ; Emacs convention
+  (define-key map [?\C-c ?\C-e] 'reduce-eval-line)
+  (define-key map [?\C-c ?\C-i] 'reduce-input-file)
+  (define-key map [?\C-c ?\C-l] 'reduce-load-package)
+  (define-key map [?\C-c ?\C-f] 'reduce-fasl-file))
 
 (defvar reduce-run-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map "\C-m" 'reduce-run-send-input)
     (define-key map [(shift return)] 'comint-send-input)
-    (define-key map [?\C-x ?\C-e] 'reduce-eval-last-statement)
-    (define-key map [?\C-c ?\C-e] 'reduce-eval-line)
-    (define-key map [?\C-c ?\C-i] 'reduce-input-file)
-    (define-key map [?\C-c ?\C-l] 'reduce-load-package)
-    (define-key map [?\C-c ?\C-f] 'reduce-fasl-file)
+    (reduce-run--add-common-keys-to-map map)
     (define-key map [(meta tab)] 'reduce-complete-symbol)
     map))
 
 ;; These commands augment REDUCE mode, so you can process REDUCE
 ;; code in file editing buffers.
-(define-key reduce-mode-map "\M-\C-x"  'reduce-eval-proc) ; Emacs convention
-(define-key reduce-mode-map "\C-x\C-e" 'reduce-eval-last-statement) ; ditto
-(define-key reduce-mode-map "\C-c\C-e" 'reduce-eval-line)
+(define-key reduce-mode-map "\C-\M-x"  'reduce-eval-proc) ; Emacs convention
 (define-key reduce-mode-map "\C-c\C-r" 'reduce-eval-region)
+(reduce-run--add-common-keys-to-map reduce-mode-map)
 (define-key reduce-mode-map "\C-c\C-z" 'switch-to-reduce)
-(define-key reduce-mode-map "\C-c\C-i" 'reduce-input-file)
-(define-key reduce-mode-map "\C-c\C-l" 'reduce-load-package)
-(define-key reduce-mode-map "\C-c\C-f" 'reduce-fasl-file)
 (define-key reduce-mode-map [(meta R)] 'run-reduce)
 
-(defconst reduce-run-menu2
+(defconst reduce-run--menu2
   '(["Input File..." reduce-input-file t]
     ["Load Package..." reduce-load-package t]
     ["Faslout File..." reduce-fasl-file t]
@@ -261,7 +262,7 @@ send REDUCE input.")
   reduce-run-mode-map
   "REDUCE Run Menu."
   `("Run REDUCE"
-    ,@reduce-run-menu2
+    ,@reduce-run--menu2
     ["(Re)Run REDUCE" rerun-reduce :active t
      :help "Stop REDUCE if running in this buffer, then (re)start it"]
     ["Run File" reduce-run-file :active t
@@ -292,7 +293,7 @@ send REDUCE input.")
     ["Input Region" reduce-eval-region :active mark-active
      :help "Input the selected region to a REDUCE process"]
     "--"
-    ,@reduce-run-menu2
+    ,@reduce-run--menu2
     ["Switch To REDUCE" switch-to-reduce :active t
      :help "Select and switch to a REDUCE process"]
     ))
@@ -310,25 +311,7 @@ send REDUCE input.")
       [Run\ REDUCE]
       definition 'REDUCE)))
 
-(defun reduce-run-install-letter-bindings ()
-  "Bind many REDUCE run commands to ‘C-c’ <letter> bindings.
-This makes them more accessible.  These bindings are reserved for
-the user and so are non-standard.  If you want to use them, you
-should have this function called by the ‘reduce-run-load-hook’:
-   (add-hook 'reduce-run-load-hook
-             'reduce-run-install-letter-bindings)
-You can modify this function to install just the bindings you want."
-  (define-key reduce-mode-map "\C-ce" 'reduce-eval-proc)
-  (define-key reduce-mode-map "\C-cr" 'reduce-eval-region)
-  (define-key reduce-mode-map "\C-cz" 'switch-to-reduce)
-  (define-key reduce-mode-map "\C-ci" 'reduce-input-file)
-  (define-key reduce-mode-map "\C-cl" 'reduce-load-package)
-  (define-key reduce-mode-map "\C-cf" 'reduce-fasl-file)
-  (define-key reduce-run-mode-map "\C-cl" 'reduce-load-package)
-  (define-key reduce-run-mode-map "\C-cf" 'reduce-fasl-file)
-  )
-
-(defconst reduce-run-font-lock-keywords
+(defconst reduce-run--font-lock-keywords
   '(;; REDUCE and CSL warning and error messages:
     ("\\(\\*\\*\\*\\|\\+\\+\\+\\).*" . font-lock-warning-face)
     ;; Rtrace output:
@@ -386,11 +369,11 @@ also affects this mode.  Entry to this mode runs the hooks on
 ‘comint-mode-hook’ and ‘reduce-run-mode-hook’ (in that order)."
   :syntax-table reduce-mode-syntax-table
   :group 'reduce-run
-  (setq font-lock-defaults              ; auto buffer-local
-        '(reduce-run-font-lock-keywords ; KEYWORDS
-          t))                           ; KEYWORDS-ONLY
+  (setq font-lock-defaults                         ; auto buffer-local
+        '(reduce-run--font-lock-keywords           ; KEYWORDS
+          t))                                      ; KEYWORDS-ONLY
   (setq comint-input-filter #'reduce-input-filter) ; buffer-local
-  (setq comint-input-ignoredups t)      ; buffer-local
+  (setq comint-input-ignoredups t)                 ; buffer-local
   ;; ansi-color-process-output causes an error when CSL is terminated
   ;; and is probably irrelevant anyway, so ...
   (remove-hook (make-local-variable 'comint-output-filter-functions)
@@ -404,7 +387,7 @@ also affects this mode.  Entry to this mode runs the hooks on
   "True if STR does not match variable ‘reduce-input-filter’."
   (not (string-match reduce-input-filter str)))
 
-(defvar reduce-run-history nil
+(defvar reduce-run--history nil
   "Input history for the ‘run-reduce’ command.")
 
 ;;;###autoload
@@ -426,18 +409,18 @@ already running this command, switch to it.  Runs the hooks from
 \(Type ‘\\[describe-mode]’ in the process buffer for a list of commands.)"
   (interactive
    (list (if current-prefix-arg
-             (read-string "REDUCE command: " nil 'reduce-run-history)
+             (read-string "REDUCE command: " nil 'reduce-run--history)
            (let ((completion-ignore-case t))
              (completing-read
               "REDUCE command name: "
               reduce-run-commands
-              nil t (car reduce-run-history) ; predicate require-match initial
-              'reduce-run-history)))))
+              nil t (car reduce-run--history) ; predicate require-match initial
+              'reduce-run--history)))))
   (if current-prefix-arg
       (reduce-run-reduce cmd "")        ; unknown REDUCE version
-    (when (and (null cmd) reduce-run-history)
+    (when (and (null cmd) reduce-run--history)
       ;; Non-interactive but history, so use it:
-      (setq cmd (car reduce-run-history)))
+      (setq cmd (car reduce-run--history)))
     (when (or (null cmd) (zerop (length cmd)))
       (setq cmd (x-popup-menu t `("REDUCE command name:"
                                   (""
@@ -445,7 +428,7 @@ already running this command, switch to it.  Runs the hooks from
                                       (lambda (x)
                                         (cons (car x) (car x)))
                                       reduce-run-commands))))
-            reduce-run-history (list cmd)))
+            reduce-run--history (list cmd)))
     (let ((reduce-run-command (assoc-string cmd reduce-run-commands t)))
       (if reduce-run-command
           (reduce-run-reduce (cdr reduce-run-command) (car reduce-run-command))
@@ -461,7 +444,7 @@ Return t if successful; nil otherwise."
   ;; Return value is no longer used!
   (let* ((proc-name (if (equal xsl "") "REDUCE" (concat xsl " REDUCE")))
          (buf-name (concat "*" proc-name "*"))
-         (reduce-run-buffer-xsl (assoc xsl reduce-run-buffer-alist))
+         (reduce-run-buffer-xsl (assoc xsl reduce-run--buffer-alist))
          buf-number)
     (cond (reduce-run-multiple
            ;; Always create a new process buffer with an appropriate name:
@@ -471,7 +454,7 @@ Return t if successful; nil otherwise."
                                        (number-to-string buf-number))
                      buf-name (concat "*" proc-name "*")))
            (when (reduce-run-reduce-1 cmd proc-name buf-name)
-             (push (list xsl buf-name buf-number) reduce-run-buffer-alist)
+             (push (list xsl buf-name buf-number) reduce-run--buffer-alist)
              t))
           ;; Re-use any existing buffer for XSL REDUCE:
           ((and reduce-run-buffer-xsl
@@ -479,7 +462,7 @@ Return t if successful; nil otherwise."
                 (comint-check-proc buf-name))
            (pop-to-buffer buf-name)) ; just re-visit this process buffer
           (t (when (reduce-run-reduce-1 cmd proc-name buf-name)
-               (push (list xsl buf-name) reduce-run-buffer-alist)
+               (push (list xsl buf-name) reduce-run--buffer-alist)
                t)))))
 
 (defun reduce-run-reduce-1 (cmd process-name buffer-name)
@@ -670,9 +653,9 @@ buffer."
      ;; If the current buffer is running REDUCE then do nothing:
      ((reduce-running-buffer-p))
      ;; Look for an *active* REDUCE process buffer (RPB):
-     ((and reduce-run-buffer-alist
-           (if (null (cdr reduce-run-buffer-alist)) ; at most one active RPB
-               (let ((buf (cadar reduce-run-buffer-alist)))
+     ((and reduce-run--buffer-alist
+           (if (null (cdr reduce-run--buffer-alist)) ; at most one active RPB
+               (let ((buf (cadar reduce-run--buffer-alist)))
                  (if (get-buffer-process buf) ; one active RPB, so use it:
                      (funcall set-or-switch-to-buffer buf)
                    ;; No active RPB, so fall through to start a new one:
@@ -720,7 +703,7 @@ buffer."
                   (cdr (assoc (substring proc-name 0 -7)
                               reduce-run-commands)))))
       (reduce-run-reduce-1
-       (or cmd (car reduce-run-history)) proc-name buf-name))))
+       (or cmd (car reduce-run--history)) proc-name buf-name))))
 
 (define-obsolete-function-alias 're-run-reduce 'rerun-reduce "REDUCE IDE 1.10.1")
 
@@ -905,12 +888,12 @@ Start a new (default) REDUCE process named from file or buffer NAME
   (let* ((xsl (caar reduce-run-commands))
          (process-name (concat xsl " REDUCE " name))
          (buffer-name (concat "*" process-name "*"))
-         (reduce-run-buffer-xsl (rassoc buffer-name reduce-run-buffer-alist)))
+         (reduce-run-buffer-xsl (rassoc buffer-name reduce-run--buffer-alist)))
     ;; Re-use any existing buffer for this REDUCE and file-name:
     (if (and reduce-run-buffer-xsl (comint-check-proc buffer-name))
         (pop-to-buffer buffer-name) ; just re-visit existing process buffer
       (reduce-run-reduce-1 (cdar reduce-run-commands) process-name buffer-name)
-      (push (list xsl buffer-name) reduce-run-buffer-alist)
+      (push (list xsl buffer-name) reduce-run--buffer-alist)
       (reduce--wait-for-prompt))
     (insert input)
     ;; Avoid triggering spurious prompts when inserting a buffer:
@@ -928,13 +911,13 @@ Start a new (default) REDUCE process named from file or buffer NAME
 
 (defun reduce-kill-buffer-tidy-up ()
   "Hang on ‘kill-buffer-hook’ to terminate the REDUCE process tidily.
-Also remove the buffer from ‘reduce-run-buffer-alist’."
+Also remove the buffer from ‘reduce-run--buffer-alist’."
   (if (eq major-mode 'reduce-run-mode)
       (let ((proc (get-buffer-process (current-buffer))))
         (if proc (reduce-send-bye proc))
-        (setq reduce-run-buffer-alist
+        (setq reduce-run--buffer-alist
               (seq-remove (lambda (x) (equal (cadr x) (buffer-name)))
-                          reduce-run-buffer-alist)))))
+                          reduce-run--buffer-alist)))))
 
 (defun reduce-process-p (proc)
   "True if PROC is a REDUCE process."
