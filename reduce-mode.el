@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1992
-;; Time-stamp: <2023-01-17 15:52:31 franc>
+;; Time-stamp: <2023-01-21 15:55:23 franc>
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.10.1alpha
 ;; Package-Requires: (cl-lib)
@@ -325,6 +325,10 @@ Precisely, a single white space (including newline), or a single
 ;;;; Keyboard and menu maps
 ;;;; **********************
 
+;; The key sequences C-c followed by a control character or digit are
+;; reserved for major modes, but do not bind C-c C-g (cancel) or C-c
+;; C-h (help).
+
 (defvar reduce-mode-map
   (let ((map (make-sparse-keymap)))
     ;; (define-key map ">" 'reduce-self-insert-and-blink-matching-group-open)
@@ -356,7 +360,7 @@ Precisely, a single white space (including newline), or a single
     (define-key map "\C-c<" 'reduce-insert-group)
     (define-key map "\C-\M-l" 'reduce-reposition-window)
     (define-key map "\C-\M-i" 'reduce-complete-symbol)
-    (define-key map "\C-c\t" 'reduce-complete-symbol)
+    (define-key map [?\C-c (tab)] 'reduce-complete-symbol)
                                         ; since C-M-i used by flyspell
     (define-key map [(meta R)] 'run-reduce)
     map)

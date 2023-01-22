@@ -58,3 +58,7 @@ Main Updates since REDUCE IDE 1.10
 * Repair `reduce-comment-procedure` and `reduce-reposition-window`.
 * Revise manual and move customization of REDUCE Run mode into the chapter on general customization of REDUCE IDE.
 * Remove `require-reduce-run`, and run `reduce-mode-load-hook` before requiring `reduce-run`.
+* Revise manual and move Run Keys section into other Run mode sections.
+* Incompatible key binding changes: `reduce-input-file` is now bound to `C-c C-f` and `reduce-fasl-file` to `C-c C-c`.
+* Improve Run REDUCE menu.
+* Remove redundant Package-Version headers; keep only in `reduce-mode.el`.

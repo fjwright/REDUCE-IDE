@@ -1,12 +1,11 @@
 ;;; reduce-delim.el --- Highlight matching group or block delimiter  -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2018, 2022 Francis J. Wright
+;; Copyright (C) 2018, 2022-2023 Francis J. Wright
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: 22 March 2018
-;; Time-stamp: <2022-12-14 15:40:12 franc>
+;; Time-stamp: <2023-01-22 17:05:40 franc>
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
-;; Package-Version: 1.10
 
 ;; This file is part of REDUCE IDE.
 

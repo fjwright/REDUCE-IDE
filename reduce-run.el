@@ -4,10 +4,9 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1998
-;; Time-stamp: <2023-01-20 17:57:27 franc>
+;; Time-stamp: <2023-01-22 17:04:46 franc>
 ;; Keywords: languages, processes
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
-;; Package-Version: 1.10.1alpha
 
 ;; This file is part of REDUCE IDE.
 
@@ -218,22 +217,23 @@ these commands to determine defaults."
   :group 'reduce-run)
 
 
-;;; Internal variables
-;;; ==================
+;;;; Keyboard and menu maps
+;;;; ======================
 
-(defvar reduce-run--buffer-alist nil
-  "This variable holds an alist of REDUCE process buffers (RPBs).
-It is used to name new RPBs appropriately and decide where to
-send REDUCE input.")
+;; The key sequences C-c followed by a control character or digit are
+;; reserved for major modes, but do not bind C-c C-g (cancel) or C-c
+;; C-h (help).
 
 (defun reduce-run--add-common-keys-to-map (map)
   "Add common key bindings to keymap MAP.
 Bindings are common to REDUCE mode and REDUCE Run mode."
   (define-key map [?\C-x ?\C-e] 'reduce-eval-last-statement) ; Emacs convention
   (define-key map [?\C-c ?\C-e] 'reduce-eval-line)
-  (define-key map [?\C-c ?\C-i] 'reduce-input-file)
+  (define-key map [?\C-c ?\C-f] 'reduce-input-file)
   (define-key map [?\C-c ?\C-l] 'reduce-load-package)
-  (define-key map [?\C-c ?\C-f] 'reduce-fasl-file))
+  (define-key map [?\C-c ?\C-c] 'reduce-fasl-file)
+  (define-key map [?\C-c ?\C-\M-f] 'reduce-run-file)
+  (define-key map [?\C-c ?\C-\M-b] 'reduce-run-buffer))
 
 (defvar reduce-run-mode-map
   (let ((map (make-sparse-keymap)))
@@ -241,6 +241,8 @@ Bindings are common to REDUCE mode and REDUCE Run mode."
     (define-key map [(shift return)] 'comint-send-input)
     (reduce-run--add-common-keys-to-map map)
     (define-key map [(meta tab)] 'reduce-complete-symbol)
+    (define-key map [?\C-c (tab)] 'reduce-complete-symbol)
+                                        ; since C-M-i used by flyspell
     map))
 
 ;; These commands augment REDUCE mode, so you can process REDUCE
@@ -252,21 +254,27 @@ Bindings are common to REDUCE mode and REDUCE Run mode."
 (define-key reduce-mode-map [(meta R)] 'run-reduce)
 
 (defconst reduce-run--menu2
-  '(["Input File..." reduce-input-file t]
-    ["Load Package..." reduce-load-package t]
-    ["Faslout File..." reduce-fasl-file t]
+  '(["Run File" reduce-run-file :active t
+     :help "Run a file in a new REDUCE process"]
+    ["Run Buffer" reduce-run-buffer :active t
+     :help "Run the current buffer in a new REDUCE process"]
+    "--"
+    ["Input File..." reduce-input-file :active t
+     :help "Input selected REDUCE source file into selected REDUCE process"]
+    ["Load Package..." reduce-load-package :active t
+     :help "Load selected REDUCE package into selected REDUCE process"]
+    ["Faslout File..." reduce-fasl-file :active t
+     :help "Compile selected REDUCE source file to selected FASL file"]
     "--"))
 
 (easy-menu-define                       ; (symbol maps doc menu)
-  reduce-run-menu
+  reduce-run--menu
   reduce-run-mode-map
   "REDUCE Run Menu."
   `("Run REDUCE"
-    ,@reduce-run--menu2
     ["(Re)Run REDUCE" rerun-reduce :active t
      :help "Stop REDUCE if running in this buffer, then (re)start it"]
-    ["Run File" reduce-run-file :active t
-     :help "Run a file in a new REDUCE process"]
+    ,@reduce-run--menu2
     ["Customize..." (customize-group 'reduce-run) :active t
      :help "Customize REDUCE Run mode"]
     ["Highlighting" font-lock-mode
@@ -275,15 +283,13 @@ Bindings are common to REDUCE mode and REDUCE Run mode."
     ))
 
 (easy-menu-define                       ; (symbol maps doc menu)
-  reduce-mode-run-menu
+  reduce-mode--run-menu
   nil
   "REDUCE Mode Run Menu -- updates stub when this file is loaded."
   `("Run REDUCE"
     ["Run REDUCE" run-reduce :active t
      :help "Start a new REDUCE process if necessary"]
-    ["Run Buffer" reduce-run-buffer :active t
-     :help "Run the current buffer in a new REDUCE process"]
-    "--"
+    ,@reduce-run--menu2
     ["Input Last Statement" reduce-eval-last-statement :active t
      :help "Input the statement before point to a REDUCE process"]
     ["Input Line" reduce-eval-line :active t
@@ -293,13 +299,12 @@ Bindings are common to REDUCE mode and REDUCE Run mode."
     ["Input Region" reduce-eval-region :active mark-active
      :help "Input the selected region to a REDUCE process"]
     "--"
-    ,@reduce-run--menu2
     ["Switch To REDUCE" switch-to-reduce :active t
      :help "Select and switch to a REDUCE process"]
     ))
 
 (let ((keymap (lookup-key reduce-mode-map [menu-bar]))
-      (definition (cons "Run REDUCE" reduce-mode-run-menu)))
+      (definition (cons "Run REDUCE" reduce-mode--run-menu)))
   ;; Redefine the Run REDUCE menu stub if it exists:
   (if (lookup-key keymap [run\ reduce])
       (define-key keymap
@@ -310,6 +315,15 @@ Bindings are common to REDUCE mode and REDUCE Run mode."
     (define-key-after keymap
       [Run\ REDUCE]
       definition 'REDUCE)))
+
+
+;;; Internal variables
+;;; ==================
+
+(defvar reduce-run--buffer-alist nil
+  "This variable holds an alist of REDUCE process buffers (RPBs).
+It is used to name new RPBs appropriately and decide where to
+send REDUCE input.")
 
 (defconst reduce-run--font-lock-keywords
   '(;; REDUCE and CSL warning and error messages:

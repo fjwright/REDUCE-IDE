@@ -2,7 +2,7 @@
 @c %**start of header
 @settitle GNU Emacs REDUCE Integrated Development Environment
 @c Manual last updated:
-@set UPDATED Time-stamp: <2023-01-17 16:57:58 franc>
+@set UPDATED Time-stamp: <2023-01-22 16:54:45 franc>
 @c Software version:
 @set VERSION 1.10.1alpha
 @afourpaper
@@ -1478,8 +1478,7 @@ automatically.
 * Run REDUCE::                  Running, rerunning and switching to REDUCE
 * Run REDUCE Program::          Running complete REDUCE programs
 * Evaluating Code::             Inputting code fragments to REDUCE
-* Processing REDUCE Files::     Inputting, compiling and loading REDUCE files
-* Run Keys::                    Run mode key bindings and menu
+* Processing REDUCE Files::     Inputting, loading and compiling REDUCE files
 @end menu
 
 @c -------------------------------------------------------------------
@@ -1622,8 +1621,8 @@ remote drive then make that the sole entry in
 
 The main command to start REDUCE is @command{run-reduce}, which is
 bound to the key @kbd{M-R} (that's a capital @code{R}, so use
-@kbd{@key{META}-@key{SHIFT}-r}) in both REDUCE mode and REDUCE Run
-mode.  It is also available in the @emph{Run REDUCE} menu.
+@kbd{@key{META}-@key{SHIFT}-r}) in REDUCE mode.  It is also available
+in the REDUCE mode @emph{Run REDUCE} menu.
 
 If the option @code{reduce-run-multiple} is non-nil (which by default
 it is) then @command{run-reduce} starts a new REDUCE process every
@@ -1636,7 +1635,18 @@ switches to it.  Finally, these commands run the hooks from
 @code{reduce-run-mode-hook} (after the @code{comint-mode-hook} is
 run).
 
-@deffn Command run-reduce
+If the option @code{reduce-run-autostart} is non-nil (which by default
+it is) then all commands that require a REDUCE process automatically
+start one if necessary.  @xref{Run Customization,, Customization of
+REDUCE Run mode}.  Where appropriate, input commands have their own
+history lists, and if run in REDUCE mode then any input file defaults
+to the file being edited.
+
+@table @kbd
+@item M-R
+@kindex M-R
+@itemx M-x run-reduce
+@findex run-reduce
 This command prompts for the name of a REDUCE command in the
 minibuffer, using completion and ignoring case.  The REDUCE command
 names are as specified by the option @code{reduce-run-commands}.  If
@@ -1650,38 +1660,89 @@ If this command is executed with a prefix argument then it reads an
 actual command to run REDUCE from the minibuffer and runs that
 command.  In this case, the REDUCE process buffer is named without any
 reference to the REDUCE command, e.g.@: @code{*REDUCE*}.
-@end deffn
+@end table
 
 A couple of convenience commands allow you to re-start a running
-REDUCE process in the same buffer and switch from any buffer to a
-running REDUCE process buffer.
+REDUCE process in the same buffer and switch from any REDUCE-mode
+buffer to a running REDUCE process buffer.
 
-@deffn Command rerun-reduce
-This command is only defined in REDUCE Run mode, i.e.@: in a REDUCE
+@table @kbd
+@item M-x rerun-reduce
+@findex rerun-reduce
+This command is defined only in REDUCE Run mode, i.e.@: in a REDUCE
 process buffer.  If REDUCE is running in the current buffer then it is
 terminated.  The command then reruns the REDUCE command whose name is
-shown in the buffer name.  @strong{Beware that this command previously
-had the now-obsolete name @code{re-run-reduce}.}
-@end deffn
+shown in the buffer name.  If no command name is shown then it uses
+the previous explicit command.  @strong{Beware that this command
+previously had the now-obsolete name @code{re-run-reduce}.}
 
-@deffn Command switch-to-reduce
-This command is primarily intended for internal use by other commands
-but it can be used interactively to switch to a running REDUCE process
-buffer.  If the current buffer is an active REDUCE process buffer then
-the command does nothing; if there is only one active REDUCE process
-buffer then the command switches to it; otherwise, the command reads
-the name of an active REDUCE process buffer from the minibuffer with
-completion.  This means that pressing the @key{TAB} key will give a
-list of active REDUCE process buffers from which to select one.  It
-remembers the last buffer used and offers that as the default, making
-it easy to switch repeatedly to the same REDUCE process buffer.  This
-function is used by all commands described below that send REDUCE code
-fragments to a running REDUCE process.
+@item C-c C-z
+@kindex C-c C-z
+@itemx M-x switch-to-reduce
+@findex switch-to-reduce
+This command is defined only in REDUCE mode.  It is primarily intended
+for internal use by other commands but it can be used interactively to
+switch to a running REDUCE process buffer.  If the current buffer is
+an active REDUCE process buffer then the command does nothing; if
+there is only one active REDUCE process buffer then the command
+switches to it; otherwise, the command reads the name of an active
+REDUCE process buffer from the minibuffer with completion.  This means
+that pressing the @key{TAB} key will give a list of active REDUCE
+process buffers from which to select one.  It remembers the last
+buffer used and offers that as the default, making it easy to switch
+repeatedly to the same REDUCE process buffer.  This function is used
+by all commands described below that send REDUCE code fragments to a
+running REDUCE process.  With an interactive argument, position the
+cursor at the end of the REDUCE process buffer.
 
 If REDUCE is not running then this command will start REDUCE
 automatically by calling @command{run-reduce} if the option
 @code{reduce-run-autostart} is non-nil (which by default it is).
-@end deffn
+@end table
+
+Within a running REDUCE process buffer, pressing @key{RET} at the end
+of a line of input sends it to REDUCE, as with the standard REDUCE
+interfaces.  However, if there is no terminator at the end of the line
+then a @code{;} is automatically appended, unless there is a @code{?}
+in the input line (implying that the input is the response to a user
+query, which must not be followed by a terminator).  You can avoid
+this automatic behaviour completely by holding down the @key{SHIFT}
+key, i.e.@: by pressing @key{SHIFT}-@key{RET}.
+
+@table @kbd
+@item RET
+@kindex RET
+@itemx reduce-run-send-input
+@findex reduce-run-send-input
+Send the preceding input to REDUCE after appending a @code{;} if
+appropriate; holding down the @key{SHIFT} key avoid this.
+@end table
+
+The following REDUCE mode key binding is also available in REDUCE Run
+mode.
+
+@table @kbd
+@item M-TAB
+@kindex M-TAB
+@itemx C-c TAB
+@kindex C-c TAB
+@itemx reduce-complete-symbol
+@findex reduce-complete-symbol
+Perform completion on the REDUCE symbol preceding point (or preceding
+the region if it is active).  Compare that symbol against the elements
+of @code{reduce-completion-alist}.  If a perfect match (only) has a
+@code{cdr} then delete the match and insert the @code{cdr} if it is a
+string or call it if it is a (nullary) function, passing on any prefix
+argument (in raw form).
+@end table
+
+Note that most of the default key bindings provided by comint mode are
+also available in REDUCE Run mode.
+
+The REDUCE Run library provides a REDUCE Run major mode menu and also
+adds a slightly modified version of this menu to the menu bar in
+REDUCE mode.  These two menus provide appropriate access to all the
+REDUCE Run mode commands.
 
 @c -------------------------------------------------------------------
 
@@ -1690,22 +1751,29 @@ automatically by calling @command{run-reduce} if the option
 
 The commands @command{reduce-run-file} and @command{reduce-run-buffer}
 run REDUCE code as an independent REDUCE program by starting the
-default version of REDUCE in a new process buffer named uniquely by
+specified version of REDUCE in a new process buffer named uniquely by
 the file or buffer containing the REDUCE code.  This allows several
 REDUCE programs to be conveniently run simultaneously and
-independently.
+independently.  The key bindings are provided in both REDUCE Edit and
+Run modes:
 
-@deffn Command reduce-run-file
+@table @kbd
+@item C-c C-M-f
+@kindex C-c C-M-f
+@itemx M-x reduce-run-file
+@findex reduce-run-file
 This command reads a file name from the minibuffer, starts REDUCE in a
 new process buffer named uniquely by the file (unless it already
 exists) and inputs the file into REDUCE.
-@end deffn
 
-@deffn Command reduce-run-buffer
+@item C-c C-M-b
+@kindex C-c C-M-b
+@itemx M-x reduce-run-buffer
+@findex reduce-run-buffer
 This command starts REDUCE in a new process buffer named uniquely by
 the current buffer (unless it already exists) and inputs the current
 buffer into REDUCE.
-@end deffn
+@end table
 
 @c -------------------------------------------------------------------
 
@@ -1721,183 +1789,76 @@ process buffer.  They all use @command{switch-to-reduce} to decide
 where to send the code.  With a prefix argument, the commands also
 explicitly switch to the REDUCE process window.
 
-@deffn Command reduce-eval-last-statement
-This command sends the code between the beginning of the statement
-before point and point to REDUCE.  The assumption is that point is at
-the end of a REDUCE statement, but this is not checked so it is
-possible to send an incomplete statement.
-@end deffn
-
-@deffn Command reduce-eval-region
-This command sends the code in the selected region to REDUCE.
-@end deffn
-
-@deffn Command reduce-eval-proc
-This command sends the procedure definition before or containing point
-to REDUCE.
-@end deffn
-
-@c -------------------------------------------------------------------
-
-@node Processing REDUCE Files
-@section Inputting, compiling and loading REDUCE files
-@cindex Key bindings
-@cindex Menu
-
-The following commands deal with complete REDUCE files that do not
-necessarily constitute complete programs.
-
-@deffn Command reduce-input-file
-Read a file name from the minibuffer and input the file into a REDUCE
-process.  It asks you whether you want the input echoed.
-@end deffn
-
-@deffn Command reduce-fasl-file
-Read a file name from the minibuffer and compile it into a
-fast-loading (``fasl'') file, for which it prompts for the name with
-the source file name as default.  It asks you whether you want the
-input echoed.
-@end deffn
-
-@deffn Command reduce-load-package
-Read a REDUCE package name from the minibuffer and load it into a
-REDUCE process.  The read process uses completion based on the files
-in the REDUCE package directory specified by the variable
-@code{reduce-packages-directory}, which should automatically be set
-correctly when REDUCE Run mode loads.  Pressing the @key{TAB} key
-should list the packages available, from which you can select in the
-usual way, such as by clicking on a package name with the mouse.
-@end deffn
-
-@c -------------------------------------------------------------------
-
-@node Run Keys
-@section Run mode key bindings and menu
-@cindex Key bindings
-@cindex Menu
-
-Pressing @key{RET} at the end of a line of input sends it to REDUCE,
-as with the standard REDUCE interfaces.  However, if there is no
-terminator at the end of the line then a @code{;} is automatically
-appended, unless there is a @code{?} in the input line (implying that
-the input is the response to a user query, which must not be followed
-by a terminator).  You can avoid this automatic behaviour completely
-by holding down the @key{SHIFT} key, i.e.@: by pressing
-@key{SHIFT}-@key{RET}.
-
-@table @kbd
-@item RET
-@kindex RET
-@itemx reduce-run-send-input
-@findex reduce-run-send-input
-Send the preceding input to REDUCE after appending a @code{;} if
-appropriate; holding down the @key{SHIFT} key avoid this.
-@end table
-
-If the option @code{reduce-run-autostart} is non-nil (which it is by
-default) then all commands that require a REDUCE process automatically
-start one if necessary.  @xref{Run Customization,, Customization of
-REDUCE Run mode}.  Where appropriate, input commands have their own
-history lists, and if run in REDUCE mode then any input file defaults
-to the file being edited.
-
-The following key bindings are provided in both REDUCE edit and run
-modes:
-
-@table @kbd
-@item C-c C-i
-@kindex C-c C-i
-@kindex C-c TAB
-@itemx reduce-input-file
-@findex reduce-input-file
-Input a REDUCE source file into the REDUCE process.  Echo it if
-@code{reduce-run-echo} is non-nil.  (This key binding redefines its
-default meaning in REDUCE mode.)
-
-@item C-c C-l
-@kindex C-c C-l
-@itemx reduce-load-package
-@findex reduce-load-package
-Load a REDUCE package into the REDUCE process.
-
-@item C-c C-f
-@kindex C-c C-f
-@itemx reduce-fasl-file
-@findex reduce-fasl-file
-Compile a REDUCE source file to a FASL image in the REDUCE process.
-Echo the file if @code{reduce-run-echo} is non-nil.
-@end table
-
 The following key bindings are added to REDUCE mode:
 
 @table @kbd
 @item C-x C-e
 @kindex C-x C-e
-@itemx reduce-eval-last-statement-and-go
-@findex reduce-eval-last-statement-and-go
-Send the previous statement to the REDUCE process, and switch to its
-buffer.  (This key binding follows Emacs convention.)
+@itemx M-x reduce-eval-last-statement
+@findex reduce-eval-last-statement
+This command sends the code between the beginning of the statement
+before point and point to REDUCE.  The assumption is that point is at
+the end of a REDUCE statement, but this is not checked so it is
+possible to send an incomplete statement.  (This key binding follows the
+Emacs convention and is available in both REDUCE Edit and Run modes.)
 
-@item M-C-x
-@kindex M-C-x
+@item C-M-x
+@kindex C-M-x
 @itemx C-c C-e
 @kindex C-c C-e
-@itemx reduce-eval-proc-and-go
-@findex reduce-eval-proc-and-go
-Send the current procedure definition to the REDUCE process, and switch
-to its buffer.  (The @kbd{M-C-x} key binding follows Emacs convention.)
+@itemx M-x reduce-eval-proc
+@findex reduce-eval-proc
+This command sends the procedure definition ending after point to
+REDUCE@.  (The @kbd{C-M-x} key binding follows the Emacs convention.)
 
 @item C-c C-r
 @kindex C-c C-r
-@itemx reduce-eval-region-and-go
-@findex reduce-eval-region-and-go
-Send the current region to the REDUCE process, and switch to its buffer.
-
-@item C-c C-z
-@kindex C-c C-z
-@itemx switch-to-reduce
-@findex switch-to-reduce
-Switch to the REDUCE process buffer.  With an argument, position the
-cursor at the end of the buffer.
+@itemx M-x reduce-eval-region
+@findex reduce-eval-region
+This command sends the code in the selected region to REDUCE.
 @end table
 
-Versions of the above ``and-go'' commands are also defined with names
-that omit the ``-and-go'' prefix, which do not switch to the REDUCE
-process buffer.  These seem to be less useful and so are not currently
-bound to any keys.
+@c -------------------------------------------------------------------
 
-The following key bindings, in addition to the defaults provided by
-comint mode, are provided in REDUCE Run mode:
+@node Processing REDUCE Files
+@section Inputting, loading and compiling REDUCE files
+@cindex Key bindings
+@cindex Menu
+
+The following commands deal with complete REDUCE files that do not
+necessarily constitute complete programs.  The key bindings are
+provided in both REDUCE Edit and Run modes:
 
 @table @kbd
-@c DOES NOT WORK RELIABLY IN EDIT MODE!
-@c @item C-x C-e
-@c @kindex C-x C-e
-@c @itemx reduce-eval-last-statement
-@c @findex reduce-eval-last-statement
-@c Send the previous statement to the REDUCE process.
-@c Prefix argument means switch to the REDUCE buffer afterwards.
-@c
-@item M-TAB
-@kindex M-TAB
-@itemx reduce-complete-symbol
-@findex reduce-complete-symbol
-Perform completion on the REDUCE symbol preceding point (or preceding
-the region if it is active).  Compare that symbol against the elements
-of @code{reduce-completion-alist}.  If a perfect match (only) has a
-@code{cdr} then delete the match and insert the @code{cdr} if it is a
-string or call it if it is a (nullary) function, passing on any prefix
-argument (in raw form).  (This key binding is exactly as in REDUCE
-mode.  It is included explicitly here because it is one of the REDUCE
-mode key bindings that is also particularly useful in REDUCE Run
-mode.)
-@end table
+@item C-c C-f
+@kindex C-c C-f
+@itemx M-x reduce-input-file
+@findex reduce-input-file
+Read a file name from the minibuffer and input the file into a REDUCE
+process.  It asks whether you want the input echoed.
 
-The REDUCE run library provides a REDUCE run major mode menu and also
-adds a slightly modified version of this menu to the menu bar in
-REDUCE mode.  These two menus provide appropriate access to all the
-above commands, and to echoing and highlighting control for REDUCE Run
-mode.
+@item C-c C-l
+@kindex C-c C-l
+@itemx M-x reduce-load-package
+@findex reduce-load-package
+Read a REDUCE package name from the minibuffer and load it into a
+REDUCE process.  The read process uses completion based on the file
+@code{package.map} in the REDUCE source code package directory
+specified by the variable @code{reduce-packages-directory}, which
+should automatically be set correctly when REDUCE Run mode loads.
+Pressing the @key{TAB} key should list the packages available, from
+which you can select in the usual way, such as by clicking on a
+package name with the mouse.
+
+@item C-c C-c
+@kindex C-c C-c
+@itemx M-x reduce-fasl-file
+@findex reduce-fasl-file
+Read a file name from the minibuffer and compile it into a
+fast-loading (``fasl'') file, for which it prompts for the name with a
+name based on the source file name as default.  It asks whether you
+want the input echoed.
+@end table
 
 @c ===================================================================
 
