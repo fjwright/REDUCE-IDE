@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1998
-;; Time-stamp: <2023-01-22 17:04:46 franc>
+;; Time-stamp: <2023-01-23 17:34:15 franc>
 ;; Keywords: languages, processes
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 
@@ -211,7 +211,7 @@ character (e.g. y or n) possibly surrounded by whitespace."
   "Used to determine if a buffer contains REDUCE source code.
 If a file is loaded into a buffer that is in one of the major
 modes in this list then it is considered to be a REDUCE source
-file by ‘reduce-input-file’ and ‘reduce-fasl-file’.  Used by
+file by ‘reduce-input-file’ and ‘reduce-compile-file’.  Used by
 these commands to determine defaults."
   :type '(repeat symbol)
   :group 'reduce-run)
@@ -231,9 +231,8 @@ Bindings are common to REDUCE mode and REDUCE Run mode."
   (define-key map [?\C-c ?\C-e] 'reduce-eval-line)
   (define-key map [?\C-c ?\C-f] 'reduce-input-file)
   (define-key map [?\C-c ?\C-l] 'reduce-load-package)
-  (define-key map [?\C-c ?\C-c] 'reduce-fasl-file)
-  (define-key map [?\C-c ?\C-\M-f] 'reduce-run-file)
-  (define-key map [?\C-c ?\C-\M-b] 'reduce-run-buffer))
+  (define-key map [?\C-c ?\C-c] 'reduce-compile-file)
+  (define-key map [?\C-c ?\C-\M-f] 'reduce-run-file))
 
 (defvar reduce-run-mode-map
   (let ((map (make-sparse-keymap)))
@@ -249,21 +248,20 @@ Bindings are common to REDUCE mode and REDUCE Run mode."
 ;; code in file editing buffers.
 (define-key reduce-mode-map "\C-\M-x"  'reduce-eval-proc) ; Emacs convention
 (define-key reduce-mode-map "\C-c\C-r" 'reduce-eval-region)
+(define-key reduce-mode-map [?\C-c ?\C-\M-b] 'reduce-run-buffer)
 (reduce-run--add-common-keys-to-map reduce-mode-map)
 (define-key reduce-mode-map "\C-c\C-z" 'switch-to-reduce)
 (define-key reduce-mode-map [(meta R)] 'run-reduce)
 
 (defconst reduce-run--menu2
   '(["Run File" reduce-run-file :active t
-     :help "Run a file in a new REDUCE process"]
-    ["Run Buffer" reduce-run-buffer :active t
-     :help "Run the current buffer in a new REDUCE process"]
+     :help "Run selected REDUCE source file in a new REDUCE process"]
     "--"
     ["Input File..." reduce-input-file :active t
      :help "Input selected REDUCE source file into selected REDUCE process"]
     ["Load Package..." reduce-load-package :active t
      :help "Load selected REDUCE package into selected REDUCE process"]
-    ["Faslout File..." reduce-fasl-file :active t
+    ["Compile File..." reduce-compile-file :active t
      :help "Compile selected REDUCE source file to selected FASL file"]
     "--"))
 
@@ -289,6 +287,8 @@ Bindings are common to REDUCE mode and REDUCE Run mode."
   `("Run REDUCE"
     ["Run REDUCE" run-reduce :active t
      :help "Start a new REDUCE process if necessary"]
+    ["Run Buffer" reduce-run-buffer :active t
+     :help "Run the current buffer in a new REDUCE process"]
     ,@reduce-run--menu2
     ["Input Last Statement" reduce-eval-last-statement :active t
      :help "Input the statement before point to a REDUCE process"]
@@ -690,6 +690,7 @@ buffer."
       (unless switch (split-window nil nil t)) ; new window on the right
       (run-reduce)
       ;; (reduce--wait-for-prompt) ; this seems to hang -- why?
+      ;; *** function modified -- may work now! ***
       ))
     ;; Go to the end of the buffer if required:
     (when (and to-eob (not (eobp)))
@@ -724,8 +725,8 @@ buffer."
 
 (defvar reduce-prev-dir/file nil
   "Record last directory and file used in inputting or compiling.
-This holds a cons cell of the form “(DIRECTORY . FILE)” describing the
-last ‘reduce-input-file’ or ‘reduce-fasl-file’ command.")
+This holds a cons cell of the form “(DIRECTORY . FILE)” describing
+the last ‘reduce-input-file’ or ‘reduce-compile-file’ command.")
 
 (defvar reduce-prev-package nil
   "Name of last package loaded or compiled.")
@@ -763,19 +764,20 @@ The user always chooses interactively whether to echo file input."
 
 (defun reduce--wait-for-prompt ()
   "Wait for REDUCE prompt in the current buffer.
+Leave point after the prompt, i.e. at end of buffer.
 Assume the current buffer is a REDUCE process buffer!"
-  (save-excursion
-    (while (progn
-             (goto-char (point-max))
-             ;; Unlike ‘beginning-of-line’, forward-line ignores field
-             ;; boundaries (cf. ‘comint-bol’)
-             (forward-line 0)
-             (not (looking-at reduce-run-prompt)))
-      (sit-for 1))))
+  (while (progn
+           (goto-char (point-max))
+           ;; Unlike ‘beginning-of-line’, forward-line ignores field
+           ;; boundaries (cf. ‘comint-bol’)
+           (forward-line 0)
+           (not (looking-at reduce-run-prompt)))
+    (sit-for 1))
+  (goto-char (point-max)))
 
-(defalias 'reduce-compile-file 'reduce-fasl-file)
+(defalias 'reduce-fasl-file 'reduce-compile-file)
 
-(defun reduce-fasl-file (file-name)
+(defun reduce-compile-file (file-name)
   "Compile REDUCE source file FILE-NAME to a FASL image in the REDUCE process.
 The user chooses whether to echo file input."
   (interactive (reduce-run-get-source "Compile REDUCE file: "))
@@ -879,23 +881,26 @@ Customizing this variable sets up completion for
 ;;; (essentially as requested by Raffaele Vitolo)
 
 ;;;###autoload
-(defun reduce-run-file (filename)
+(defun reduce-run-file (filename echo)
   "Run FILENAME as a REDUCE program in a unique process buffer.
-Start a new (default) REDUCE process named from FILENAME
-\(if necessary) and input FILENAME."
-  (interactive "fRun REDUCE file: ")
-  (reduce-run-file-or-buffer
+Echo the file contents if ECHO is non-nil.
+Start a new REDUCE process named from FILENAME (if necessary) and
+input FILENAME."
+  (interactive (list
+                (read-file-name "Run REDUCE file: ")
+                (y-or-n-p "Echo file input? ")))
+  (reduce-run--file-or-buffer
    (file-name-nondirectory filename)
-   (format "in \"%s\"%c" filename (if (y-or-n-p "Echo file input? ") ?\; ?$))))
+   (format "in \"%s\"%c" filename (if echo ?\; ?$))))
 
 (defun reduce-run-buffer ()
   "Run current buffer as a REDUCE program in a unique process buffer.
 Start a new (default) REDUCE process named from the current
 buffer (if necessary) and input the current buffer."
   (interactive)
-  (reduce-run-file-or-buffer (buffer-name) (buffer-string)))
+  (reduce-run--file-or-buffer (buffer-name) (buffer-string)))
 
-(defun reduce-run-file-or-buffer (name input)
+(defun reduce-run--file-or-buffer (name input)
   "Run NAME INPUT as a REDUCE program in a unique process buffer.
 Start a new (default) REDUCE process named from file or buffer NAME
 \(if necessary) and input INPUT."

@@ -2,7 +2,7 @@
 @c %**start of header
 @settitle GNU Emacs REDUCE Integrated Development Environment
 @c Manual last updated:
-@set UPDATED Time-stamp: <2023-01-22 16:54:45 franc>
+@set UPDATED Time-stamp: <2023-01-23 18:02:19 franc>
 @c Software version:
 @set VERSION 1.10.1alpha
 @afourpaper
@@ -1754,8 +1754,7 @@ run REDUCE code as an independent REDUCE program by starting the
 specified version of REDUCE in a new process buffer named uniquely by
 the file or buffer containing the REDUCE code.  This allows several
 REDUCE programs to be conveniently run simultaneously and
-independently.  The key bindings are provided in both REDUCE Edit and
-Run modes:
+independently.
 
 @table @kbd
 @item C-c C-M-f
@@ -1764,7 +1763,9 @@ Run modes:
 @findex reduce-run-file
 This command reads a file name from the minibuffer, starts REDUCE in a
 new process buffer named uniquely by the file (unless it already
-exists) and inputs the file into REDUCE.
+exists) and inputs the file into REDUCE.  It asks whether you want the
+input echoed.  The key binding is provided in both REDUCE Edit and Run
+modes.
 
 @item C-c C-M-b
 @kindex C-c C-M-b
@@ -1772,7 +1773,7 @@ exists) and inputs the file into REDUCE.
 @findex reduce-run-buffer
 This command starts REDUCE in a new process buffer named uniquely by
 the current buffer (unless it already exists) and inputs the current
-buffer into REDUCE.
+buffer into REDUCE.  The key binding is provided in REDUCE mode only.
 @end table
 
 @c -------------------------------------------------------------------
@@ -1852,8 +1853,8 @@ package name with the mouse.
 
 @item C-c C-c
 @kindex C-c C-c
-@itemx M-x reduce-fasl-file
-@findex reduce-fasl-file
+@itemx M-x reduce-compile-file
+@findex reduce-compile-file
 Read a file name from the minibuffer and compile it into a
 fast-loading (``fasl'') file, for which it prompts for the name with a
 name based on the source file name as default.  It asks whether you

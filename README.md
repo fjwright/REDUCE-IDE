@@ -62,3 +62,6 @@ Main Updates since REDUCE IDE 1.10
 * Incompatible key binding changes: `reduce-input-file` is now bound to `C-c C-f` and `reduce-fasl-file` to `C-c C-c`.
 * Improve Run REDUCE menu.
 * Remove redundant Package-Version headers; keep only in `reduce-mode.el`.
+* Correct `reduce-run-file` and revise `reduce--wait-for-prompt`.
+* Remove `reduce-run-buffer` key bindings from REDUCE Run mode.
+* Make `reduce-fasl-file` an alias for `reduce-compile-file`, rather than vice versa.
