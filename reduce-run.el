@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1998
-;; Time-stamp: <2023-01-28 17:01:03 franc>
+;; Time-stamp: <2023-01-28 17:56:08 franc>
 ;; Keywords: languages, processes
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 
@@ -321,6 +321,9 @@ Bindings are common to REDUCE mode and REDUCE Run mode."
   "This variable holds an alist of REDUCE process buffers (RPBs).
 It is used to name new RPBs appropriately and decide where to
 send REDUCE input.")
+
+(declare-function reduce-font-lock--run-mode "reduce-font-lock" ())
+(declare-function reduce-show-delim-mode "reduce-delim" ())
 
 (define-derived-mode reduce-run-mode comint-mode "REDUCE Run"
   "Major mode for interacting with a REDUCE process – part of REDUCE IDE.
