@@ -1,10 +1,10 @@
-;;; reduce-font-lock.el --- Syntax highlighting for REDUCE source code  -*- lexical-binding: t; -*-
+;;; reduce-font-lock.el --- Syntax highlighting for REDUCE IDE  -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2022-2023 Francis J. Wright
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: 6 June 2022 as a separate file (was part of reduce-mode.el)
-;; Time-stamp: <2023-01-22 17:05:00 franc>
+;; Time-stamp: <2023-01-28 16:22:20 franc>
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 
 ;; This file is part of REDUCE IDE.
@@ -54,7 +54,8 @@
     reduce-font-lock--keywords-1        ; Algebraic
     reduce-font-lock--keywords-2        ; Symbolic = t
     )
-  "A list of symbols corresponding to increasing fontification.
+  "Syntax highlighting for editing REDUCE.
+A list of symbols corresponding to increasing fontification.
 Each is assigned a ‘font-lock-keywords’ value for REDUCE mode.
 The symbols are in order of increasing fontification level, which
 is selected by the value of ‘font-lock-maximum-decoration’.  This
@@ -519,7 +520,7 @@ which must be done in ‘reduce-mode’."
 
 (define-key-after (lookup-key reduce-mode-map [menu-bar REDUCE])
   [Fontification] (cons "Syntax Highlighting" reduce-fontification-submenu)
-  t)                                    ; was 'Make\ Proc\ Menu
+  t)
 
 (defun reduce-font-lock--change (level)
   "Re-fontify at the specified LEVEL."
@@ -532,6 +533,71 @@ which must be done in ‘reduce-mode’."
       (setq reduce-font-lock--level level)
       (message "REDUCE Font Lock decoration set to level %d : %s."
                level name))))
+
+
+;;;;; *****************************
+;;;;; REDUCE Run mode fontification
+;;;;; *****************************
+
+(defconst reduce-font-lock--run-keywords
+  '(
+    reduce-font-lock--run-keywords-0    ; Basic = nil
+    reduce-font-lock--run-keywords-1    ; Algebraic
+    reduce-font-lock--run-keywords-2    ; Symbolic = t
+    )
+  "Syntax highlighting for running REDUCE.
+A list of symbols corresponding to increasing fontification.
+Each is assigned a ‘font-lock-keywords’ value for REDUCE Run
+mode.  The symbols are in order of increasing fontification
+level, which is selected by the value of
+‘font-lock-maximum-decoration’.  This defaults to t, meaning
+maximal fontification.  The levels are strictly cumulative and
+their names should not be taken too literally!")
+
+(defun reduce-font-lock--run-mode ()
+  "Set up font-lock mode.  Called in ‘reduce-run-mode’."
+  ;; These variables are automatically buffer-local:
+  (setq font-lock-defaults
+        ;; reduce-font-lock--run-keywords evaluates to a list of symbols!
+        (list reduce-font-lock--run-keywords ; KEYWORDS
+              nil                            ; KEYWORDS-ONLY
+              t)                             ; CASE-FOLD
+        font-lock-multiline t)               ; for comment statements
+  ;; Additional support for comment statements:
+  (add-to-list 'font-lock-extend-region-functions
+               #'reduce-font-lock--extend-region-for-comment-statement)
+  (reduce-font-lock--level))            ; for font-lock menu
+
+(defconst reduce-font-lock--run-keywords-output
+  '(;; REDUCE and CSL warning and error messages:
+    ("\\(?:\\*\\*\\*\\|\\+\\+\\+\\).*" . font-lock-warning-face)
+    ;; Rtrace output:
+    ("^\\(?:Enter\\|Leave\\) ([0-9]+) [^ \n]+\\(?: =\\)?" . font-lock-warning-face)
+    ("^Rule.*:" . font-lock-warning-face)
+    ;; CSL trace output:
+    ("^\\(?:Entering .*\\| *Arg[0-9]+:\\|Value = \\)" . font-lock-warning-face))
+  "Syntax highlighting for REDUCE output.")
+
+(defconst reduce-font-lock--run-keywords-0
+  (append reduce-font-lock--run-keywords-output
+          reduce-font-lock--keywords-0)
+  "List of “basic” REDUCE Run mode fontification rules.")
+
+(defconst reduce-font-lock--run-keywords-1
+  (append reduce-font-lock--run-keywords-output
+          reduce-font-lock--keywords-1)
+  "List of “algebraic” REDUCE Run mode fontification rules.")
+
+(defconst reduce-font-lock--run-keywords-2
+  (append reduce-font-lock--run-keywords-output
+          reduce-font-lock--keywords-2)
+  "List of “symbolic” REDUCE Run mode fontification rules.")
+
+(defvar reduce-run-mode-map)           ; defined in reduce-run-mode.el
+
+(define-key-after (lookup-key reduce-run-mode-map [menu-bar Run\ REDUCE])
+  [Fontification] (cons "Syntax Highlighting" reduce-fontification-submenu)
+  t)
 
 (provide 'reduce-font-lock)
 

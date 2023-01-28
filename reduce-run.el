@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1998
-;; Time-stamp: <2023-01-23 17:34:15 franc>
+;; Time-stamp: <2023-01-28 16:27:32 franc>
 ;; Keywords: languages, processes
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 
@@ -275,9 +275,6 @@ Bindings are common to REDUCE mode and REDUCE Run mode."
     ,@reduce-run--menu2
     ["Customize..." (customize-group 'reduce-run) :active t
      :help "Customize REDUCE Run mode"]
-    ["Highlighting" font-lock-mode
-     :style toggle :selected font-lock-mode :active t
-     :help "Toggle the highlighting in this buffer"]
     ))
 
 (easy-menu-define                       ; (symbol maps doc menu)
@@ -317,27 +314,13 @@ Bindings are common to REDUCE mode and REDUCE Run mode."
       definition 'REDUCE)))
 
 
-;;; Internal variables
-;;; ==================
+;;; Functions to run REDUCE in a buffer
+;;; ===================================
 
 (defvar reduce-run--buffer-alist nil
   "This variable holds an alist of REDUCE process buffers (RPBs).
 It is used to name new RPBs appropriately and decide where to
 send REDUCE input.")
-
-(defconst reduce-run--font-lock-keywords
-  '(;; REDUCE and CSL warning and error messages:
-    ("\\(\\*\\*\\*\\|\\+\\+\\+\\).*" . font-lock-warning-face)
-    ;; Rtrace output:
-    ("^\\(Enter\\|Leave\\) ([0-9]+) [^ \n]+\\( =\\)?" . font-lock-warning-face)
-    ("^Rule.*:" . font-lock-warning-face)
-    ;; CSL trace output:
-    ("^\\(Entering .*\\| *Arg[0-9]+:\\|Value = \\)" . font-lock-warning-face))
-  "Syntax highlighting for running REDUCE.")
-
-
-;;; Functions to run REDUCE in a buffer
-;;; ===================================
 
 (define-derived-mode reduce-run-mode comint-mode "REDUCE Run"
   "Major mode for interacting with a REDUCE process – part of REDUCE IDE.
@@ -383,19 +366,20 @@ also affects this mode.  Entry to this mode runs the hooks on
 ‘comint-mode-hook’ and ‘reduce-run-mode-hook’ (in that order)."
   :syntax-table reduce-mode-syntax-table
   :group 'reduce-run
-  (setq font-lock-defaults                         ; auto buffer-local
-        '(reduce-run--font-lock-keywords           ; KEYWORDS
-          t))                                      ; KEYWORDS-ONLY
-  (setq comint-input-filter #'reduce-input-filter) ; buffer-local
-  (setq comint-input-ignoredups t)                 ; buffer-local
+  ;; Optionally set up font-lock mode:
+  (and reduce-font-lock-mode-on
+       (require 'reduce-font-lock "reduce-font-lock" t)
+       (reduce-font-lock--run-mode))
+  (setq comint-input-filter #'reduce-input-filter  ; buffer-local
+        comint-input-ignoredups t)                 ; buffer-local
   ;; ansi-color-process-output causes an error when CSL is terminated
   ;; and is probably irrelevant anyway, so ...
   (remove-hook (make-local-variable 'comint-output-filter-functions)
                'ansi-color-process-output t) ; remove locally!
   ;; Try to ensure graceful shutdown. In particular, PSL REDUCE on
   ;; Windows seems to object to being killed!
-  (add-hook 'kill-buffer-hook 'reduce-kill-buffer-tidy-up)
-  (add-hook 'kill-emacs-hook 'reduce-kill-emacs-tidy-up))
+  (add-hook 'kill-buffer-hook #'reduce-kill-buffer-tidy-up)
+  (add-hook 'kill-emacs-hook #'reduce-kill-emacs-tidy-up))
 
 (defun reduce-input-filter (str)
   "True if STR does not match variable ‘reduce-input-filter’."
