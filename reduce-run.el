@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1998
-;; Time-stamp: <2023-01-28 16:27:32 franc>
+;; Time-stamp: <2023-01-28 17:01:03 franc>
 ;; Keywords: languages, processes
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 
@@ -366,10 +366,14 @@ also affects this mode.  Entry to this mode runs the hooks on
 ‘comint-mode-hook’ and ‘reduce-run-mode-hook’ (in that order)."
   :syntax-table reduce-mode-syntax-table
   :group 'reduce-run
-  ;; Optionally set up font-lock mode:
+  ;; Optionally set up font-lock-mode:
   (and reduce-font-lock-mode-on
        (require 'reduce-font-lock "reduce-font-lock" t)
        (reduce-font-lock--run-mode))
+  ;; Optionally set up reduce-show-delim-mode:
+  (and reduce-show-delim-mode-on
+       (require 'reduce-delim "reduce-delim" t)
+       (reduce-show-delim-mode))
   (setq comint-input-filter #'reduce-input-filter  ; buffer-local
         comint-input-ignoredups t)                 ; buffer-local
   ;; ansi-color-process-output causes an error when CSL is terminated

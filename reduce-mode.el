@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1992
-;; Time-stamp: <2023-01-28 16:42:48 franc>
+;; Time-stamp: <2023-01-28 17:01:46 franc>
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.10.2
 ;; Package-Requires: (cl-lib)
@@ -545,7 +545,7 @@ inherits from Prog mode, so the customization group ‘prog-mode’
 also affects this mode.  Entry to this mode runs the hooks on
 ‘prog-mode-hook’ and ‘reduce-mode-hook’ (in that order)."
   :group 'reduce
-  ;; Optionally set up font-lock mode:
+  ;; Optionally set up font-lock-mode:
   (and reduce-font-lock-mode-on
        (require 'reduce-font-lock "reduce-font-lock" t)
        (reduce-font-lock-mode))

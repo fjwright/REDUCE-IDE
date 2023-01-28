@@ -71,3 +71,4 @@ Main Updates since REDUCE IDE 1.10
 1.10.2:
 
 * Add REDUCE mode font lock support to the previous output font lock support in run mode.
+* Add REDUCE show delim support to run mode.
