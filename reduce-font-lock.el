@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: 6 June 2022 as a separate file (was part of reduce-mode.el)
-;; Time-stamp: <2023-01-28 18:25:09 franc>
+;; Time-stamp: <2023-01-29 17:35:14 franc>
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 
 ;; This file is part of REDUCE IDE.
@@ -564,6 +564,8 @@ level, which is selected by the value of
 ‘font-lock-maximum-decoration’.  This defaults to t, meaning
 maximal fontification.  The levels are strictly cumulative and
 their names should not be taken too literally!")
+
+(defvar reduce-run-mode-map)           ; defined in reduce-run-mode.el
 
 (defun reduce-font-lock--run-mode ()
   "Set up font-lock mode.  Called in ‘reduce-run-mode’."
