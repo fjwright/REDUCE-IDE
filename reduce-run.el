@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1998
-;; Time-stamp: <2023-01-28 17:56:08 franc>
+;; Time-stamp: <2023-01-30 16:18:57 franc>
 ;; Keywords: languages, processes
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 
@@ -254,7 +254,7 @@ Bindings are common to REDUCE mode and REDUCE Run mode."
 (define-key reduce-mode-map [(meta R)] 'run-reduce)
 
 (defconst reduce-run--menu2
-  '(["Run File" reduce-run-file :active t
+  '(["Run File..." reduce-run-file :active t
      :help "Run selected REDUCE source file in a new REDUCE process"]
     "--"
     ["Input File..." reduce-input-file :active t
@@ -396,13 +396,16 @@ also affects this mode.  Entry to this mode runs the hooks on
   "Input history for the ‘run-reduce’ command.")
 
 ;;;###autoload
-(defun run-reduce (&optional cmd)
-  "Run REDUCE command named CMD with I/O via a buffer.
-Interactively, prompt with completion for CMD, ignoring case,
-which defaults to the last value used.  If CMD is omitted, nil or
-not provided, display a pop-up menu of command names.  Look up
-CMD in ‘reduce-run-commands’ and run command found.  The buffer
-is in REDUCE Run mode and named “*CMD REDUCE*”.
+(defun run-reduce (&optional label)
+  "Run REDUCE with I/O via a buffer.
+If LABEL is non-nil, append it to the process and buffer names.
+Prompt with completion for a REDUCE command name, which defaults
+to the last value used.  If none is provided, display a pop-up
+menu of command names.  Look up the command name (CMD), ignoring
+case, in ‘reduce-run-commands’ and run the command found.  The
+buffer is in REDUCE Run mode.  If LABEL is nil, which it is
+interactively, the buffer is named “*CMD REDUCE*”; otherwise it
+is named “*CMD REDUCE LABEL*”.
 
 With a prefix argument, CMD is the actual REDUCE command.
 
@@ -412,45 +415,48 @@ already running this command, switch to it.  Runs the hooks from
 ‘reduce-run-mode-hook’ (after the ‘comint-mode-hook’ is run).
 
 \(Type ‘\\[describe-mode]’ in the process buffer for a list of commands.)"
-  (interactive
-   (list (if current-prefix-arg
-             (read-string "REDUCE command: " nil 'reduce-run--history)
-           (let ((completion-ignore-case t))
-             (completing-read
-              "REDUCE command name: "
-              reduce-run-commands
-              nil t (car reduce-run--history) ; predicate require-match initial
-              'reduce-run--history)))))
-  (if current-prefix-arg
-      (reduce-run-reduce cmd "")        ; unknown REDUCE version
-    (when (and (null cmd) reduce-run--history)
-      ;; Non-interactive but history, so use it:
-      (setq cmd (car reduce-run--history)))
-    (when (or (null cmd) (zerop (length cmd)))
-      (setq cmd (x-popup-menu t `("REDUCE command name:"
-                                  (""
-                                   ,@(mapcar
-                                      (lambda (x)
-                                        (cons (car x) (car x)))
-                                      reduce-run-commands))))
-            reduce-run--history (list cmd)))
-    (let ((reduce-run-command (assoc-string cmd reduce-run-commands t)))
-      (if reduce-run-command
-          (reduce-run-reduce (cdr reduce-run-command) (car reduce-run-command))
-        (lwarn '(reduce-run) :warning
-               "REDUCE command name \"%s\" not found!" cmd)))))
+  (interactive)
+  (let ((cmd (if current-prefix-arg
+                 (read-string "REDUCE command: " nil 'reduce-run--history)
+               (let ((completion-ignore-case t))
+                 (completing-read
+                  "REDUCE command name: "
+                  reduce-run-commands
+                  nil t (car reduce-run--history) ; predicate require-match initial
+                  'reduce-run--history)))))
+    (if current-prefix-arg
+        (reduce-run-reduce cmd "")        ; unknown REDUCE version
+      (when (and (null cmd) reduce-run--history)
+        ;; Non-interactive but history, so use it:
+        (setq cmd (car reduce-run--history)))
+      (when (or (null cmd) (zerop (length cmd)))
+        (setq cmd (x-popup-menu t `("REDUCE command name:"
+                                    (""
+                                     ,@(mapcar
+                                        (lambda (x)
+                                          (cons (car x) (car x)))
+                                        reduce-run-commands))))
+              reduce-run--history (list cmd)))
+      (let ((command (assoc-string cmd reduce-run-commands t)))
+        (if command
+            (reduce-run-reduce (cdr command) (car command) label)
+          (lwarn '(reduce-run) :warning
+                 "REDUCE command name \"%s\" not found!" cmd))))))
 
-(defun reduce-run-reduce (cmd xsl)
-  "Run CMD as an XSL REDUCE process with I/O via buffer “*XSL REDUCE*”.
+(defun reduce-run-reduce (cmd xsl &optional label)
+  "Run CMD as an XSL REDUCE process with I/O via a buffer.
+If LABEL is nil then the process is named “XSL REDUCE” and the
+buffer is named “*XSL REDUCE*”; otherwise, the process is named
+“XSL REDUCE LABEL” and the buffer is named “*XSL REDUCE LABEL*”.
 XSL is the name of a REDUCE command in ’reduce-run-commands’ (by
 default \"CSL\" or \"PSL\") or \"\".  If there is a process
-already running this command name, just switch to it.
-Return t if successful; nil otherwise."
+already running this command name, just switch to it."
   ;; Return value is no longer used!
-  (let* ((proc-name (if (equal xsl "") "REDUCE" (concat xsl " REDUCE")))
-         (buf-name (concat "*" proc-name "*"))
-         (reduce-run-buffer-xsl (assoc xsl reduce-run--buffer-alist))
-         buf-number)
+  (let ((proc-name (if (equal xsl "") "REDUCE" (concat xsl " REDUCE")))
+        (reduce-run-buffer-xsl (assoc xsl reduce-run--buffer-alist))
+        buf-name buf-number)
+    (when label (setq proc-name (concat proc-name " " label)))
+    (setq buf-name (concat "*" proc-name "*"))
     (cond (reduce-run-multiple
            ;; Always create a new process buffer with an appropriate name:
            (if reduce-run-buffer-xsl
@@ -680,7 +686,7 @@ buffer."
      (reduce-run-autostart
       (unless switch (split-window nil nil t)) ; new window on the right
       (run-reduce)
-      ;; (reduce--wait-for-prompt) ; this seems to hang -- why?
+      ;; (reduce-run--wait-for-prompt) ; this seems to hang -- why?
       ;; *** function modified -- may work now! ***
       ))
     ;; Go to the end of the buffer if required:
@@ -753,7 +759,7 @@ The user always chooses interactively whether to echo file input."
    (format "in \"%s\"%c" file-name
            (if (y-or-n-p "Echo file input? ") ?\; ?$))))
 
-(defun reduce--wait-for-prompt ()
+(defun reduce-run--wait-for-prompt ()
   "Wait for REDUCE prompt in the current buffer.
 Leave point after the prompt, i.e. at end of buffer.
 Assume the current buffer is a REDUCE process buffer!"
@@ -777,9 +783,9 @@ The user chooses whether to echo file input."
           reduce-prev-package fasl-name)
     (switch-to-reduce t t t)
     (reduce-send-string (format "faslout %s;" fasl-name))
-    (reduce--wait-for-prompt)
+    (reduce-run--wait-for-prompt)
     (reduce-input-file file-name)
-    (reduce--wait-for-prompt)
+    (reduce-run--wait-for-prompt)
     (reduce-send-string "faslend;")))
 
 
@@ -867,16 +873,15 @@ Customizing this variable sets up completion for
   (reduce-send-string (format "load_package %s;" package)))
 
 
-;;; Functions to run a REDUCE file or buffer in a unique process buffer
-;;; ===================================================================
+;;; Functions to run a REDUCE file or buffer in a new process buffer
+;;; ================================================================
 ;;; (essentially as requested by Raffaele Vitolo)
 
 ;;;###autoload
 (defun reduce-run-file (filename echo)
-  "Run FILENAME as a REDUCE program in a unique process buffer.
-Echo the file contents if ECHO is non-nil.
-Start a new REDUCE process named from FILENAME (if necessary) and
-input FILENAME."
+  "Run FILENAME as a REDUCE program in a new process buffer.
+Echo the file contents if ECHO is non-nil.  Start a new REDUCE
+process named from FILENAME and input FILENAME."
   (interactive (list
                 (read-file-name "Run REDUCE file: ")
                 (y-or-n-p "Echo file input? ")))
@@ -885,31 +890,23 @@ input FILENAME."
    (format "in \"%s\"%c" filename (if echo ?\; ?$))))
 
 (defun reduce-run-buffer ()
-  "Run current buffer as a REDUCE program in a unique process buffer.
-Start a new (default) REDUCE process named from the current
-buffer (if necessary) and input the current buffer."
+  "Run current buffer as a REDUCE program in a new process buffer.
+Start a new REDUCE process named from the current buffer and
+input the current buffer."
   (interactive)
   (reduce-run--file-or-buffer (buffer-name) (buffer-string)))
 
-(defun reduce-run--file-or-buffer (name input)
-  "Run NAME INPUT as a REDUCE program in a unique process buffer.
-Start a new (default) REDUCE process named from file or buffer NAME
-\(if necessary) and input INPUT."
-  (let* ((xsl (caar reduce-run-commands))
-         (process-name (concat xsl " REDUCE " name))
-         (buffer-name (concat "*" process-name "*"))
-         (reduce-run-buffer-xsl (rassoc buffer-name reduce-run--buffer-alist)))
-    ;; Re-use any existing buffer for this REDUCE and file-name:
-    (if (and reduce-run-buffer-xsl (comint-check-proc buffer-name))
-        (pop-to-buffer buffer-name) ; just re-visit existing process buffer
-      (reduce-run-reduce-1 (cdar reduce-run-commands) process-name buffer-name)
-      (push (list xsl buffer-name) reduce-run--buffer-alist)
-      (reduce--wait-for-prompt))
-    (insert input)
-    ;; Avoid triggering spurious prompts when inserting a buffer:
-    (delete-blank-lines)                ; from end of inserted buffer
-    (if (bolp) (delete-char -1))        ; delete previous newline
-    (comint-send-input)))
+(defun reduce-run--file-or-buffer (label input)
+  "Run INPUT as a REDUCE program in a new process buffer.
+Start a new REDUCE process named from file or buffer LABEL and
+input INPUT."
+  (run-reduce label)
+  (reduce-run--wait-for-prompt)
+  (insert input)
+  ;; Avoid triggering spurious prompts when inserting a buffer:
+  (delete-blank-lines)                ; from end of inserted buffer
+  (if (bolp) (delete-char -1))        ; delete previous newline
+  (comint-send-input))
 
 
 ;;; Ancillary functions

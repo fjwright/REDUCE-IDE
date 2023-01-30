@@ -72,3 +72,5 @@ Main Updates since REDUCE IDE 1.10
 
 * Add REDUCE mode font lock support to the previous output font lock support in run mode.
 * Add REDUCE show delim support to run mode.
+* Add minimal font-lock level, which is syntactic plus the old font-lock support in run mode, and syntactic-only in edit mode.
+* Revise `reduce-run-file` and `reduce-run-buffer` to prompt for the REDUCE command (via `run-reduce`).
