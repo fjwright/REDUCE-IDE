@@ -74,3 +74,6 @@ Main Updates since REDUCE IDE 1.10
 * Add REDUCE show delim support to run mode.
 * Add minimal font-lock level, which is syntactic plus the old font-lock support in run mode, and syntactic-only in edit mode.
 * Revise `reduce-run-file` and `reduce-run-buffer` to prompt for the REDUCE command (via `run-reduce`).
+* Add option `reduce-run-command-name-default` to specify the default REDUCE command name, which defaults to the first command name in `reduce-run-commands`.
+* Replace `...` with Unicode horizontal ellipsis `…`.
+* Add *Customize…* item to REDUCE mode Run REDUCE menu.

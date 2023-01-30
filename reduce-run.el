@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1998
-;; Time-stamp: <2023-01-30 16:18:57 franc>
+;; Time-stamp: <2023-01-30 17:53:39 franc>
 ;; Keywords: languages, processes
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 
@@ -171,6 +171,18 @@ REDUCE; a GUI version will not work!"
   :group 'reduce-run
   :set-after '(reduce-run-installation-directory))
 
+(defcustom reduce-run-command-name-default
+  (caar reduce-run-commands)
+  "Default command name to run REDUCE, or nil.
+The default is the first command name in ‘reduce-run-commands’."
+  ;; :type 'string
+  :type `(choice (const :tag "None" nil)
+                 ,@(mapcar #'(lambda (x) (list 'const (car x)))
+                           reduce-run-commands))
+  :set-after '(reduce-run-commands)
+  :group 'reduce-run
+  :package-version '(reduce-ide . "1.11"))
+
 (defcustom reduce-run-prompt "^\\(?:[0-9]+[:*] \\)+"
   "Regexp to recognise prompts in REDUCE Run mode."
   :type 'regexp
@@ -254,14 +266,14 @@ Bindings are common to REDUCE mode and REDUCE Run mode."
 (define-key reduce-mode-map [(meta R)] 'run-reduce)
 
 (defconst reduce-run--menu2
-  '(["Run File..." reduce-run-file :active t
+  '(["Run File…" reduce-run-file :active t
      :help "Run selected REDUCE source file in a new REDUCE process"]
     "--"
-    ["Input File..." reduce-input-file :active t
+    ["Input File…" reduce-input-file :active t
      :help "Input selected REDUCE source file into selected REDUCE process"]
-    ["Load Package..." reduce-load-package :active t
+    ["Load Package…" reduce-load-package :active t
      :help "Load selected REDUCE package into selected REDUCE process"]
-    ["Compile File..." reduce-compile-file :active t
+    ["Compile File…" reduce-compile-file :active t
      :help "Compile selected REDUCE source file to selected FASL file"]
     "--"))
 
@@ -273,7 +285,7 @@ Bindings are common to REDUCE mode and REDUCE Run mode."
     ["(Re)Run REDUCE" rerun-reduce :active t
      :help "Stop REDUCE if running in this buffer, then (re)start it"]
     ,@reduce-run--menu2
-    ["Customize..." (customize-group 'reduce-run) :active t
+    ["Customize…" (customize-group 'reduce-run) :active t
      :help "Customize REDUCE Run mode"]
     ))
 
@@ -298,6 +310,8 @@ Bindings are common to REDUCE mode and REDUCE Run mode."
     "--"
     ["Switch To REDUCE" switch-to-reduce :active t
      :help "Select and switch to a REDUCE process"]
+    ["Customize…" (customize-group 'reduce-run) :active t
+     :help "Customize REDUCE Run mode"]
     ))
 
 (let ((keymap (lookup-key reduce-mode-map [menu-bar]))
@@ -380,7 +394,7 @@ also affects this mode.  Entry to this mode runs the hooks on
   (setq comint-input-filter #'reduce-input-filter  ; buffer-local
         comint-input-ignoredups t)                 ; buffer-local
   ;; ansi-color-process-output causes an error when CSL is terminated
-  ;; and is probably irrelevant anyway, so ...
+  ;; and is probably irrelevant anyway, so …
   (remove-hook (make-local-variable 'comint-output-filter-functions)
                'ansi-color-process-output t) ; remove locally!
   ;; Try to ensure graceful shutdown. In particular, PSL REDUCE on
@@ -400,12 +414,13 @@ also affects this mode.  Entry to this mode runs the hooks on
   "Run REDUCE with I/O via a buffer.
 If LABEL is non-nil, append it to the process and buffer names.
 Prompt with completion for a REDUCE command name, which defaults
-to the last value used.  If none is provided, display a pop-up
-menu of command names.  Look up the command name (CMD), ignoring
-case, in ‘reduce-run-commands’ and run the command found.  The
-buffer is in REDUCE Run mode.  If LABEL is nil, which it is
-interactively, the buffer is named “*CMD REDUCE*”; otherwise it
-is named “*CMD REDUCE LABEL*”.
+initially to the value of ‘reduce-run-command-name-default’ and
+subsequently to the last value used.  If none is provided,
+display a pop-up menu of command names.  Look up the command
+name (CMD), ignoring case, in ‘reduce-run-commands’ and run the
+command found.  The buffer is in REDUCE Run mode.  If LABEL is
+nil, which it is interactively, the buffer is named “*CMD
+REDUCE*”; otherwise it is named “*CMD REDUCE LABEL*”.
 
 With a prefix argument, CMD is the actual REDUCE command.
 
@@ -422,7 +437,9 @@ already running this command, switch to it.  Runs the hooks from
                  (completing-read
                   "REDUCE command name: "
                   reduce-run-commands
-                  nil t (car reduce-run--history) ; predicate require-match initial
+                  nil t                 ; predicate require-match
+                  (or (car reduce-run--history) ; initial
+                      reduce-run-command-name-default)
                   'reduce-run--history)))))
     (if current-prefix-arg
         (reduce-run-reduce cmd "")        ; unknown REDUCE version
@@ -948,8 +965,8 @@ Also remove the buffer from ‘reduce-run--buffer-alist’."
       (process-list)))
 
 
-;;; Do the user's customisation...
-;;; ==============================
+;;; Do the user's customisation…
+;;; ============================
 
 (provide 'reduce-run)
 

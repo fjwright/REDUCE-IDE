@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1992
-;; Time-stamp: <2023-01-28 17:01:46 franc>
+;; Time-stamp: <2023-01-30 18:02:02 franc>
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.10.2
 ;; Package-Requires: (cl-lib)
@@ -420,14 +420,14 @@ Precisely, a single white space (including newline), or a single
     ["Make Proc/Op Menu" (reduce-imenu-add-to-menubar t) :active (not reduce-imenu-done)
      :help "Show an imenu of procedures and operators"]
     "--"
-    ["Find Tag..." xref-find-definitions :active t
+    ["Find Tag…" xref-find-definitions :active t
      :help "Find a procedure definition using a tag file"]
-    ["New TAGS Table..." visit-tags-table :active t
+    ["New TAGS Table…" visit-tags-table :active t
      :help "Select a new tag file"]
     "--"
-    ["Tag Directory..." reduce-tagify-dir :active t
+    ["Tag Directory…" reduce-tagify-dir :active t
      :help "Tag REDUCE files in this directory"]
-    ["Tag Dir & Subdirs..." reduce-tagify-dir-recursively :active t
+    ["Tag Dir & Subdirs…" reduce-tagify-dir-recursively :active t
      :help "Tag all REDUCE files under this directory"]
     )
    "--"
@@ -447,7 +447,7 @@ Precisely, a single white space (including newline), or a single
    "--"
    ["Command Mini Help" (apropos-command "\\`reduce\\|reduce\\'") :active t
     :help "Show a REDUCE Mode command summary"]
-   ["Customize..." (customize-group 'reduce) :active t
+   ["Customize…" (customize-group 'reduce) :active t
     :help "Customize REDUCE Mode"]
    ["Show Version" reduce-ide-version :active t
     :help "Show the REDUCE IDE version"]
@@ -512,7 +512,7 @@ ignore comments, strings and character case.  Standard indentation and
 comment commands are supported.  Modelled primarily on Lisp mode;
 comment commands follow Lisp conventions.
 
-“<<...>>” and “begin...end” are treated as bracketed or
+“<< … >>” and “begin … end” are treated as bracketed or
 symbolic expressions for motion, delimiter matching, etc.
 
 The command ‘\\[reduce-indent-line]’ indents in a fixed style (mine!).
@@ -655,7 +655,7 @@ Use the information found to build ‘reduce--comment-seq’."
         (widen) (goto-char (point-min))
         (save-match-data
           (while (re-search-forward "\\_<comment\\_>" nil t)
-            ;; Unless in a string or syntactic comment...
+            ;; Unless in a string or syntactic comment…
             (unless (nth 8 (syntax-ppss))
               (push (cons (match-beginning 0)
                           (or (re-search-forward "[\;$]" nil t) (point-max)))
@@ -761,7 +761,7 @@ Return t if match found, nil otherwise."
            ((nth 3 (setq tmp (syntax-ppss))) ; in string
             (goto-char (nth 8 tmp))
             (forward-sexp) t)
-           ((nth 4 tmp)                 ; in % or /*...*/ comment
+           ((nth 4 tmp)                 ; in % or /*…*/ comment
             (goto-char (nth 8 tmp))
             (forward-comment 1) t)
            ((setq tmp (reduce--in-comment-statement-p
@@ -1003,7 +1003,7 @@ Return non-nil if found; otherwise report a user error."
            (forward-char) (backward-list) ; skip balanced brackets
            (reduce--find-matching-if))))
         ;; Found begin, <<, opening bracket, terminator or beginning
-        ;; of buffer, so...
+        ;; of buffer, so…
         (user-error "Cannot find ‘if’ matching ‘then’ or ‘else’"))))
 
 (defun reduce--calculate-indent-prev ()
@@ -1081,7 +1081,7 @@ The indentation depends only on *previous* non-blank line."
         ;; non-blank line.
 
         (cond
-         ;; If extra indentation determined then use it ...
+         ;; If extra indentation determined then use it …
          (extra-indentation (+ previous-indentation extra-indentation))
          ;; Indent successive lines of a comma-separated sequence by
          ;; the same amount if both previous lines end with , :
@@ -1102,26 +1102,26 @@ The indentation depends only on *previous* non-blank line."
           (current-indentation))
          ;; If beginning new statement or comma-separated element
          ;; then indent to previous statement or element
-         ;; unless it is a first argument ...
+         ;; unless it is a first argument …
          ((reduce--calculate-indent-prev1))
          ;; This produces very odd results if the group is preceded by indented code:
          ;; ((and (looking-at ".*<<") (not (looking-at ".*>>")))
          ;;  (reduce-backward-statement 1)
          ;;  (back-to-indentation)
          ;;  (+ (current-column) reduce-indentation))
-         ;; ;; If continuing ‘if’ then indent relative to the ‘if’ ...
+         ;; ;; If continuing ‘if’ then indent relative to the ‘if’ …
          ;; ((looking-at ".*\\(\\<then\\>\\|\\<else\\>\\)[ \t]*[%\n]")
          ;;  (if (looking-at ".*\\<if\\>")
          ;;  ()
          ;;    (goto-char (match-beginning 1))
          ;;    (reduce--find-matching-if))
          ;;  (+ (current-indentation) reduce-indentation))
-         ;; ;; ... but the ‘if’ must be embedded ...
+         ;; ;; … but the ‘if’ must be embedded …
          ((looking-at ".+\\<if\\>.*\\(\\<then\\>\\|\\<else\\>\\)[ \t]*[%\n]")
           (goto-char (match-beginning 1))
           (reduce--find-matching-if)
           (+ (current-indentation) reduce-indentation))
-         ;; Otherwise continuing previous line, so ...
+         ;; Otherwise continuing previous line, so …
          (t (+ previous-indentation reduce-indentation)))))))
 
 (defun reduce--calculate-indent-prev1 ()
@@ -1147,7 +1147,7 @@ to previous statement or element unless it is the first element."
       (if (or not-first-el
               (and open
                    (looking-at
-                    ;; ... procedure, begin, <<, label
+                    ;; … procedure, begin, <<, label
                     ".*\\<procedure\\>\
 \\|\\<begin\\>\\|<<\
 \\|\\w+[ \t]*:[^=]"))                           ; ???
@@ -1226,7 +1226,7 @@ Interactively with prefix arg, indent the whole buffer."
   ;; Indent lines between beg-region and end-region
   ;; and return point to where it started.
   ;; This version is not very efficient.
-  (message "Indenting ...")
+  (message "Indenting …")
   (let ((end-region-mark (make-marker)) (save-point (point-marker)))
     ;; Must use markers so that they move with the text.
     (set-marker end-region-mark end-region)
@@ -1239,7 +1239,7 @@ Interactively with prefix arg, indent the whole buffer."
     (goto-char save-point)
     (set-marker end-region-mark nil)
     (set-marker save-point nil))
-  (message "Indenting ... done"))
+  (message "Indenting … done"))
 
 ;;;; ******************************************************
 ;;;; Support for automatic re-indentation of specific lines
@@ -1410,7 +1410,7 @@ fails, report a user error."
 ;;;; ******************************
 
 ;; This section updated September 2022.
-;; It now handles /*...*/ comments.
+;; It now handles /*…*/ comments.
 
 (defvar reduce-escape-tries 1
   "Repeat count of reduce-forward/backward-statement calls.
@@ -1947,7 +1947,7 @@ justify as well."
               (goto-char first)
             (while (and (= (forward-line -1) 0)
                         (looking-at "\\s-*%")))
-            ;; Might have reached BOB, so ...
+            ;; Might have reached BOB, so …
             (unless (looking-at "\\s-*%") (forward-line)))
           ;; Fill region as one paragraph breaking lines to fit
           ;; fill-column:
@@ -1975,7 +1975,7 @@ justify as well."
 ;;;; ***************************
 
 (defun reduce-insert-if-then (&optional else)
-  "Insert ‘if ... then’; if ELSE then include ‘else’.
+  "Insert ‘if … then’; if ELSE then include ‘else’.
 Position point after ‘if’.
 With argument include a correctly indented ‘else’ on a second line."
   (interactive "*P")            ; error if buffer read-only
@@ -1992,7 +1992,7 @@ With argument include a correctly indented ‘else’ on a second line."
     ))
 
 (defun reduce-insert-block (&optional nosplit)
-  "Insert and indent ‘begin ... end’ block; if NOSPLIT then on same line.
+  "Insert and indent ‘begin … end’ block; if NOSPLIT then on same line.
 Position point inside.
 With argument put ‘begin’ and ‘end’ on the same line
 \(see ‘reduce-insert-block-or-group’)."
@@ -2008,7 +2008,7 @@ With argument put ‘<<’ and ‘>>’ on the same line
   (reduce-insert-block-or-group "<<" ">>" nil nosplit))
 
 (defun reduce-insert-block-or-group (open close block nosplit)
-  "Insert and indent ‘open ... close’ structure and position point inside.
+  "Insert and indent ‘open … close’ structure and position point inside.
 If the mark is transient and active then enclose the region; otherwise
 if point is not at the end of the line then enclose the rest of the line.
 Leave the mark at the insertion point in the body of a block.
@@ -2057,11 +2057,11 @@ If ‘nosplit’ is true then put ‘open’ and ‘close’ on the same line."
 ;; provided solely to ignore any argument:
 
 (defun reduce-expand-if-then (&optional _arg)
-  "Insert ‘if ... then’ and position point inside, ignoring ARG."
+  "Insert ‘if … then’ and position point inside, ignoring ARG."
   (reduce-insert-if-then))
 
 (defun reduce-expand-if-then-else (&optional _arg)
-  "Insert ‘if ... then ... else’ and position point after ‘if’, ignoring ARG."
+  "Insert ‘if … then … else’ and position point after ‘if’, ignoring ARG."
   (reduce-insert-if-then 'else))
 
 
@@ -2072,7 +2072,7 @@ If ‘nosplit’ is true then put ‘open’ and ‘close’ on the same line."
 (defun reduce-self-insert-and-blink-matching-group-open ()
   "Insert character and then blink matching group opening construct."
   ;; Based on blink-matching-open in simple.el
-  ;; but cannot use syntax table for composite tokens like << ... >>
+  ;; but cannot use syntax table for composite tokens like << … >>
   (interactive "*")         ; error if buffer read-only
   ;; (insert last-command-char)
   (insert ?>)
@@ -2208,13 +2208,13 @@ passing on any prefix argument (in raw form)."
        (delete-region beg end)
        (insert completion)
        (if (fboundp (cdr (assoc completion reduce-completion-alist)))
-           (setq deactivate-mark nil))) ; for beg -> begin -> ...
+           (setq deactivate-mark nil))) ; for beg -> begin -> …
       (t
-       (message "Making completion list...")
+       (message "Making completion list…")
        (let ((list (all-completions pattern reduce-completion-alist)))
          (with-output-to-temp-buffer "*Completions*"
            (display-completion-list list)))
-       (message "Making completion list...%s" "done")))))
+       (message "Making completion list…%s" "done")))))
 
 
 ;;;; **********************************************************
@@ -2298,7 +2298,7 @@ TAGS goes in DIR, which by default is the current directory."
   (setq dir (directory-file-name (expand-file-name dir)))
   (reduce--tagify
    dir (directory-files dir nil "\\.red\\'")
-   (message "Tagging files ‘%s/*.red’..." dir)))
+   (message "Tagging files ‘%s/*.red’…" dir)))
 
 (defun reduce--tagify (dir files msg)
   "Generate a REDUCE TAGS file in directory DIR for specified FILES.
@@ -2312,7 +2312,7 @@ MSG is the message displayed when the tagging process started."
            nil                                     ; infile
            "*rtags-log*"                           ; destination
            nil                                     ; display
-           "--lang=none"                           ; args ...
+           "--lang=none"                           ; args …
            "--regex=/[^%]*procedure[ \\t]+\\([^ \\t\(;$]+\\)/\\1/i"
            files)))                     ; LIST of filenames
     (if (eq value 0)
@@ -2335,7 +2335,7 @@ TAGS goes in DIR, which by default is the current directory."
     ;; reduce--tagify-root required by ‘reduce--directory-files-recursively’.
     (reduce--tagify
      dir (reduce--directory-files-recursively dir)
-     (message "Tagging all files ‘%s/...*.red’..." dir))))
+     (message "Tagging all files ‘%s/…*.red’…" dir))))
 
 (defun reduce--directory-files-recursively (dir)
   "Return a list of all ‘*.red’ files under DIR.
