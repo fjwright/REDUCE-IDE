@@ -77,3 +77,4 @@ Main Updates since REDUCE IDE 1.10
 * Add option `reduce-run-command-name-default` to specify the default REDUCE command name, which defaults to the first command name in `reduce-run-commands`.
 * Replace `...` with Unicode horizontal ellipsis `…`.
 * Add *Customize…* item to REDUCE mode Run REDUCE menu.
+* Simplify `run-reduce` and no longer use a pop-up window, which was overkill.  Now, a null command name aborts the run.  I think these changes finally repair `reduce-run-file`, which calls `run-reduce`.
