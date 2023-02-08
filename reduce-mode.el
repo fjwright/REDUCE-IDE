@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1992
-;; Time-stamp: <2023-01-30 18:02:02 franc>
+;; Time-stamp: <2023-02-07 18:25:11 franc>
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.10.2
 ;; Package-Requires: (cl-lib)
@@ -625,6 +625,34 @@ Mark ! followed by \" as having punctuation syntax (syntax-code
     (setq reduce-imenu-done t)
     (imenu-add-to-menubar reduce-imenu-title)
     (if redraw (force-mode-line-update))))
+
+(defun reduce--bounds-of-symbol-at-point ()
+  "Determine the start and end buffer locations for the symbol at point.
+This function is needed to make ‘imenu’ work properly.
+See the file `thingatpt.el' for documentation.
+Return a cons cell (START . END) giving the start and end
+positions of the symbol found."
+  ;; (cons (forward-symbol 1) (forward-symbol -1)) ; doesn't work!
+  (save-excursion
+    (let (start end)
+      (cond ((eq (char-after) ?!) (forward-char 2))
+            ((eq (char-before) ?!) (forward-char)))
+      (while (memq (char-syntax (char-after)) '(?w ?_))
+        (skip-syntax-forward "w_")
+        (when (eq (char-after) ?!) (forward-char 2)))
+      (setq end (point))
+
+      (while (memq (char-syntax (char-before)) '(?w ?_))
+        (skip-syntax-backward "w_")
+        (when (eq (char-after (- (point) 2)) ?!) (backward-char 2)))
+      (setq start (point))
+
+      (when (< start end)
+        ;; (cons start end)
+        (buffer-substring-no-properties start end)
+        ))))
+
+;; (put 'symbol 'bounds-of-thing-at-point #'reduce--bounds-of-symbol-at-point)
 
 
 ;;;; *******************************
