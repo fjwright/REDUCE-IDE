@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1992
-;; Time-stamp: <2023-02-08 13:55:15 franc>
+;; Time-stamp: <2023-02-08 17:57:34 franc>
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.10.2
 ;; Package-Requires: (cl-lib)
@@ -295,9 +295,8 @@ it is nil then do nothing."
 
 ;; Internal variables:
 
-(defvar reduce-imenu-done nil
-  "Buffer-local: set to true if ‘reduce-imenu-add-to-menubar’ has been called.")
-(make-variable-buffer-local 'reduce-imenu-done)
+(defvar-local reduce--imenu-done nil
+  "Buffer-local: t if ‘reduce--imenu-add-to-menubar’ has been called.")
 
 ;; The following two constants are also used in reduce-font-lock.el.
 
@@ -417,7 +416,7 @@ Precisely, a single white space (including newline), or a single
     ["Show Current Proc" reduce-show-proc-mode
      :style toggle :selected reduce-show-proc-mode :active t
      :help "Toggle display of the current procedure name"]
-    ["Make Proc/Op Menu" (reduce-imenu-add-to-menubar t) :active (not reduce-imenu-done)
+    ["Make Proc/Op Menu" (reduce--imenu-add-to-menubar t) :active (not reduce--imenu-done)
      :help "Show an imenu of procedures and operators"]
     "--"
     ["Find Tag…" xref-find-definitions :active t
@@ -568,8 +567,8 @@ also affects this mode.  Entry to this mode runs the hooks on
         reduce-imenu-generic-expression)
   (setq-local imenu-space-replacement " ")
   ;; Necessary to avoid re-installing the same imenu:
-  (setq reduce-imenu-done nil)
-  (if reduce-imenu (reduce-imenu-add-to-menubar))
+  (setq reduce--imenu-done nil)
+  (if reduce-imenu (reduce--imenu-add-to-menubar))
   ;; ChangeLog support:
   (setq-local add-log-current-defun-function
               #'reduce-current-proc)
@@ -619,42 +618,52 @@ Mark ! followed by \" as having punctuation syntax (syntax-code
 ;;;; Imenu support
 ;;;; *************
 
-(defun reduce-imenu-add-to-menubar (&optional redraw)
-  "Add \"Contents\" menu to menubar; if REDRAW force update."
+(defun reduce--imenu-add-to-menubar (&optional redraw)
+  "Add Imenu to menubar; if REDRAW force update."
   (interactive)
-  (if reduce-imenu-done
-      ;; This is PRIMARILY to avoid a bug in imenu-add-to-menubar that
-      ;; causes it to corrupt the menu bar if it is run more than once
-      ;; in the same buffer.
-      ()
-    (setq reduce-imenu-done t)
+  (unless reduce--imenu-done
+    ;; This is PRIMARILY to avoid a bug in imenu-add-to-menubar that
+    ;; causes it to corrupt the menu bar if it is run more than once
+    ;; in the same buffer.
+    (setq reduce--imenu-done t)
     (imenu-add-to-menubar reduce-imenu-title)
     (if redraw (force-mode-line-update))))
 
+(defun reduce--char-quote-p (char)
+  "Return t if CHAR is non-nil and has syntax class ‘/’."
+  (and char (eq (char-syntax char) ?/)))
+
 (defun reduce--bounds-of-symbol-at-point ()
   "Determine the start and end buffer locations for the symbol at point.
-This function is needed to make ‘imenu’ work properly.
-See the file `thingatpt.el' for documentation.
+The symbol may contain character quotes (escape characters) with
+syntax class ‘/’, i.e. ’!’ in REDUCE.  (This should do no harm in
+other modes that do not use this syntax.)
+
+This function is needed to make ‘imenu’ work properly by putting
+it as the ‘bounds-of-thing-at-point’ property of ‘symbol’.  See
+the file `thingatpt.el' for documentation.
+
 Return a cons cell (START . END) giving the start and end
 positions of the symbol found."
-  ;; (cons (forward-symbol 1) (forward-symbol -1)) ; doesn't work!
   (save-excursion
     (let (start end)
-      (cond ((eq (char-after) ?!) (forward-char 2))
-            ((eq (char-before) ?!) (forward-char)))
-      (while (memq (char-syntax (char-after)) '(?w ?_))
-        (skip-syntax-forward "w_")
-        (when (eq (char-after) ?!) (forward-char 2)))
+      (cond ((reduce--char-quote-p (char-after))
+             (forward-char 2))
+            ((reduce--char-quote-p (char-before))
+             (forward-char)))
+      (while (> (skip-syntax-forward "w_") 0)
+        (when (reduce--char-quote-p (char-after))
+          (forward-char 2)))
       (setq end (point))
-      (when (eq (char-after (- (point) 2)) ?!) (backward-char 2))
-      (while (memq (char-syntax (char-before)) '(?w ?_))
-        (skip-syntax-backward "w_")
-        (when (eq (char-after (- (point) 2)) ?!) (backward-char 2)))
+      (when (reduce--char-quote-p (char-after (- (point) 2)))
+        (backward-char 2))
+      (while (< (skip-syntax-backward "w_") 0)
+        (when (reduce--char-quote-p (char-after (- (point) 2)))
+          (backward-char 2)))
       (setq start (point))
       (when (< start end)
-        (cons start end)
-        ;; (buffer-substring-no-properties start end)
-        ))))
+        ;; (buffer-substring-no-properties start end) ; for testing only
+        (cons start end)))))
 
 (put 'symbol 'bounds-of-thing-at-point #'reduce--bounds-of-symbol-at-point)
 
