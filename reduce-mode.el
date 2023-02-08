@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1992
-;; Time-stamp: <2023-02-07 18:25:11 franc>
+;; Time-stamp: <2023-02-08 13:55:15 franc>
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.10.2
 ;; Package-Requires: (cl-lib)
@@ -614,6 +614,11 @@ Mark ! followed by \" as having punctuation syntax (syntax-code
          (put-text-property start (1+ start) 'syntax-table '(1 . nil)))
     (setq start (1+ start))))
 
+
+;;;; *************
+;;;; Imenu support
+;;;; *************
+
 (defun reduce-imenu-add-to-menubar (&optional redraw)
   "Add \"Contents\" menu to menubar; if REDRAW force update."
   (interactive)
@@ -641,18 +646,17 @@ positions of the symbol found."
         (skip-syntax-forward "w_")
         (when (eq (char-after) ?!) (forward-char 2)))
       (setq end (point))
-
+      (when (eq (char-after (- (point) 2)) ?!) (backward-char 2))
       (while (memq (char-syntax (char-before)) '(?w ?_))
         (skip-syntax-backward "w_")
         (when (eq (char-after (- (point) 2)) ?!) (backward-char 2)))
       (setq start (point))
-
       (when (< start end)
-        ;; (cons start end)
-        (buffer-substring-no-properties start end)
+        (cons start end)
+        ;; (buffer-substring-no-properties start end)
         ))))
 
-;; (put 'symbol 'bounds-of-thing-at-point #'reduce--bounds-of-symbol-at-point)
+(put 'symbol 'bounds-of-thing-at-point #'reduce--bounds-of-symbol-at-point)
 
 
 ;;;; *******************************
