@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1992
-;; Time-stamp: <2023-02-08 17:57:34 franc>
+;; Time-stamp: <2023-02-09 17:02:57 franc>
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.10.2
 ;; Package-Requires: (cl-lib)
@@ -665,7 +665,16 @@ positions of the symbol found."
         ;; (buffer-substring-no-properties start end) ; for testing only
         (cons start end)))))
 
-(put 'symbol 'bounds-of-thing-at-point #'reduce--bounds-of-symbol-at-point)
+(defun reduce--update-bounds-of-thing-at-point ()
+  "Reset ‘thing-at-point’ on changing buffer.
+Update the ‘bounds-of-thing-at-point’ property of ‘symbol’.
+Run by the hook ‘buffer-list-update-hook’."
+  ;; Should really save and restore previous value!
+  (put 'symbol 'bounds-of-thing-at-point
+       (when (eq major-mode 'reduce-mode)
+         #'reduce--bounds-of-symbol-at-point)))
+
+(add-hook 'buffer-list-update-hook #'reduce--update-bounds-of-thing-at-point)
 
 
 ;;;; *******************************
