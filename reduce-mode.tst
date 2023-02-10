@@ -81,10 +81,10 @@ Comment The above line no longer breaks this comment!$
 
 procedure foo; bar;
 
-procedure /* comment here OK */ foo; bar;
+procedure /* comment here OK */ foo1; bar;
 
 procedure
-   foo /* comment here OK */ x; /* comment here OK */ bar;
+   foo2 /* comment here OK */ x; /* comment here OK */ bar;
 
 !Strange + var!"iable + !!names + ! spaced! ;
 
@@ -92,7 +92,7 @@ procedure
 "It contains keywords: comment, procedure, operator, lisp, algebraic.";
 
 procedure % comment here OK
-   foo % and here!
+   foo3 % and here!
    (x,y); bar;
 
 % Check indentation and filling:

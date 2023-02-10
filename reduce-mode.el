@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1992
-;; Time-stamp: <2023-02-09 17:02:57 franc>
+;; Time-stamp: <2023-02-10 18:07:05 franc>
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.10.2
 ;; Package-Requires: (cl-lib)
@@ -60,7 +60,26 @@
     (save-excursion (lm-header "package-version")))
   "Version information for REDUCE IDE.")
 
-;; (message "Loading reduce-mode")  ; TEMPORARY!
+;; The following two constants are also used in reduce-font-lock.el.
+
+(defconst reduce-identifier-regexp
+  "\\(?:[[:alpha:]]\\|!.\\)\
+\\(?:\\w\\|\\s_\\|!.\\)*"
+  ;; Digits have word syntax and identifier cannot begin with a digit.
+  "Regular expression matching a REDUCE identifier.
+An identifier consists of one or more alphanumeric
+characters (i.e. alphabetic letters or decimal digits), the first
+of which must be alphabetic.  In addition, the underscore
+character (_) is considered a letter if it is within an
+identifier.  Special characters may be used in identifiers too,
+even as the first character, but each must be preceded by an
+exclamation mark in input.")
+
+(defconst reduce-whitespace-regexp
+  "\\(?:\\s-\\|\n\\|%.*?\n\\|/\\*.*?\\*/\\)"
+  "Regexp that matches a white space or comment.
+Precisely, a single white space (including newline), or a single
+%- or /**/-comment.")
 
 ;; Customizable user options:
 
@@ -113,8 +132,16 @@ It can be used to customize buffer-local features of REDUCE mode."
 ;; Interface:
 
 (defcustom reduce-imenu-generic-expression ; EXPERIMENTAL!
-  '((nil "^\\([^%\n]+\\(ic\\|ro\\) \\)?\\s *procedure \\(\\w\\(\\w\\|\\s_\\|!.\\)*\\)" 3)
-    ("Operators" "^\\([^%\n]+ic \\)?\\s *operator \\(\\w\\(\\w\\|\\s_\\|!.\\)*\\)" 2))
+  `((nil
+     ,(concat "\\_<procedure\\_>"
+              reduce-whitespace-regexp
+              "+\\(" reduce-identifier-regexp "\\)")
+     1)
+    ("Operators"
+     ,(concat "\\_<operator\\_>"
+              reduce-whitespace-regexp
+              "+\\(" reduce-identifier-regexp "\\)")
+     1))
   "Imenu support for procedure definitions and operator declarations.
 An alist with elements of the form (MENU-TITLE REGEXP INDEX) –
 see the documentation for ‘imenu-generic-expression’."
@@ -129,7 +156,7 @@ This adds a Contents menu to the menubar.  Default is nil."
 
 (defcustom reduce-imenu-title "Procs/Ops"
   "The title to use if REDUCE mode adds a proc/op menu to the menubar.
-Default is \"Procs/Ops\"."
+Default is “Procs/Ops”."
   :type 'string
   :group 'reduce-interface)
 
@@ -298,27 +325,6 @@ it is nil then do nothing."
 (defvar-local reduce--imenu-done nil
   "Buffer-local: t if ‘reduce--imenu-add-to-menubar’ has been called.")
 
-;; The following two constants are also used in reduce-font-lock.el.
-
-(defconst reduce-identifier-regexp
-  "\\(?:[[:alpha:]]\\|!.\\)\
-\\(?:\\w\\|\\s_\\|!.\\)*"
-  ;; Digits have word syntax and identifier cannot begin with a digit.
-  "Regular expression matching a REDUCE identifier.
-An identifier consists of one or more alphanumeric
-characters (i.e. alphabetic letters or decimal digits), the first
-of which must be alphabetic.  In addition, the underscore
-character (_) is considered a letter if it is within an
-identifier.  Special characters may be used in identifiers too,
-even as the first character, but each must be preceded by an
-exclamation mark in input.")
-
-(defconst reduce-whitespace-regexp
-  "\\(?:\\s-\\|\n\\|%.*?\n\\|/\\*.*?\\*/\\)"
-  "Regexp that matches a white space or comment.
-Precisely, a single white space (including newline), or a single
-%- or /**/-comment.")
-
 
 ;;;; **********************
 ;;;; Keyboard and menu maps
@@ -416,7 +422,8 @@ Precisely, a single white space (including newline), or a single
     ["Show Current Proc" reduce-show-proc-mode
      :style toggle :selected reduce-show-proc-mode :active t
      :help "Toggle display of the current procedure name"]
-    ["Make Proc/Op Menu" (reduce--imenu-add-to-menubar t) :active (not reduce--imenu-done)
+    ["Add “Procs/Ops” Menu" (reduce--imenu-add-to-menubar t)
+     :active (not reduce--imenu-done)
      :help "Show an imenu of procedures and operators"]
     "--"
     ["Find Tag…" xref-find-definitions :active t
