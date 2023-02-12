@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1992
-;; Time-stamp: <2023-02-12 14:36:23 franc>
+;; Time-stamp: <2023-02-12 17:48:36 franc>
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.10.2
 ;; Package-Requires: (cl-lib)
@@ -130,23 +130,6 @@ It can be used to customize buffer-local features of REDUCE mode."
   :group 'reduce)
 
 ;; Interface:
-
-(defcustom reduce-imenu-generic-expression ; EXPERIMENTAL!
-  `((nil
-     ,(concat "\\_<procedure\\_>"
-              reduce-whitespace-regexp
-              "+\\(" reduce-identifier-regexp "\\)")
-     1)
-    ("Operators"
-     ,(concat "\\_<operator\\_>"
-              reduce-whitespace-regexp
-              "+\\(" reduce-identifier-regexp "\\)")
-     1))
-  "Imenu support for procedure definitions and operator declarations.
-An alist with elements of the form (MENU-TITLE REGEXP INDEX) –
-see the documentation for ‘imenu-generic-expression’."
-  :type '(repeat (list (choice (const nil) string) regexp integer))
-  :group 'reduce-interface)
 
 (defcustom reduce-imenu nil
   "If non-nil REDUCE mode automatically calls ‘imenu-add-to-menubar’.
@@ -570,9 +553,9 @@ also affects this mode.  Entry to this mode runs the hooks on
   ;; length of match determines level:
   ;; (setq-local outline-regexp "[^ \t\n]")
   ;; Imenu support:
-  (setq imenu-generic-expression       ; auto buffer local
-        reduce-imenu-generic-expression)
-  (setq-local imenu-space-replacement " ")
+  (setq imenu-create-index-function     ; auto buffer local
+        #'reduce--imenu-create-index)
+  (setq-local imenu-space-replacement " ") ; ?????
   ;; Necessary to avoid re-installing the same imenu:
   (setq reduce--imenu-done nil)
   (if reduce-imenu (reduce--imenu-add-to-menubar))
@@ -654,16 +637,28 @@ A nested sub-alist element looks like this:
 
 It creates the submenu MENU-TITLE specified by SUB-ALIST."
   (let ((case-fold-search t)
-        (regex (concat "\\(" reduce-identifier-regexp "\\)\\|[\;$]"))
-        ops-alist)
-    (while (reduce--re-search-forward "\\_<operator\\_>")
-      (while (and (reduce--re-search-forward regex)
-                  (match-beginning 1))
-        (setq ops-alist
-              (cons (cons (match-string-no-properties 1)
-                          (line-beginning-position))
-                    ops-alist))))
-    (cons "Operators" (nreverse ops-alist))))
+        (proc-regex (concat "\\=" reduce-whitespace-regexp
+                            "+\\(" reduce-identifier-regexp "\\)"))
+        (op-regex (concat "\\(" reduce-identifier-regexp "\\)\\|[\;$]"))
+        procs-alist ops-alist)
+    (while (reduce--re-search-forward
+            "\\_<\\(procedure\\)\\|operator\\_>")
+      (if (match-beginning 1)
+          ;; procedure found
+          (when (re-search-forward proc-regex nil t)
+            (setq procs-alist
+                  (cons (cons (match-string-no-properties 1)
+                              (line-beginning-position))
+                        procs-alist)))
+        ;; operators found
+        (while (and (reduce--re-search-forward op-regex)
+                    (match-beginning 1))
+          (setq ops-alist
+                (cons (cons (match-string-no-properties 1)
+                            (line-beginning-position))
+                      ops-alist)))))
+    (cons (cons "Operators" (nreverse ops-alist))
+          (nreverse procs-alist))))
 
 (defun reduce--char-quote-p (char)
   "Return t if CHAR is non-nil and has syntax class ‘/’."
