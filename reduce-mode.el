@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1992
-;; Time-stamp: <2023-02-10 18:07:05 franc>
+;; Time-stamp: <2023-02-12 14:36:23 franc>
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.10.2
 ;; Package-Requires: (cl-lib)
@@ -635,6 +635,35 @@ Mark ! followed by \" as having punctuation syntax (syntax-code
     (setq reduce--imenu-done t)
     (imenu-add-to-menubar reduce-imenu-title)
     (if redraw (force-mode-line-update))))
+
+(defun reduce--imenu-create-index ()
+  "REDUCE version of ‘imenu-default-create-index-function’.
+Assigned to ‘imenu-create-index-function’.  Return an index alist
+for the current buffer.  Called within ‘save-excursion’.
+
+Simple elements look like this:
+
+  (INDEX-NAME . INDEX-POSITION)
+
+Selecting a simple element has the effect of moving to position
+INDEX-POSITION in the buffer.
+
+A nested sub-alist element looks like this:
+
+  (MENU-TITLE . SUB-ALIST)
+
+It creates the submenu MENU-TITLE specified by SUB-ALIST."
+  (let ((case-fold-search t)
+        (regex (concat "\\(" reduce-identifier-regexp "\\)\\|[\;$]"))
+        ops-alist)
+    (while (reduce--re-search-forward "\\_<operator\\_>")
+      (while (and (reduce--re-search-forward regex)
+                  (match-beginning 1))
+        (setq ops-alist
+              (cons (cons (match-string-no-properties 1)
+                          (line-beginning-position))
+                    ops-alist))))
+    (cons "Operators" (nreverse ops-alist))))
 
 (defun reduce--char-quote-p (char)
   "Return t if CHAR is non-nil and has syntax class ‘/’."
