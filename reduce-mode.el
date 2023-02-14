@@ -4,9 +4,9 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1992
-;; Time-stamp: <2023-02-12 17:48:36 franc>
+;; Time-stamp: <2023-02-14 18:09:26 franc>
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
-;; Package-Version: 1.10.2
+;; Package-Version: 1.11alpha
 ;; Package-Requires: (cl-lib)
 
 ;; This file is part of REDUCE IDE.
@@ -131,17 +131,14 @@ It can be used to customize buffer-local features of REDUCE mode."
 
 ;; Interface:
 
-(defcustom reduce-imenu nil
-  "If non-nil REDUCE mode automatically calls ‘imenu-add-to-menubar’.
-This adds a Contents menu to the menubar.  Default is nil."
+(defcustom reduce-imenu-add t
+  "If non-nil REDUCE mode automatically calls ‘imenu-add-menubar-index’.
+This adds an “Index” menu to the menubar.  Default is t."
+  :package-version '(reduce-ide . "1.11")
   :type 'boolean
   :group 'reduce-interface)
 
-(defcustom reduce-imenu-title "Procs/Ops"
-  "The title to use if REDUCE mode adds a proc/op menu to the menubar.
-Default is “Procs/Ops”."
-  :type 'string
-  :group 'reduce-interface)
+(define-obsolete-variable-alias 'reduce-imenu 'reduce-imenu-add "1.11")
 
 (defcustom reduce-max-escape-tries 2
   "Number of attempts required to escape a block or group.
@@ -221,7 +218,6 @@ Optional ‘cdr’ is a replacement string or nullary function (for structures).
 
 (defcustom reduce-comment-region-string "%% "
   "String inserted by \\[reduce-comment-region] at start of each line."
-  :version "1.21" ; Name was reduce-comment-region up to version 1555!
   :type 'string
   :group 'reduce-format)
 
@@ -305,8 +301,8 @@ it is nil then do nothing."
 
 ;; Internal variables:
 
-(defvar-local reduce--imenu-done nil
-  "Buffer-local: t if ‘reduce--imenu-add-to-menubar’ has been called.")
+(defvar-local reduce--imenu-added nil
+  "Buffer-local: t if ‘reduce--imenu-add-menubar-index’ has been called.")
 
 
 ;;;; **********************
@@ -405,9 +401,9 @@ it is nil then do nothing."
     ["Show Current Proc" reduce-show-proc-mode
      :style toggle :selected reduce-show-proc-mode :active t
      :help "Toggle display of the current procedure name"]
-    ["Add “Procs/Ops” Menu" (reduce--imenu-add-to-menubar t)
-     :active (not reduce--imenu-done)
-     :help "Show an imenu of procedures and operators"]
+    ["Add “Index” Menu" (reduce--imenu-add-menubar-index t)
+     :active (not reduce--imenu-added)
+     :help "Show an imenu of procedures, operators and variables"]
     "--"
     ["Find Tag…" xref-find-definitions :active t
      :help "Find a procedure definition using a tag file"]
@@ -557,8 +553,8 @@ also affects this mode.  Entry to this mode runs the hooks on
         #'reduce--imenu-create-index)
   (setq-local imenu-space-replacement " ") ; ?????
   ;; Necessary to avoid re-installing the same imenu:
-  (setq reduce--imenu-done nil)
-  (if reduce-imenu (reduce--imenu-add-to-menubar))
+  ;; (setq reduce--imenu-added nil)
+  (if reduce-imenu-add (reduce--imenu-add-menubar-index))
   ;; ChangeLog support:
   (setq-local add-log-current-defun-function
               #'reduce-current-proc)
@@ -608,15 +604,15 @@ Mark ! followed by \" as having punctuation syntax (syntax-code
 ;;;; Imenu support
 ;;;; *************
 
-(defun reduce--imenu-add-to-menubar (&optional redraw)
+(defun reduce--imenu-add-menubar-index (&optional redraw)
   "Add Imenu to menubar; if REDRAW force update."
   (interactive)
-  (unless reduce--imenu-done
+  (unless reduce--imenu-added
     ;; This is PRIMARILY to avoid a bug in imenu-add-to-menubar that
     ;; causes it to corrupt the menu bar if it is run more than once
     ;; in the same buffer.
-    (setq reduce--imenu-done t)
-    (imenu-add-to-menubar reduce-imenu-title)
+    (setq reduce--imenu-added t)
+    (imenu-add-menubar-index)
     (if redraw (force-mode-line-update))))
 
 (defun reduce--imenu-create-index ()
@@ -639,26 +635,38 @@ It creates the submenu MENU-TITLE specified by SUB-ALIST."
   (let ((case-fold-search t)
         (proc-regex (concat "\\=" reduce-whitespace-regexp
                             "+\\(" reduce-identifier-regexp "\\)"))
-        (op-regex (concat "\\(" reduce-identifier-regexp "\\)\\|[\;$]"))
-        procs-alist ops-alist)
+        (ops-vars-regex (concat "\\(" reduce-identifier-regexp "\\)\\|[\;$]"))
+        alist ops-alist vars-alist)
     (while (reduce--re-search-forward
-            "\\_<\\(procedure\\)\\|operator\\_>")
-      (if (match-beginning 1)
-          ;; procedure found
-          (when (re-search-forward proc-regex nil t)
-            (setq procs-alist
-                  (cons (cons (match-string-no-properties 1)
-                              (line-beginning-position))
-                        procs-alist)))
-        ;; operators found
-        (while (and (reduce--re-search-forward op-regex)
-                    (match-beginning 1))
-          (setq ops-alist
-                (cons (cons (match-string-no-properties 1)
-                            (line-beginning-position))
-                      ops-alist)))))
-    (cons (cons "Operators" (nreverse ops-alist))
-          (nreverse procs-alist))))
+            "\\_<\\(?:\\(procedure\\)\\|\\(operator\\)\\|global\\|fluid\\)\\_>")
+      (cond ((match-beginning 1)        ; procedure found
+             (when (re-search-forward proc-regex nil t)
+               (setq alist
+                     (cons (cons (match-string-no-properties 1)
+                                 (line-beginning-position))
+                           alist))))
+            ((match-beginning 2)        ; operators found
+             (while (and (reduce--re-search-forward ops-vars-regex)
+                         (match-beginning 1))
+               (setq ops-alist
+                     (cons (cons (match-string-no-properties 1)
+                                 (line-beginning-position))
+                           ops-alist))))
+            (t                          ; variables found
+             (while (and (reduce--re-search-forward ops-vars-regex)
+                         (match-beginning 1))
+               (setq vars-alist
+                     (cons (cons (match-string-no-properties 1)
+                                 (line-beginning-position))
+                           vars-alist))))))
+    (setq alist (nreverse alist))
+    (when ops-alist
+      (setq alist
+            (cons (cons "*Operators*" (nreverse ops-alist)) alist)))
+    (when vars-alist
+      (setq alist
+            (cons (cons "*Variables*" (nreverse vars-alist)) alist)))
+    alist))
 
 (defun reduce--char-quote-p (char)
   "Return t if CHAR is non-nil and has syntax class ‘/’."
@@ -2329,7 +2337,11 @@ in mode line after ‘reduce-show-proc-delay’ seconds of Emacs idle time."
     (reduce-show-proc-function)))
 
 (defconst reduce-show-proc-regexp
-  (car reduce-imenu-generic-expression))
+  `(nil
+    ,(concat "\\_<procedure\\_>"
+             reduce-whitespace-regexp
+             "+\\(" reduce-identifier-regexp "\\)")
+    1))
 
 (defun reduce-current-proc ()
   "Return name of procedure definition point is in, or nil."

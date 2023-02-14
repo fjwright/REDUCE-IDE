@@ -2,9 +2,9 @@
 @c %**start of header
 @settitle GNU Emacs REDUCE Integrated Development Environment
 @c Manual last updated:
-@set UPDATED Time-stamp: <2023-01-23 18:02:19 franc>
+@set UPDATED Time-stamp: <2023-02-14 17:58:37 franc>
 @c Software version:
-@set VERSION 1.10.1alpha
+@set VERSION 1.11alpha
 @afourpaper
 @c With different size paper the printed page breaks will need attention!
 @c Look for @page and @need commands.
@@ -93,7 +93,7 @@ Manual last updated @value{UPDATED}
 * Structures::                  Structure templates
 * Completion::                  Completion and expansion of REDUCE keywords
 * Font-Lock::                   Font selection for syntactic highlighting
-* Access::                      Access to procedure and operator definitions
+* Information::                 Procedure, operator and variable information
 * Miscellaneous::               Miscellaneous minor features
 * Run::                         Running REDUCE in a window
 * Customization::               Options that control REDUCE IDE
@@ -1165,24 +1165,25 @@ i.e.@: as @code{!"}, but only within a string.
 
 @c ===================================================================
 
-@node Access
-@chapter Access to procedure and operator definitions
-@cindex Access to procedure and operator definitions
-@cindex Information, procedures and operators
-@cindex Procedure access
-@cindex Operator access
+@node Information
+@chapter Procedure, operator and variable information
+@cindex Procedure, operator and variable information
+@cindex Information on procedures, operators and variables
+@cindex Procedure information
+@cindex Operator information
+@cindex Variable information
 
 REDUCE mode can provide information about the procedure that point is
 currently in, and easy access via the @code{Imenu} facility to all the
-procedure and operator definitions within the current file.  Whilst
-@code{Imenu} provides a convenient way to find a procedure or operator
-definition rapidly in the current file, the standard Emacs ``tag''
-facility is the best way to find a procedure or operator definition
-rapidly in another file.
+procedure definitions and operator and variable declarations within
+the current file.  Whilst @code{Imenu} provides a convenient way to
+find a procedure or operator definition rapidly in the current file,
+the standard Emacs ``tag'' facility is the best way to find a
+procedure or operator definition rapidly in another file.
 
 @menu
 * Show Proc::                   Showing the current procedure
-* Imenu::                       Menu access to procedures and operators
+* Imenu::                       Menu access to procedures, etc.
 * Tags::                        Tag access to procedures and operators
 @end menu
 
@@ -1218,21 +1219,32 @@ line after @code{reduce-show-proc-delay} seconds of Emacs idle time.
 @section Imenu support
 @cindex Imenu support
 @cindex Support for imenu
-@cindex Menu of procedures and operators
-@cindex Procedure menu
-@cindex Operator menu
+@cindex Menu of procedures, operators and variables
+@cindex Procedures menu
+@cindex Operators menu
+@cindex Variables menu
 
 REDUCE mode supports the standard Emacs @code{Imenu} facilities
-(@pxref{Imenu,,,elisp, The GNU Emacs Lisp Reference Manual}).  The
-easiest way to use them is via the REDUCE menu entry that builds a new
-(nested) menu of REDUCE procedure and operator names.  Selecting an
-entry in this menu moves point to the start of the definition of the
-specified procedure or operator.  Another way to use @code{Imenu} is by
-entering the extended command @kbd{M-x imenu} and then using the
-standard Emacs completion facilities to select a procedure or operator
-name.  The REDUCE mode @code{Imenu} menu-bar menu name and the regular
-expression used to build menu entries can be customized
-(@pxref{Customization,, Customization of REDUCE IDE}).
+(@pxref{Imenu,,,emacs, The Emacs Editor}).  REDUCE mode can add an
+``Index'' menu to the menubar to the left of the REDUCE menu, which
+lists all the procedures found in the current buffer.  If the current
+buffer defines any operators then they are listed in an
+``*Operators*'' submenu, and if the current buffer defines any
+symbolic-mode global or fluid variables then they are listed in a
+``*Variables*'' submenu.  Selecting an entry in this menu moves point
+to the start of the line in which the specified procedure is defined
+or the specified operator or variable is declared.
+
+If the customizable option @code{reduce-imenu-add} is non-nil, which
+it is by default, then REDUCE mode adds an ``Index'' menu
+automatically (@pxref{Customization,, Customization of REDUCE IDE}).
+Otherwise, selecting the appropriate item in the REDUCE menu adds an
+``Index'' menu.
+
+Another way to use @code{Imenu} is by entering the extended command
+@kbd{M-x imenu} and then using the standard Emacs completion
+facilities to select a procedure name, but note that this works only
+for procedures.
 
 @c -------------------------------------------------------------------
 
@@ -2031,17 +2043,18 @@ Directory containing the @code{etags} program, or @code{nil} if it is
 in path.  If non-nil the string must end with @code{/}.
 
 @item reduce-imenu
-Default value @code{nil}.  If non-nil then REDUCE mode automatically
-calls @code{imenu-add-to-menubar} to add a Contents menu to the menubar.
+Obsolete; renamed to @code{reduce-imenu-add}.
+
+@item reduce-imenu-add
+Default value @code{t}.  If non-nil REDUCE mode automatically calls
+@code{imenu-add-menubar-index}, which adds an ``Index'' menu to the
+menubar.
 
 @item reduce-imenu-generic-expression
-Imenu support for procedure definitions and operator declarations.  An
-alist with elements of the form @code{(MENU-TITLE REGEXP INDEX)} --
-see the documentation for @code{imenu-generic-expression}.
+Obsolete.
 
 @item reduce-imenu-title
-Default value "Procs/Ops".  The title to use if REDUCE mode adds a
-procedure/operator menu to the menubar.
+Obsolete.
 
 @item reduce-max-escape-tries
 Default value 2.  Number of repeats of @code{reduce-forward-statement}

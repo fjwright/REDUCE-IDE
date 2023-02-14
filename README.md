@@ -5,7 +5,7 @@ Major modes for editing and running REDUCE source code
 
 **[Francis Wright](https://sites.google.com/site/fjwcentaur)**
 
-Version 1.10.2, February 2023
+Version 1.11alpha, February 2023
 
 REDUCE IDE is a package that provides an Integrated Development Environment for the [REDUCE computer algebra system](https://reduce-algebra.sourceforge.io/) within the GNU Emacs editor.  Its two major components are Emacs Lisp libraries that provide major modes for editing REDUCE source code and running a *command-line version* of REDUCE in an Emacs window.  It assumes that Emacs is running under a GUI such as Microsoft Windows or the X Window System under some flavour of UNIX or Linux, and displays Unicode character sets correctly.  REDUCE IDE does not include REDUCE, which is available separately from [SourceForge](https://sourceforge.net/projects/reduce-algebra/).  You don't need to install REDUCE in order to edit REDUCE source code using REDUCE IDE, but if you want to run REDUCE in REDUCE IDE then you do need to install REDUCE.
 
@@ -51,8 +51,6 @@ To Do
 Main Updates since REDUCE IDE 1.10
 ----------------------------------
 
-1.10.1:
-
 * Define key `Meta-R` in the REDUCE mode key map to run REDUCE.
 * Revise detection of end-of-file marker, which must now be at start of line.
 * Repair `re-run-reduce` to support general REDUCE command names and no name (i.e. an explicit command), rename it to `rerun-reduce` and revise the wording of the menu item to (Re)Run REDUCE.
@@ -67,9 +65,6 @@ Main Updates since REDUCE IDE 1.10
 * Correct `reduce-run-file` and revise `reduce--wait-for-prompt`.
 * Remove `reduce-run-buffer` key bindings from REDUCE Run mode.
 * Make `reduce-fasl-file` an alias for `reduce-compile-file`, rather than vice versa.
-
-1.10.2:
-
 * Add REDUCE mode font lock support to the previous output font lock support in run mode.
 * Add REDUCE show delim support to run mode.
 * Add minimal font-lock level, which is syntactic plus the old font-lock support in run mode, and syntactic-only in edit mode.
