@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1992
-;; Time-stamp: <2023-02-14 18:09:26 franc>
+;; Time-stamp: <2023-02-15 12:59:25 franc>
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.11alpha
 ;; Package-Requires: (cl-lib)
@@ -131,14 +131,14 @@ It can be used to customize buffer-local features of REDUCE mode."
 
 ;; Interface:
 
+(define-obsolete-variable-alias 'reduce-imenu 'reduce-imenu-add "1.11")
+
 (defcustom reduce-imenu-add t
   "If non-nil REDUCE mode automatically calls ‘imenu-add-menubar-index’.
 This adds an “Index” menu to the menubar.  Default is t."
   :package-version '(reduce-ide . "1.11")
   :type 'boolean
   :group 'reduce-interface)
-
-(define-obsolete-variable-alias 'reduce-imenu 'reduce-imenu-add "1.11")
 
 (defcustom reduce-max-escape-tries 2
   "Number of attempts required to escape a block or group.
@@ -598,122 +598,6 @@ Mark ! followed by \" as having punctuation syntax (syntax-code
          (nth 3 (syntax-ppss start))    ; moves point to start
          (put-text-property start (1+ start) 'syntax-table '(1 . nil)))
     (setq start (1+ start))))
-
-
-;;;; *************
-;;;; Imenu support
-;;;; *************
-
-(defun reduce--imenu-add-menubar-index (&optional redraw)
-  "Add Imenu to menubar; if REDRAW force update."
-  (interactive)
-  (unless reduce--imenu-added
-    ;; This is PRIMARILY to avoid a bug in imenu-add-to-menubar that
-    ;; causes it to corrupt the menu bar if it is run more than once
-    ;; in the same buffer.
-    (setq reduce--imenu-added t)
-    (imenu-add-menubar-index)
-    (if redraw (force-mode-line-update))))
-
-(defun reduce--imenu-create-index ()
-  "REDUCE version of ‘imenu-default-create-index-function’.
-Assigned to ‘imenu-create-index-function’.  Return an index alist
-for the current buffer.  Called within ‘save-excursion’.
-
-Simple elements look like this:
-
-  (INDEX-NAME . INDEX-POSITION)
-
-Selecting a simple element has the effect of moving to position
-INDEX-POSITION in the buffer.
-
-A nested sub-alist element looks like this:
-
-  (MENU-TITLE . SUB-ALIST)
-
-It creates the submenu MENU-TITLE specified by SUB-ALIST."
-  (let ((case-fold-search t)
-        (proc-regex (concat "\\=" reduce-whitespace-regexp
-                            "+\\(" reduce-identifier-regexp "\\)"))
-        (ops-vars-regex (concat "\\(" reduce-identifier-regexp "\\)\\|[\;$]"))
-        alist ops-alist vars-alist)
-    (while (reduce--re-search-forward
-            "\\_<\\(?:\\(procedure\\)\\|\\(operator\\)\\|global\\|fluid\\)\\_>")
-      (cond ((match-beginning 1)        ; procedure found
-             (when (re-search-forward proc-regex nil t)
-               (setq alist
-                     (cons (cons (match-string-no-properties 1)
-                                 (line-beginning-position))
-                           alist))))
-            ((match-beginning 2)        ; operators found
-             (while (and (reduce--re-search-forward ops-vars-regex)
-                         (match-beginning 1))
-               (setq ops-alist
-                     (cons (cons (match-string-no-properties 1)
-                                 (line-beginning-position))
-                           ops-alist))))
-            (t                          ; variables found
-             (while (and (reduce--re-search-forward ops-vars-regex)
-                         (match-beginning 1))
-               (setq vars-alist
-                     (cons (cons (match-string-no-properties 1)
-                                 (line-beginning-position))
-                           vars-alist))))))
-    (setq alist (nreverse alist))
-    (when ops-alist
-      (setq alist
-            (cons (cons "*Operators*" (nreverse ops-alist)) alist)))
-    (when vars-alist
-      (setq alist
-            (cons (cons "*Variables*" (nreverse vars-alist)) alist)))
-    alist))
-
-(defun reduce--char-quote-p (char)
-  "Return t if CHAR is non-nil and has syntax class ‘/’."
-  (and char (eq (char-syntax char) ?/)))
-
-(defun reduce--bounds-of-symbol-at-point ()
-  "Determine the start and end buffer locations for the symbol at point.
-The symbol may contain character quotes (escape characters) with
-syntax class ‘/’, i.e. ’!’ in REDUCE.  (This should do no harm in
-other modes that do not use this syntax.)
-
-This function is needed to make ‘imenu’ work properly by putting
-it as the ‘bounds-of-thing-at-point’ property of ‘symbol’.  See
-the file `thingatpt.el' for documentation.
-
-Return a cons cell (START . END) giving the start and end
-positions of the symbol found."
-  (save-excursion
-    (let (start end)
-      (cond ((reduce--char-quote-p (char-after))
-             (forward-char 2))
-            ((reduce--char-quote-p (char-before))
-             (forward-char)))
-      (while (> (skip-syntax-forward "w_") 0)
-        (when (reduce--char-quote-p (char-after))
-          (forward-char 2)))
-      (setq end (point))
-      (when (reduce--char-quote-p (char-after (- (point) 2)))
-        (backward-char 2))
-      (while (< (skip-syntax-backward "w_") 0)
-        (when (reduce--char-quote-p (char-after (- (point) 2)))
-          (backward-char 2)))
-      (setq start (point))
-      (when (< start end)
-        ;; (buffer-substring-no-properties start end) ; for testing only
-        (cons start end)))))
-
-(defun reduce--update-bounds-of-thing-at-point ()
-  "Reset ‘thing-at-point’ on changing buffer.
-Update the ‘bounds-of-thing-at-point’ property of ‘symbol’.
-Run by the hook ‘buffer-list-update-hook’."
-  ;; Should really save and restore previous value!
-  (put 'symbol 'bounds-of-thing-at-point
-       (when (eq major-mode 'reduce-mode)
-         #'reduce--bounds-of-symbol-at-point)))
-
-(add-hook 'buffer-list-update-hook #'reduce--update-bounds-of-thing-at-point)
 
 
 ;;;; *******************************
@@ -2365,6 +2249,122 @@ in mode line after ‘reduce-show-proc-delay’ seconds of Emacs idle time."
     (setq reduce-show-proc-string
       (concat "[" (or (reduce-current-proc) "") "]"))
     (force-mode-line-update)))
+
+
+;;;; *************
+;;;; Imenu support
+;;;; *************
+
+(defun reduce--imenu-add-menubar-index (&optional redraw)
+  "Add Imenu to menubar; if REDRAW force update."
+  (interactive)
+  (unless reduce--imenu-added
+    ;; This is PRIMARILY to avoid a bug in imenu-add-to-menubar that
+    ;; causes it to corrupt the menu bar if it is run more than once
+    ;; in the same buffer.
+    (setq reduce--imenu-added t)
+    (imenu-add-menubar-index)
+    (if redraw (force-mode-line-update))))
+
+(defun reduce--imenu-create-index ()
+  "REDUCE version of ‘imenu-default-create-index-function’.
+Assigned to ‘imenu-create-index-function’.  Return an index alist
+for the current buffer.  Called within ‘save-excursion’.
+
+Simple elements look like this:
+
+  (INDEX-NAME . INDEX-POSITION)
+
+Selecting a simple element has the effect of moving to position
+INDEX-POSITION in the buffer.
+
+A nested sub-alist element looks like this:
+
+  (MENU-TITLE . SUB-ALIST)
+
+It creates the submenu MENU-TITLE specified by SUB-ALIST."
+  (let ((case-fold-search t)
+        (proc-regex (concat "\\=" reduce-whitespace-regexp
+                            "+\\(" reduce-identifier-regexp "\\)"))
+        (ops-vars-regex (concat "\\(" reduce-identifier-regexp "\\)\\|[\;$]"))
+        alist ops-alist vars-alist)
+    (while (reduce--re-search-forward
+            "\\_<\\(?:\\(procedure\\)\\|\\(operator\\)\\|global\\|fluid\\)\\_>")
+      (cond ((match-beginning 1)        ; procedure found
+             (when (re-search-forward proc-regex nil t)
+               (setq alist
+                     (cons (cons (match-string-no-properties 1)
+                                 (line-beginning-position))
+                           alist))))
+            ((match-beginning 2)        ; operators found
+             (while (and (reduce--re-search-forward ops-vars-regex)
+                         (match-beginning 1))
+               (setq ops-alist
+                     (cons (cons (match-string-no-properties 1)
+                                 (line-beginning-position))
+                           ops-alist))))
+            (t                          ; variables found
+             (while (and (reduce--re-search-forward ops-vars-regex)
+                         (match-beginning 1))
+               (setq vars-alist
+                     (cons (cons (match-string-no-properties 1)
+                                 (line-beginning-position))
+                           vars-alist))))))
+    (setq alist (nreverse alist))
+    (when ops-alist
+      (setq alist
+            (cons (cons "*Operators*" (nreverse ops-alist)) alist)))
+    (when vars-alist
+      (setq alist
+            (cons (cons "*Variables*" (nreverse vars-alist)) alist)))
+    alist))
+
+(defun reduce--char-quote-p (char)
+  "Return t if CHAR is non-nil and has syntax class ‘/’."
+  (and char (eq (char-syntax char) ?/)))
+
+(defun reduce--bounds-of-symbol-at-point ()
+  "Determine the start and end buffer locations for the symbol at point.
+The symbol may contain character quotes (escape characters) with
+syntax class ‘/’, i.e. ’!’ in REDUCE.  (This should do no harm in
+other modes that do not use this syntax.)
+
+This function is needed to make ‘imenu’ work properly by putting
+it as the ‘bounds-of-thing-at-point’ property of ‘symbol’.  See
+the file `thingatpt.el' for documentation.
+
+Return a cons cell (START . END) giving the start and end
+positions of the symbol found."
+  (save-excursion
+    (let (start end)
+      (cond ((reduce--char-quote-p (char-after))
+             (forward-char 2))
+            ((reduce--char-quote-p (char-before))
+             (forward-char)))
+      (while (> (skip-syntax-forward "w_") 0)
+        (when (reduce--char-quote-p (char-after))
+          (forward-char 2)))
+      (setq end (point))
+      (when (reduce--char-quote-p (char-after (- (point) 2)))
+        (backward-char 2))
+      (while (< (skip-syntax-backward "w_") 0)
+        (when (reduce--char-quote-p (char-after (- (point) 2)))
+          (backward-char 2)))
+      (setq start (point))
+      (when (< start end)
+        ;; (buffer-substring-no-properties start end) ; for testing only
+        (cons start end)))))
+
+(defun reduce--update-bounds-of-thing-at-point ()
+  "Reset ‘thing-at-point’ on changing buffer.
+Update the ‘bounds-of-thing-at-point’ property of ‘symbol’.
+Run by the hook ‘buffer-list-update-hook’."
+  ;; Should really save and restore previous value!
+  (put 'symbol 'bounds-of-thing-at-point
+       (when (eq major-mode 'reduce-mode)
+         #'reduce--bounds-of-symbol-at-point)))
+
+(add-hook 'buffer-list-update-hook #'reduce--update-bounds-of-thing-at-point)
 
 
 ;;;; *****************************************
