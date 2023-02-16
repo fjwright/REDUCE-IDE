@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1992
-;; Time-stamp: <2023-02-15 12:59:25 franc>
+;; Time-stamp: <2023-02-16 16:29:06 franc>
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.11alpha
 ;; Package-Requires: (cl-lib)
@@ -260,7 +260,7 @@ Defaults to the value of ‘show-paren-mode’."
   :type 'boolean
   :group 'reduce-display)
 
-(defcustom reduce-show-proc-mode nil
+(defcustom reduce-show-proc-mode t
   "If non-nil then display current procedure name in mode line.
 Update after ‘reduce-show-proc-delay’ seconds of Emacs idle time."
   :set (lambda (_symbol value)
@@ -291,12 +291,8 @@ it is nil then do nothing."
 ;; External variables:
 
 ;; Due to improvements of byte compilation around 2003 the compiler
-;; would complain about ‘make-local-var’ on these later on. I left
-;; unchanged another (too late) declaration for ‘which-func-mode’ below,
-;; which appears not to disturb. TS
+;; would complain about ‘make-local-var’ on these later on. TS
 
-(defvar which-func-mode)
-(defvar which-func-format)
 (defvar imenu-space-replacement)
 
 ;; Internal variables:
@@ -539,9 +535,6 @@ also affects this mode.  Entry to this mode runs the hooks on
        (require 'reduce-delim "reduce-delim" t)
        (reduce-show-delim-mode))
   (if reduce-auto-indent-mode (reduce-auto-indent-mode t))
-  ;; For reduce-show-proc-mode:
-  (setq which-func-mode nil)           ; auto buffer local
-  (setq-local which-func-format 'reduce-show-proc-string)
   (if reduce-show-proc-mode (reduce-show-proc-mode t))
   ;; This seems to be obsolete in Emacs 26!
   ;; Experimental support for outline minor mode (cf. lisp-mode.el)
@@ -557,7 +550,7 @@ also affects this mode.  Entry to this mode runs the hooks on
   (if reduce-imenu-add (reduce--imenu-add-menubar-index))
   ;; ChangeLog support:
   (setq-local add-log-current-defun-function
-              #'reduce-current-proc)
+              #'reduce--current-proc)
   ;; (setq-local paragraph-start (concat "^$\\|" page-delimiter))
   ;; (setq-local paragraph-separate
   ;;             ;; paragraph-start)
@@ -2194,61 +2187,120 @@ passing on any prefix argument (in raw form)."
 ;;;; Support for displaying current procedure name in mode line
 ;;;; **********************************************************
 
-(defvar reduce-show-proc-idle-timer nil)
+;; This code is based loosely on "which-func.el" but does not use any
+;; of its functionality.
 
-(defvar reduce-show-proc-string nil)
-(defvar which-func-mode)
+(defvar-local reduce--show-proc-idle-timer nil
+  "Timer to display current procedure name in mode line, or nil.")
+
+(defvar-local reduce--show-proc-string nil
+  "Name of current procedure to display in mode line, or nil.")
 
 (defun reduce-show-proc-mode (&optional arg)
   "Toggle REDUCE Show Proc mode.
-With prefix ARG, turn REDUCE Show Proc mode on if and only if ARG is positive.
-Returns the new status of REDUCE Show Proc mode (non-nil means on).
+With prefix ARG, turn REDUCE Show Proc mode on if and only if ARG
+is positive.  Return the new status of REDUCE Show Proc
+mode (non-nil means on).
 
-When REDUCE Show Proc mode is enabled, display current procedure name
-in mode line after ‘reduce-show-proc-delay’ seconds of Emacs idle time."
+When REDUCE Show Proc mode is enabled, display current procedure
+name in mode line after ‘reduce-show-proc-delay’ seconds of Emacs
+idle time."
   (interactive "P")
   (let ((on-p (if arg
-          (> (prefix-numeric-value arg) 0)
-        (not reduce-show-proc-mode))))
-    (if reduce-show-proc-idle-timer
-    (cancel-timer reduce-show-proc-idle-timer))
-    (if on-p
-    (setq reduce-show-proc-idle-timer
-          (run-with-idle-timer reduce-show-proc-delay t
-                   'reduce-show-proc-function)))
-    (setq reduce-show-proc-mode on-p
-      which-func-mode on-p)
-    (reduce-show-proc-function)))
+                  (> (prefix-numeric-value arg) 0)
+                (not reduce-show-proc-mode))))
+    (when reduce--show-proc-idle-timer
+      (cancel-timer reduce--show-proc-idle-timer))
+    (when on-p
+      (setq reduce--show-proc-idle-timer
+            (run-with-idle-timer reduce-show-proc-delay t
+                                 'reduce--show-proc)))
+    (setq reduce-show-proc-mode on-p)
+    (reduce--show-proc)))
 
-(defconst reduce-show-proc-regexp
-  `(nil
-    ,(concat "\\_<procedure\\_>"
-             reduce-whitespace-regexp
-             "+\\(" reduce-identifier-regexp "\\)")
-    1))
+(defconst reduce--show-proc-regexp
+  (concat "\\_<procedure\\_>"
+          reduce-whitespace-regexp
+          "+\\(" reduce-identifier-regexp "\\)")
+  "Regexp to match the keyword “procedure” followed by its identifier.")
 
-(defun reduce-current-proc ()
+(defun reduce--current-proc ()
   "Return name of procedure definition point is in, or nil."
   ;; Used by reduce-show-proc-mode and ChangeLog support
   (let ((start (point)) procname)
     (end-of-line)
     (save-match-data
-      (when (re-search-backward
-         (nth 1 reduce-show-proc-regexp) nil t)
-    (setq procname
-          (match-string (nth 2 reduce-show-proc-regexp)))
-    (reduce-forward-procedure 1)
-    (if (<= (point) start)      ; not in procedure
-        (setq procname nil))))
+      (when (reduce--re-search-backward reduce--show-proc-regexp)
+        (setq procname (match-string-no-properties 1))
+        (reduce-forward-procedure 1)
+        (if (<= (point) start)          ; not in procedure
+            (setq procname nil))))
     (goto-char start)
     procname))
 
-(defun reduce-show-proc-function ()
+(defun reduce--show-proc ()
   "Display current procedure name in mode line."
   (when (eq major-mode 'reduce-mode)
-    (setq reduce-show-proc-string
-      (concat "[" (or (reduce-current-proc) "") "]"))
+    (setq reduce--show-proc-string (reduce--current-proc))
     (force-mode-line-update)))
+
+(defun reduce--show-proc-beginning ()
+  "Move backwards to the beginning of the current procedure.
+But don't jump out of the current procedure!"
+  (interactive)
+  (end-of-line)
+  (reduce-backward-procedure 1))
+
+(defun reduce--show-proc-end ()
+  "Move forwards to the end of the current procedure.
+But don't jump out of the current procedure!"
+  (interactive)
+  (beginning-of-line)
+  (reduce-forward-procedure 1)
+  (backward-char))
+
+(defun reduce--show-proc-toggle-alone ()
+  "Narrow to the current procedure or widen if narrowed.
+But don't jump out of the current procedure!"
+  (interactive)
+  (if (buffer-narrowed-p)
+      (widen)
+    (save-excursion
+      (reduce--show-proc-end)
+      (let ((end (point)))
+        (reduce--show-proc-beginning)
+        (narrow-to-region (point) end)))))
+
+(defconst reduce--show-proc-keymap
+  (let ((map (make-sparse-keymap)))
+    (define-key map [mode-line mouse-1] #'reduce--show-proc-beginning)
+    (define-key map [mode-line mouse-2] #'reduce--show-proc-toggle-alone)
+    (define-key map [mode-line mouse-3] #'reduce--show-proc-end)
+    map)
+  "Mouse menu keymap for the procedure name in the mode line.")
+
+(defconst reduce--show-proc-format
+  `("["
+    (:propertize reduce--show-proc-string
+		         local-map ,reduce--show-proc-keymap
+		         ;; face which-func
+		         mouse-face mode-line-highlight
+                 help-echo ,(concat
+                             "Current procedure\n"
+                             "mouse-1: Go to beginning\n"
+                             "mouse-2: Toggle show alone\n"
+                             "mouse-3: Go to end"))
+    "]")
+  "Format for displaying the procedure name in the mode line.")
+
+(unless (assq 'reduce-show-proc-mode mode-line-misc-info)
+  (add-to-list 'mode-line-misc-info
+               '(reduce-show-proc-mode ; Only display if mode is enabled.
+                 (reduce--show-proc-string
+                  ("" reduce--show-proc-format " ")))))
+
+;; TODO:
+;; Use define-minor-mode?
 
 
 ;;;; *************
