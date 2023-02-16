@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1992
-;; Time-stamp: <2023-02-16 16:29:06 franc>
+;; Time-stamp: <2023-02-16 17:45:05 franc>
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.11alpha
 ;; Package-Requires: (cl-lib)
@@ -550,7 +550,7 @@ also affects this mode.  Entry to this mode runs the hooks on
   (if reduce-imenu-add (reduce--imenu-add-menubar-index))
   ;; ChangeLog support:
   (setq-local add-log-current-defun-function
-              #'reduce--current-proc)
+              #'reduce--current-proc-name)
   ;; (setq-local paragraph-start (concat "^$\\|" page-delimiter))
   ;; (setq-local paragraph-separate
   ;;             ;; paragraph-start)
@@ -2214,9 +2214,9 @@ idle time."
     (when on-p
       (setq reduce--show-proc-idle-timer
             (run-with-idle-timer reduce-show-proc-delay t
-                                 'reduce--show-proc)))
+                                 'reduce--show-proc-name)))
     (setq reduce-show-proc-mode on-p)
-    (reduce--show-proc)))
+    (reduce--show-proc-name)))
 
 (defconst reduce--show-proc-regexp
   (concat "\\_<procedure\\_>"
@@ -2224,24 +2224,27 @@ idle time."
           "+\\(" reduce-identifier-regexp "\\)")
   "Regexp to match the keyword “procedure” followed by its identifier.")
 
-(defun reduce--current-proc ()
+(defun reduce--current-proc-name ()
   "Return name of procedure definition point is in, or nil."
   ;; Used by reduce-show-proc-mode and ChangeLog support
   (let ((start (point)) procname)
-    (end-of-line)
     (save-match-data
-      (when (reduce--re-search-backward reduce--show-proc-regexp)
-        (setq procname (match-string-no-properties 1))
-        (reduce-forward-procedure 1)
-        (if (<= (point) start)          ; not in procedure
-            (setq procname nil))))
+      (beginning-of-line)
+      (if (looking-at reduce--show-proc-regexp)
+          (setq procname (match-string-no-properties 1))
+        (end-of-line)
+        (when (reduce--re-search-backward reduce--show-proc-regexp)
+          (setq procname (match-string-no-properties 1))
+          (reduce-forward-procedure 1)
+          (if (<= (point) start)        ; not in procedure
+              (setq procname nil)))))
     (goto-char start)
     procname))
 
-(defun reduce--show-proc ()
+(defun reduce--show-proc-name ()
   "Display current procedure name in mode line."
   (when (eq major-mode 'reduce-mode)
-    (setq reduce--show-proc-string (reduce--current-proc))
+    (setq reduce--show-proc-string (reduce--current-proc-name))
     (force-mode-line-update)))
 
 (defun reduce--show-proc-beginning ()
@@ -2267,7 +2270,8 @@ But don't jump out of the current procedure!"
       (widen)
     (save-excursion
       (reduce--show-proc-end)
-      (let ((end (point)))
+      (let ((end (1+ (point))))
+        ;; 1+ to avoid breaking reduce--current-proc-name
         (reduce--show-proc-beginning)
         (narrow-to-region (point) end)))))
 
@@ -2509,7 +2513,6 @@ Each file name appears in the returned list relative to directory
                   files)))))
     (nconc result (nreverse files))))
 
-
 ;;;; **********************************************************************
 
 ;;; Load Hook

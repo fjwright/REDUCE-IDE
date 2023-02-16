@@ -74,3 +74,4 @@ Main Updates since REDUCE IDE 1.10
 * Add *Customize…* item to REDUCE mode Run REDUCE menu.
 * Simplify `run-reduce` and no longer use a pop-up window, which was overkill.  Now, a null command name aborts the run.  I think these changes finally repair `reduce-run-file`, which calls `run-reduce`.
 * Improve Imenu support to handle REDUCE syntax.
+* Repair and update Show Proc code.  Turn it on by default.  Add support for mouse menu, cf. which-function-mode.

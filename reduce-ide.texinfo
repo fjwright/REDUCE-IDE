@@ -2,7 +2,7 @@
 @c %**start of header
 @settitle GNU Emacs REDUCE Integrated Development Environment
 @c Manual last updated:
-@set UPDATED Time-stamp: <2023-02-14 17:58:37 franc>
+@set UPDATED Time-stamp: <2023-02-15 15:29:28 franc>
 @c Software version:
 @set VERSION 1.11alpha
 @afourpaper
@@ -1195,14 +1195,15 @@ procedure or operator definition rapidly in another file.
 @cindex Showing current procedure
 @cindex Which procedure
 
-When editing or viewing long procedure definitions it is easy to forget
-which procedure you are looking at when the procedure statement itself
-is off the top of the screen.  REDUCE mode can show in the mode line the
-name of the procedure (if any) that point is in.  This facility is
-turned on and off by the command @kbd{M-x reduce-show-proc-mode} or via
-the REDUCE mode menu; it is off by default.  (It is analogous to the
-standard Emacs ``Which Function'' mode, but it is implemented
-differently and largely independently.)
+When editing or viewing long procedure definitions it is easy to
+forget which procedure you are looking at when the procedure statement
+itself is off the top of the screen.  REDUCE mode can show in the mode
+line the name of the procedure (if any) that point is in.  This
+facility is turned on and off by the command @kbd{M-x
+reduce-show-proc-mode} or via the REDUCE mode menu; it is off by
+default.  (It is analogous to the standard Emacs ``Which Function''
+mode -- @pxref{Which Function,,,emacs, The Emacs Editor} -- but it is
+implemented differently and largely independently.)
 
 @table @kbd
 @item M-x reduce-show-proc-mode
