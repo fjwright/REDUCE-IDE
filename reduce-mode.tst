@@ -81,9 +81,10 @@ Comment The above line no longer breaks this comment!$
 
 procedure foo; bar;
 
-procedure /* comment here OK */ foo1; bar;
+algebraic procedure /* comment here OK */ foo1; bar;
 
-procedure
+integer
+   procedure
    foo2 /* comment here OK */ x; /* comment here OK */ bar;
 
 !Strange + var!"iable + !!names + ! spaced! ;
@@ -91,7 +92,9 @@ procedure
 "This is a string!";
 "It contains keywords: comment, procedure, operator, lisp, algebraic.";
 
-procedure % comment here OK
+symbolic
+   inline
+   procedure % comment here OK
    foo3 % and here!
    (x,y); bar;
 

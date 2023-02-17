@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1992
-;; Time-stamp: <2023-02-16 17:45:05 franc>
+;; Time-stamp: <2023-02-17 15:18:49 franc>
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.11alpha
 ;; Package-Requires: (cl-lib)
@@ -2219,17 +2219,21 @@ idle time."
     (reduce--show-proc-name)))
 
 (defconst reduce--show-proc-regexp
-  (concat "\\_<procedure\\_>"
+  (concat reduce--proc-type-regexp "*"
+          reduce--proc-kwd-regexp
           reduce-whitespace-regexp
           "+\\(" reduce-identifier-regexp "\\)")
-  "Regexp to match the keyword “procedure” followed by its identifier.")
+  "Regexp to match a procedure header including the identifier.
+It matches optional procedural types followed by white space (but
+not comments) followed by “procedure”, “matrixproc” or “listproc”
+followed by white space or comments followed by an identifier.")
 
 (defun reduce--current-proc-name ()
   "Return name of procedure definition point is in, or nil."
   ;; Used by reduce-show-proc-mode and ChangeLog support
   (let ((start (point)) procname)
     (save-match-data
-      (beginning-of-line)
+      (back-to-indentation)
       (if (looking-at reduce--show-proc-regexp)
           (setq procname (match-string-no-properties 1))
         (end-of-line)
