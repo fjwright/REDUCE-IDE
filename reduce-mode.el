@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1992
-;; Time-stamp: <2023-02-17 15:18:49 franc>
+;; Time-stamp: <2023-02-17 15:48:18 franc>
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.11alpha
 ;; Package-Requires: (cl-lib)
@@ -262,16 +262,11 @@ Defaults to the value of ‘show-paren-mode’."
 
 (defcustom reduce-show-proc-mode t
   "If non-nil then display current procedure name in mode line.
-Update after ‘reduce-show-proc-delay’ seconds of Emacs idle time."
+Update after ‘idle-update-delay’ seconds of Emacs idle time."
   :set (lambda (_symbol value)
      (reduce-show-proc-mode (or value 0)))
   :initialize 'custom-initialize-default
   :type 'boolean
-  :group 'reduce-display)
-
-(defcustom reduce-show-proc-delay 0.125
-  "Time in seconds to delay before showing the current procedure name."
-  :type 'number
   :group 'reduce-display)
 
 ;; Run:
@@ -2187,8 +2182,8 @@ passing on any prefix argument (in raw form)."
 ;;;; Support for displaying current procedure name in mode line
 ;;;; **********************************************************
 
-;; This code is based loosely on "which-func.el" but does not use any
-;; of its functionality.
+;; This code is based loosely on ‘which-funcion-mode’ but does not use
+;; any of its functionality.
 
 (defvar-local reduce--show-proc-idle-timer nil
   "Timer to display current procedure name in mode line, or nil.")
@@ -2203,8 +2198,8 @@ is positive.  Return the new status of REDUCE Show Proc
 mode (non-nil means on).
 
 When REDUCE Show Proc mode is enabled, display current procedure
-name in mode line after ‘reduce-show-proc-delay’ seconds of Emacs
-idle time."
+name in mode line after ‘idle-update-delay’ seconds of Emacs idle
+time."
   (interactive "P")
   (let ((on-p (if arg
                   (> (prefix-numeric-value arg) 0)
@@ -2213,8 +2208,8 @@ idle time."
       (cancel-timer reduce--show-proc-idle-timer))
     (when on-p
       (setq reduce--show-proc-idle-timer
-            (run-with-idle-timer reduce-show-proc-delay t
-                                 'reduce--show-proc-name)))
+            (run-with-idle-timer idle-update-delay t
+                                 #'reduce--show-proc-name)))
     (setq reduce-show-proc-mode on-p)
     (reduce--show-proc-name)))
 
