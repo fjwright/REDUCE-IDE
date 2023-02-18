@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: 6 June 2022 as a separate file (was part of reduce-mode.el)
-;; Time-stamp: <2023-01-29 17:35:14 franc>
+;; Time-stamp: <2023-02-18 12:58:22 franc>
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 
 ;; This file is part of REDUCE IDE.
@@ -310,8 +310,8 @@ constants (e.g. “pi”).")
        "\\(" reduce-identifier-regexp "\\)\\)?")
      (1 font-lock-keyword-face)
      (2 font-lock-type-face)
-     (3 font-lock-keyword-face t)
-     (4 font-lock-function-name-face)))
+     (3 font-lock-keyword-face t t)           ; need not match
+     (4 font-lock-function-name-face nil t))) ; need not match
   "Rules to highlight “declare” and “struct” statements, as used in “redlog”.")
 
 (defconst reduce-font-lock--keywords-3

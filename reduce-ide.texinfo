@@ -2,7 +2,7 @@
 @c %**start of header
 @settitle GNU Emacs REDUCE Integrated Development Environment
 @c Manual last updated:
-@set UPDATED Time-stamp: <2023-02-17 16:20:39 franc>
+@set UPDATED Time-stamp: <2023-02-18 14:35:40 franc>
 @c Software version:
 @set VERSION 1.11alpha
 @afourpaper
@@ -1218,11 +1218,13 @@ it is currently narrowed.
 @table @kbd
 @item M-x reduce-show-proc-mode
 @findex reduce-show-proc-mode
-Toggle REDUCE Show Proc mode.  With a prefix argument, turn REDUCE
-Show Proc mode on if and only if the argument is positive.  When
-REDUCE Show Proc mode is enabled, display the current procedure name
-in the mode line after @code{idle-update-delay} seconds of Emacs idle
-time.
+Toggle REDUCE Show Proc mode.  REDUCE Show Proc mode displays the
+current procedure name in the mode line and updates it after
+@code{idle-update-delay} seconds of Emacs idle time.
+
+This is a minor mode.  If called interactively, toggle REDUCE Show
+Proc mode.  If the prefix argument is positive, enable the mode, and
+if it is zero or negative, disable the mode.
 @end table
 
 @c -------------------------------------------------------------------
@@ -1986,12 +1988,18 @@ turn on @code{reduce-show-delim-mode} initially in each REDUCE mode
 buffer.
 
 @item reduce-show-proc-delay
-Obsolete.
+Obsolete; replaced by @code{idle-update-delay}.
 
 @item reduce-show-proc-mode
-Default value @code{t}.  If non-nil then display the current procedure
-name in the mode line after @code{idle-update-delay} seconds of Emacs
-idle time.
+Obsolete; effectively replaced by @code{reduce-show-proc-mode-on}.
+
+@item reduce-show-proc-mode-on
+Default value @code{t}.  If non-nil then turn on REDUCE Show Proc mode
+automatically.  REDUCE Show Proc mode displays the current procedure
+name in the mode line and updates it after @code{idle-update-delay}
+seconds of Emacs idle time.  Since this is a buffer-local minor mode,
+it can also be turned on and off in each buffer independently using
+the command @code{reduce-show-proc-mode}.
 @end vtable
 
 @subsection Subgroup: Reduce Delim Showing

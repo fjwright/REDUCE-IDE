@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1992
-;; Time-stamp: <2023-02-17 15:48:18 franc>
+;; Time-stamp: <2023-02-18 14:42:45 franc>
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.11alpha
 ;; Package-Requires: (cl-lib)
@@ -245,27 +245,26 @@ It should end with \\=\\=.  The default value is \"\\(else\\|end\\|>>\\)\\=\\=\"
 ;; Display:
 
 (defcustom reduce-font-lock-mode-on t
-  "If non-nil then turn on ‘reduce-font-lock-mode’ initially.
-Defaults to t."
-  :package-version '(reduce-ide . "1.6")
+  "If non-nil then turn on ‘reduce-font-lock-mode’ automatically."
   :type 'boolean
   :group 'reduce-display)
 
 (defcustom reduce-show-delim-mode-on show-paren-mode
-  "If non-nil then turn on ‘reduce-show-delim-mode’ initially.
+  "If non-nil then turn on ‘reduce-show-delim-mode’ automatically.
 Since ‘reduce-show-delim-mode’ is a buffer-local minor mode, it
 can also be turned on and off in each buffer independently.
 Defaults to the value of ‘show-paren-mode’."
-  :package-version '(reduce-ide . "1.54")
   :type 'boolean
   :group 'reduce-display)
 
-(defcustom reduce-show-proc-mode t
-  "If non-nil then display current procedure name in mode line.
-Update after ‘idle-update-delay’ seconds of Emacs idle time."
-  :set (lambda (_symbol value)
-     (reduce-show-proc-mode (or value 0)))
-  :initialize 'custom-initialize-default
+(defcustom reduce-show-proc-mode-on t
+  "If non-nil then turn on REDUCE Show Proc mode automatically.
+REDUCE Show Proc mode displays the current procedure name in the
+mode line and updates it after ‘idle-update-delay’ seconds of
+Emacs idle time.  Since this is a buffer-local minor mode, it can
+also be turned on and off in each buffer independently using the
+command ‘reduce-show-proc-mode’."
+  :package-version '(reduce-ide . "1.11")
   :type 'boolean
   :group 'reduce-display)
 
@@ -529,8 +528,8 @@ also affects this mode.  Entry to this mode runs the hooks on
   (and reduce-show-delim-mode-on
        (require 'reduce-delim "reduce-delim" t)
        (reduce-show-delim-mode))
-  (if reduce-auto-indent-mode (reduce-auto-indent-mode t))
-  (if reduce-show-proc-mode (reduce-show-proc-mode t))
+  (when reduce-show-proc-mode-on (reduce-show-proc-mode))
+  (when reduce-auto-indent-mode (reduce-auto-indent-mode t))
   ;; This seems to be obsolete in Emacs 26!
   ;; Experimental support for outline minor mode (cf. lisp-mode.el)
   ;; ‘outline-regexp’ must match ‘heading’ from beginning of line;
@@ -2191,27 +2190,18 @@ passing on any prefix argument (in raw form)."
 (defvar-local reduce--show-proc-string nil
   "Name of current procedure to display in mode line, or nil.")
 
-(defun reduce-show-proc-mode (&optional arg)
+(define-minor-mode reduce-show-proc-mode
   "Toggle REDUCE Show Proc mode.
-With prefix ARG, turn REDUCE Show Proc mode on if and only if ARG
-is positive.  Return the new status of REDUCE Show Proc
-mode (non-nil means on).
-
-When REDUCE Show Proc mode is enabled, display current procedure
-name in mode line after ‘idle-update-delay’ seconds of Emacs idle
-time."
-  (interactive "P")
-  (let ((on-p (if arg
-                  (> (prefix-numeric-value arg) 0)
-                (not reduce-show-proc-mode))))
-    (when reduce--show-proc-idle-timer
-      (cancel-timer reduce--show-proc-idle-timer))
-    (when on-p
-      (setq reduce--show-proc-idle-timer
-            (run-with-idle-timer idle-update-delay t
-                                 #'reduce--show-proc-name)))
-    (setq reduce-show-proc-mode on-p)
-    (reduce--show-proc-name)))
+REDUCE Show Proc mode displays the current procedure name in the
+mode line and updates it after ‘idle-update-delay’ seconds of
+Emacs idle time."
+  :init-value nil
+  (when reduce--show-proc-idle-timer
+    (cancel-timer reduce--show-proc-idle-timer))
+  (when reduce-show-proc-mode
+    (setq reduce--show-proc-idle-timer
+          (run-with-idle-timer idle-update-delay t
+                               #'reduce--show-proc-name))))
 
 (defconst reduce--show-proc-regexp
   (concat reduce--proc-type-regexp "*"
@@ -2296,14 +2286,10 @@ But don't jump out of the current procedure!"
     "]")
   "Format for displaying the procedure name in the mode line.")
 
-(unless (assq 'reduce-show-proc-mode mode-line-misc-info)
-  (add-to-list 'mode-line-misc-info
-               '(reduce-show-proc-mode ; Only display if mode is enabled.
-                 (reduce--show-proc-string
-                  ("" reduce--show-proc-format " ")))))
-
-;; TODO:
-;; Use define-minor-mode?
+(add-to-list 'mode-line-misc-info
+             '(reduce-show-proc-mode ; Only display if mode is enabled.
+               (reduce--show-proc-string ; Only display if in proc.
+                ("" reduce--show-proc-format " "))))
 
 
 ;;;; *************
