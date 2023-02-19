@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1998
-;; Time-stamp: <2023-01-31 17:16:27 franc>
+;; Time-stamp: <2023-02-19 14:33:04 franc>
 ;; Keywords: languages, processes
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 
@@ -84,8 +84,8 @@ Not defined on other platforms."
 Each drive must be specified as ‘X:’, where X is a letter A-Z." invalid))
                       widget)))
                 string)
-        :group 'reduce-run
-        :package-version '(reduce-ide . "1.6"))))
+        :link '(custom-manual "(reduce-ide)REDUCE on Windows")
+        :group 'reduce-run)))
 
 (defcustom reduce-run-installation-directory
   (if (eq system-type 'windows-nt)
@@ -109,8 +109,8 @@ REDUCE Run mode attempts to determine automatically.  On other
 platforms, it defaults to “/usr/share/reduce/”.  Note that you
 can complete the directory name using \\<widget-field-keymap>‘\\[widget-complete]’."
   :type  '(choice (const :tag "None" nil) directory)
-  :group 'reduce-run
-  :package-version '(reduce-ide . "1.6"))
+  :link '(custom-manual "(reduce-ide)REDUCE on Windows")
+  :group 'reduce-run)
 
 
 (defconst reduce-run--redpsl-bat-filename
@@ -168,8 +168,9 @@ REDUCE; a GUI version will not work!"
                                   (const "PSL")
                                   (string :tag "Other"))
                 :value-type string)
-  :group 'reduce-run
-  :set-after '(reduce-run-installation-directory))
+  :set-after '(reduce-run-installation-directory)
+  :link '(custom-manual "(reduce-ide)Run REDUCE")
+  :group 'reduce-run)
 
 (defcustom reduce-run-command-name-default
   (caar reduce-run-commands)
@@ -180,17 +181,20 @@ The default is the first command name in ‘reduce-run-commands’."
                  ,@(mapcar #'(lambda (x) (list 'const (car x)))
                            reduce-run-commands))
   :set-after '(reduce-run-commands)
+  :link '(custom-manual "(reduce-ide)Run REDUCE")
   :group 'reduce-run
   :package-version '(reduce-ide . "1.11"))
 
 (defcustom reduce-run-prompt "^\\(?:[0-9]+[:*] \\)+"
   "Regexp to recognise prompts in REDUCE Run mode."
   :type 'regexp
+  :link '(custom-manual "(reduce-ide)Run Customization")
   :group 'reduce-run)
 
 (defcustom reduce-run-autostart t
   "If non-nil, automatically start a REDUCE process if necessary."
   :type 'boolean
+  :link '(custom-manual "(reduce-ide)Run REDUCE")
   :group 'reduce-run)
 
 (defcustom reduce-run-multiple t
@@ -198,17 +202,20 @@ The default is the first command name in ‘reduce-run-commands’."
 Do this even if REDUCE is already running.
 If nil, re-use any appropriate running REDUCE process."
   :type 'boolean
+  :link '(custom-manual "(reduce-ide)Run REDUCE")
   :group 'reduce-run)
 
 (defcustom reduce-run-mode-hook nil
   "Hook for customising REDUCE Run mode."
   :type 'hook
+  :link '(custom-manual "(reduce-ide)Hooks")
   :group 'reduce-run)
 
 (defcustom reduce-run-load-hook nil
   "Hook run when REDUCE Run mode is loaded.
 It is a good place to put keybindings."
   :type 'hook
+  :link '(custom-manual "(reduce-ide)Hooks")
   :group 'reduce-run)
 
 (defcustom reduce-input-filter "\\`\\([ \t;$]*\\|[ \t]*.[ \t]*\\)\\'"
@@ -217,6 +224,7 @@ The value is a regexp.  The default matches any combination of zero or
 more whitespace characters and/or statement terminators, or any single
 character (e.g. y or n) possibly surrounded by whitespace."
   :type 'regexp
+  :link '(custom-manual "(reduce-ide)Run Customization")
   :group 'reduce-run)
 
 (defcustom reduce-source-modes '(reduce-mode)
@@ -226,6 +234,7 @@ modes in this list then it is considered to be a REDUCE source
 file by ‘reduce-input-file’ and ‘reduce-compile-file’.  Used by
 these commands to determine defaults."
   :type '(repeat symbol)
+  :link '(custom-manual "(reduce-ide)Run Customization")
   :group 'reduce-run)
 
 
@@ -839,12 +848,13 @@ should be set automatically.  Note that you can complete the
 directory name using \\<widget-field-keymap>‘\\[widget-complete]’.
 Customizing this variable sets up completion for
 ‘reduce-load-package’; setting it directly has no effect."
-  :type '(choice (const :tag "None" nil) directory)
-  :group 'reduce-run
   :set #'(lambda (symbol value)
            (if value (reduce-set-package-completion-alist value))
            (set-default symbol value))
-  :set-after '(reduce-run-installation-directory))
+  :set-after '(reduce-run-installation-directory)
+  :type '(choice (const :tag "None" nil) directory)
+  :link '(custom-manual "(reduce-ide)Processing REDUCE Files")
+  :group 'reduce-run)
 
 (defvar reduce-load-package-history nil
      "A history list for ‘reduce-load-package’.")

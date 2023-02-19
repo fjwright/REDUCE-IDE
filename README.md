@@ -78,3 +78,5 @@ Main Updates since REDUCE IDE 1.10
 * Replace reduce-show-proc-delay with idle-update-delay.
 * Make Show Proc a proper buffer-local minor mode turned on automatically if the new option `reduce-show-proc-mode-on` is non-nil.
 * Fix a minor font-lock bug causing a transient error message.
+* Add links to the manual to all customizable options.
+* Rename `autoload-reduce-run` to `reduce-run-autoload`.

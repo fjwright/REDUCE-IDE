@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1992
-;; Time-stamp: <2023-02-18 14:42:45 franc>
+;; Time-stamp: <2023-02-19 16:12:22 franc>
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.11alpha
 ;; Package-Requires: (cl-lib)
@@ -120,6 +120,7 @@ Note that REDUCE Run inherits from comint."
 It can be used to customize global features of REDUCE mode and so
 is a good place to put keybindings."
   :type 'hook
+  :link '(custom-manual "(reduce-ide)Hooks")
   :group 'reduce)
 
 (defcustom reduce-mode-hook nil
@@ -127,6 +128,7 @@ is a good place to put keybindings."
 For example, ‘turn-on-font-lock’ to turn on font-lock mode locally.
 It can be used to customize buffer-local features of REDUCE mode."
   :type 'hook
+  :link '(custom-manual "(reduce-ide)Hooks")
   :group 'reduce)
 
 ;; Interface:
@@ -135,9 +137,10 @@ It can be used to customize buffer-local features of REDUCE mode."
 
 (defcustom reduce-imenu-add t
   "If non-nil REDUCE mode automatically calls ‘imenu-add-menubar-index’.
-This adds an “Index” menu to the menubar.  Default is t."
+This adds an “Index” menu to the menubar."
   :package-version '(reduce-ide . "1.11")
   :type 'boolean
+  :link '(custom-manual "(reduce-ide)Imenu")
   :group 'reduce-interface)
 
 (defcustom reduce-max-escape-tries 2
@@ -145,6 +148,7 @@ This adds an “Index” menu to the menubar.  Default is t."
 This relates to repeated use of ‘reduce-forward-statement’ or
 ‘reduce-backward-statement’ from inside the block or group."
   :type 'integer
+  :link '(custom-manual "(reduce-ide)Statements")
   :group 'reduce-interface)
 
 (defcustom reduce-completion-alist
@@ -207,6 +211,7 @@ This relates to repeated use of ‘reduce-forward-statement’ or
   "Alist of REDUCE symbols to be completed by ‘reduce-complete-symbol’.
 Optional ‘cdr’ is a replacement string or nullary function (for structures)."
   :type '(repeat (cons string (choice (const nil) string function)))
+  :link '(custom-manual "(reduce-ide)Completion")
   :group 'reduce-interface)
 
 ;; Formatting:
@@ -214,11 +219,13 @@ Optional ‘cdr’ is a replacement string or nullary function (for structures).
 (defcustom reduce-indentation 3
   "Depth of successive indentations in REDUCE code."
   :type 'integer
+  :link '(custom-manual "(reduce-ide)Indentation")
   :group 'reduce-format)
 
 (defcustom reduce-comment-region-string "%% "
   "String inserted by \\[reduce-comment-region] at start of each line."
   :type 'string
+  :link '(custom-manual "(reduce-ide)Comments")
   :group 'reduce-format)
 
 (defcustom reduce-auto-indent-mode t
@@ -229,48 +236,69 @@ time if the text just typed matches ‘reduce-auto-indent-regex’."
      (reduce-auto-indent-mode (or value 0)))
   :initialize 'custom-initialize-default
   :type 'boolean
+  :link '(custom-manual "(reduce-ide)Indentation")
   :group 'reduce-format)
 
 (defcustom reduce-auto-indent-delay 0.125
   "Time in seconds to delay before maybe re-indenting current line."
   :type 'number
+  :link '(custom-manual "(reduce-ide)Indentation")
   :group 'reduce-format)
 
 (defcustom reduce-auto-indent-regexp "\\(else\\|end\\|>>\\)\\="
   "Auto indent current line if text just typed matches this regexp.
 It should end with \\=\\=.  The default value is \"\\(else\\|end\\|>>\\)\\=\\=\"."
   :type 'regexp
+  :link '(custom-manual "(reduce-ide)Indentation")
   :group 'reduce-format)
 
 ;; Display:
 
 (defcustom reduce-font-lock-mode-on t
-  "If non-nil then turn on ‘reduce-font-lock-mode’ automatically."
+  "If non-nil then turn on REDUCE Font Lock mode automatically.
+REDUCE Font Lock mode automatically selects the font in which
+text is displayed (“fontifies” it) so as to indicate its logical
+status.
+
+Once REDUCE Font Lock mode has been turned on, it can be
+controlled by the standard Emacs Font Lock facilities."
   :type 'boolean
+  :link '(custom-manual "(reduce-ide)Font-Lock")
   :group 'reduce-display)
 
 (defcustom reduce-show-delim-mode-on show-paren-mode
-  "If non-nil then turn on ‘reduce-show-delim-mode’ automatically.
-Since ‘reduce-show-delim-mode’ is a buffer-local minor mode, it
-can also be turned on and off in each buffer independently.
+  "If non-nil then turn on REDUCE Show Delim mode automatically.
+REDUCE Show Delim mode displays highlighting on whatever group or
+block delimiter matches the one before or after point.
+
+This is a buffer-local minor mode so it can also be turned on and
+off in each buffer independently using the command
+‘reduce-show-delim-mode’.
+
 Defaults to the value of ‘show-paren-mode’."
   :type 'boolean
+  :link '(custom-manual "(reduce-ide)Groups and blocks highlighting")
   :group 'reduce-display)
 
 (defcustom reduce-show-proc-mode-on t
   "If non-nil then turn on REDUCE Show Proc mode automatically.
 REDUCE Show Proc mode displays the current procedure name in the
 mode line and updates it after ‘idle-update-delay’ seconds of
-Emacs idle time.  Since this is a buffer-local minor mode, it can
-also be turned on and off in each buffer independently using the
-command ‘reduce-show-proc-mode’."
+Emacs idle time.
+
+This is a buffer-local minor mode so it can also be turned on and
+off in each buffer independently using the command
+‘reduce-show-proc-mode’."
   :package-version '(reduce-ide . "1.11")
   :type 'boolean
+  :link '(custom-manual "(reduce-ide)Show Proc")
   :group 'reduce-display)
 
 ;; Run:
 
-(defcustom autoload-reduce-run 'menu
+(define-obsolete-variable-alias 'autoload-reduce-run 'reduce-run-autoload "1.11")
+
+(defcustom reduce-run-autoload 'menu
   "Whether, and if so how, to autoload REDUCE Run mode.
 Loading it is necessary only if you plan to run REDUCE within
 REDUCE IDE.  If the value is t then load REDUCE Run mode after
@@ -280,14 +308,8 @@ it is nil then do nothing."
   :type '(choice (const :tag "Load REDUCE Run mode" t)
                  (const :tag "Display Run REDUCE menu stub" menu)
                  (const :tag "Do nothing" nil))
+  :link '(custom-manual "(reduce-ide)Major mode menu")
   :group 'reduce-run)
-
-;; External variables:
-
-;; Due to improvements of byte compilation around 2003 the compiler
-;; would complain about ‘make-local-var’ on these later on. TS
-
-(defvar imenu-space-replacement)
 
 ;; Internal variables:
 
@@ -341,7 +363,7 @@ it is nil then do nothing."
   "Keymap for REDUCE mode.")
 
 ;; REDUCE-run menu bar and pop-up menu stub
-(when (eq autoload-reduce-run 'menu)
+(when (eq reduce-run-autoload 'menu)
   (easy-menu-define                     ; (symbol maps doc menu)
     reduce-mode-run-menu
     reduce-mode-map
@@ -2415,9 +2437,9 @@ Run by the hook ‘buffer-list-update-hook’."
 (defcustom reduce-etags-directory invocation-directory
   "Directory containing the etags program, or nil if it is in path.
 If non-nil the string must end with /."
-  :package-version '(reduce-ide . "1.54")
   :type '(choice (directory :tag "Etags program directory")
                  (const :tag "Etags is in exec path" nil))
+  :link '(custom-manual "(reduce-ide)Tags")
   :group 'reduce-interface)
 
 (defun reduce-tagify-dir (dir)
@@ -2506,6 +2528,6 @@ Each file name appears in the returned list relative to directory
 
 (run-hooks 'reduce-mode-load-hook)
 
-(when (eq autoload-reduce-run t) (require 'reduce-run))
+(when (eq reduce-run-autoload t) (require 'reduce-run))
 
 ;;; reduce-mode.el ends here

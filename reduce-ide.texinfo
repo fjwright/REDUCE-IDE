@@ -2,7 +2,7 @@
 @c %**start of header
 @settitle GNU Emacs REDUCE Integrated Development Environment
 @c Manual last updated:
-@set UPDATED Time-stamp: <2023-02-18 14:35:40 franc>
+@set UPDATED Time-stamp: <2023-02-19 15:50:08 franc>
 @c Software version:
 @set VERSION 1.11alpha
 @afourpaper
@@ -1188,8 +1188,8 @@ procedure or operator definition rapidly in another file.
 @end menu
 
 @node Show Proc
-@section Show procedure mode
-@cindex Show procedure mode
+@section Show proc mode
+@cindex Show proc mode
 @cindex Procedure display
 @cindex Displaying current procedure
 @cindex Showing current procedure
@@ -1251,7 +1251,7 @@ or the specified operator or variable is declared.
 
 If the customizable option @code{reduce-imenu-add} is non-nil, which
 it is by default, then REDUCE mode adds an ``Index'' menu
-automatically (@xref{Customization,, Customization of REDUCE IDE}).
+automatically (@ref{Customization,, Customization of REDUCE IDE}).
 Otherwise, selecting the appropriate item in the REDUCE menu adds an
 ``Index'' menu.
 
@@ -1426,7 +1426,7 @@ abbreviated menu can only run REDUCE (which implicitly loads REDUCE
 Run mode) or explicitly load REDUCE Run mode.  Whether or not to load
 REDUCE Run mode or install the abbreviated REDUCE Run mode menu when
 REDUCE mode loads is controlled by the option
-@code{autoload-reduce-run}.  @xref{Run Customization}.
+@code{reduce-run-autoload}.  @xref{Run Customization}.
 
 @c -------------------------------------------------------------------
 
@@ -1596,7 +1596,7 @@ your @code{load-path}, and put the following in your @file{.emacs} file:
 @end lisp
 
 To control access to the features of REDUCE Run mode from REDUCE mode
-you can customize the option @code{autoload-reduce-run}.  @xref{Run
+you can customize the option @code{reduce-run-autoload}.  @xref{Run
 Customization}.
 
 @c -------------------------------------------------------------------
@@ -1871,7 +1871,7 @@ process.  It asks whether you want the input echoed.
 Read a REDUCE package name from the minibuffer and load it into a
 REDUCE process.  The read process uses completion based on the file
 @code{package.map} in the REDUCE source code package directory
-specified by the variable @code{reduce-packages-directory}, which
+specified by the option @code{reduce-packages-directory}, which
 should automatically be set correctly when REDUCE Run mode loads.
 Pressing the @key{TAB} key should list the packages available, from
 which you can select in the usual way, such as by clicking on a
@@ -1951,7 +1951,7 @@ bindings.
 However, adding the function @code{require-reduce-run} to this hook to
 automatically load @code{reduce-run} is no longer supported and the
 function has been removed; instead, please customize the option
-@code{autoload-reduce-run}.  @xref{Run Customization}.
+@code{reduce-run-autoload}.  @xref{Run Customization}.
 
 @item reduce-mode-hook
 Default value @code{nil}.  List of functions to be called when REDUCE
@@ -2097,7 +2097,7 @@ mode.  The @code{comint} customization group can be accessed via a
 link in the REDUCE Run customization group.
 
 @vtable @code
-@item autoload-reduce-run
+@item reduce-run-autoload
 Whether, and if so how, to autoload REDUCE Run mode.  Loading it is
 necessary only if you plan to run REDUCE within REDUCE IDE@.  If the
 value is @code{t} then load REDUCE Run mode after @code{reduce-mode}
