@@ -2,7 +2,7 @@
 @c %**start of header
 @settitle GNU Emacs REDUCE Integrated Development Environment
 @c Manual last updated:
-@set UPDATED Time-stamp: <2023-02-19 15:50:08 franc>
+@set UPDATED Time-stamp: <2023-02-19 17:58:03 franc>
 @c Software version:
 @set VERSION 1.11alpha
 @afourpaper
@@ -1064,54 +1064,64 @@ Font-lock mode causes Emacs to select automatically the font in which
 text is displayed (``fontify'' it) so as to indicate its logical
 status.  @xref{Font Lock,, Font Lock mode, emacs, The Emacs Editor}.
 The first version of font-lock support for REDUCE mode was contributed
-by Rainer Schöpf.  The current version provides 3 strictly inclusive
-level: ``Symbolic'' includes ``Algebraic'' includes ``Basic''.  The
-level can be selected using the standard font-lock facilities, or
-interactively most easily via the REDUCE mode @emph{Syntax
-Highlighting} sub-menu.  The levels and corresponding highlighting are
-as follows:
+by Rainer Schöpf.  The current version applies to both REDUCE mode and
+REDUCE Run mode (@ref{Run}) and provides 4 strictly inclusive level:
+``Symbolic'' includes ``Algebraic'', which includes ``Basic'', which
+includes ``Minimal''.  The level can be selected using the standard
+font-lock facilities, or interactively most easily via the REDUCE
+major mode @emph{Syntax Highlighting} sub-menu.  The levels and
+corresponding highlighting are as follows:
 
 @enumerate 0
 @item
-Basic: strings are displayed using @code{font-lock-string-face}; all
-types of comment (comment statements, comments from @code{%} to the
-end of the line, and C-style comments between @code{/*} and @code{*/}
-delimiters) are displayed using @code{font-lock-comment-face}; the
-main keywords including block delimiters and group delimiters are
-displayed using @code{font-lock-keyword-face}.
+Minimal: strings are displayed using @code{font-lock-string-face} and
+``syntactic'' comments (namely comments from @code{%} to the end of
+the line, and C-style comments between @code{/*} and @code{*/}
+delimiters) are displayed using @code{font-lock-comment-face}.
+
+In REDUCE Run mode (@ref{Run}) REDUCE warning and error messages, and
+REDUCE (@code{rtrace}) and Lisp trace output, are displayed using
+@code{font-lock-warning-face}.
 
 @item
-Algebraic: as basic level; additionally procedure names are displayed
-using @code{font-lock-function-name-face} and procedure parameters are
-displayed using @code{font-lock-variable-face}; general types such as
-``algebraic'' are displayed using @code{font-lock-type-face}; local
-variable types such as ``scalar'' are displayed using
-@code{font-lock-type-face} and variable names declared local are
-displayed using @code{font-lock-variable-name-face}; goto and label
-names and named constants such as ``pi'' and ``Catalan'' are displayed
-using @code{font-lock-constant-face}; declared operator, operator type
-such as ``linear'', vector, array and matrix declarations are
-displayed using @code{font-lock-type-face}; operator, vector, and
-array and matrix identifiers (with or without bounds) are displayed
-using @code{font-lock-function-face}.
+Basic: as minimal level and additionally comment statements are
+displayed using @code{font-lock-comment-face}; the main keywords
+including block delimiters and group delimiters are displayed using
+@code{font-lock-keyword-face}.
 
 @item
-Symbolic: as algebraic level; additionally preprocessor #-directives
-are displayed using @code{font-lock-preprocessor-face}; the key
-symbolic-mode ``types'' @code{fluid} and @code{global} are displayed
-using @code{font-lock-type-face} and the variable names declared fluid
-or global are displayed using @code{font-lock-variable-name-face}; all
-other quoted objects are displayed using
-@code{font-lock-constant-face}; asserted types are displayed using
-@code{font-lock-type-face}; ``declare'' and ``struct'' statements, as
-used in ``redlog'', are displayed using @code{font-lock-keyword-face},
-@code{font-lock-function-name-face} and @code{font-lock-type-face};
-module, endmodule and other symbolic-mode keywords are displayed using
-@code{font-lock-keyword-face}; module names are displayed using
-@code{font-lock-constant-face}; key symbolic-mode functions such as
-``flag'' and ``get'' are displayed using
-@code{font-lock-builtin-face}; other symbolic-mode ``types'' such as
-``switch'' and ``share'' are displayed using
+Algebraic: as basic level and additionally procedure names are
+displayed using @code{font-lock-function-name-face} and procedure
+parameters are displayed using @code{font-lock-variable-face}; general
+types such as ``algebraic'' are displayed using
+@code{font-lock-type-face}; local variable types such as ``scalar''
+are displayed using @code{font-lock-type-face} and variable names
+declared local are displayed using
+@code{font-lock-variable-name-face}; goto and label names and named
+constants such as ``pi'' and ``Catalan'' are displayed using
+@code{font-lock-constant-face}; declared operator, operator type such
+as ``linear'', vector, array and matrix declarations are displayed
+using @code{font-lock-type-face}; operator, vector, and array and
+matrix identifiers (with or without bounds) are displayed using
+@code{font-lock-function-face}.
+
+@item
+Symbolic: as algebraic level and additionally preprocessor
+#-directives are displayed using @code{font-lock-preprocessor-face};
+the key symbolic-mode ``types'' @code{fluid} and @code{global} are
+displayed using @code{font-lock-type-face} and the variable names
+declared fluid or global are displayed using
+@code{font-lock-variable-name-face}; all other quoted objects are
+displayed using @code{font-lock-constant-face}; asserted types are
+displayed using @code{font-lock-type-face}; ``declare'' and ``struct''
+statements, as used in ``redlog'', are displayed using
+@code{font-lock-keyword-face}, @code{font-lock-function-name-face} and
+@code{font-lock-type-face}; module, endmodule and other symbolic-mode
+keywords are displayed using @code{font-lock-keyword-face}; module
+names are displayed using @code{font-lock-constant-face}; key
+symbolic-mode functions such as ``flag'' and ``get'' are displayed
+using @code{font-lock-builtin-face}; other symbolic-mode ``types''
+such as ``switch'' and ``share'' are displayed using
 @code{font-lock-type-face}; declared lambda parameters are displayed
 using @code{font-lock-variable-face}.
 @end enumerate
@@ -1350,7 +1360,8 @@ REDUCE Show Delim mode is based closely on Show Paren mode;
 @ref{Matching,, Automatic Display Of Matching Parentheses, emacs, The
 Emacs Editor}.  It is completely independent except that all settings
 default to the corresponding values for Show Paren mode.  Show Delim
-mode is turned on automatically when REDUCE mode is selected if
+mode applies to both REDUCE mode and REDUCE Run mode (@ref{Run}) and
+is turned on automatically when a REDUCE mode is selected if
 @code{reduce-show-delim-mode-on} is non-nil, which it is by default if
 Show Paren mode is on.
 
@@ -1521,7 +1532,8 @@ input editing and flexible re-execution of previous input;
 @item
 flexible browsing of all input and output;
 @item
-syntax highlighting of prompts, input and error messages;
+syntax highlighting of prompts, input, warning and error messages, and
+trace output;
 @item
 bracket and delimiter highlighting or matching as in REDUCE mode;
 @item
@@ -1675,12 +1687,13 @@ to the file being edited.
 @findex run-reduce
 This command prompts for the name of a REDUCE command in the
 minibuffer, using completion and ignoring case.  The REDUCE command
-names are as specified by the option @code{reduce-run-commands}.  If
-you don’t give a command name, i.e.@: you just hit @key{RET}, then a
-menu pops up at the current pointer location, from which you can
-select the name of the command you want to run.  The REDUCE process
-buffer is named using the name of the REDUCE command that it runs,
-e.g.@: @code{*CSL REDUCE*} or @code{*PSL REDUCE*}.
+names are as specified by the option @code{reduce-run-commands} and
+the default command name is as specified by the option
+@code{reduce-run-command-name-default}, if non-nil.  If you don’t
+provide a command name, i.e.@: you just hit @key{RET}, then the
+command aborts.  The REDUCE process buffer is named using the name of
+the REDUCE command that it runs, e.g.@: @code{*CSL REDUCE*} or
+@code{*PSL REDUCE*}.
 
 If this command is executed with a prefix argument then it reads an
 actual command to run REDUCE from the minibuffer and runs that
@@ -1780,7 +1793,8 @@ run REDUCE code as an independent REDUCE program by starting the
 specified version of REDUCE in a new process buffer named uniquely by
 the file or buffer containing the REDUCE code.  This allows several
 REDUCE programs to be conveniently run simultaneously and
-independently.
+independently.  Both commands prompt for the REDUCE command to run
+(via @code{run-reduce}).
 
 @table @kbd
 @item C-c C-M-f
@@ -1899,7 +1913,9 @@ REDUCE IDE supports a small amount of customization and the following
 options can be changed using the standard Emacs customization
 facilities.  The main REDUCE IDE customization group is called
 ``REDUCE'', under which are the four sub-groups ``REDUCE Display'',
-``REDUCE Format'', ``REDUCE Interface'' and ``REDUCE Run''.
+``REDUCE Format'', ``REDUCE Interface'' and ``REDUCE Run''.  Every
+customizable option includes a link to the appropriate section of this
+manual.
 
 REDUCE mode inherits from @code{prog-mode}, so some of its options
 also affects this mode.  The @code{prog-mode} customization group can
@@ -1979,13 +1995,23 @@ mode but have no effect on the code itself.
 
 @vtable @code
 @item reduce-font-lock-mode-on
-Default value @code{t}.  If non-nil then turn on
-@code{reduce-font-lock-mode} initially. More
+Default value @code{t}.  If non-nil then turn on REDUCE Font Lock mode
+automatically.  REDUCE Font Lock mode automatically selects the font
+in which text is displayed (“fontifies” it) so as to indicate its
+logical status.
+
+Once REDUCE Font Lock mode has been turned on, it can be
+controlled by the standard Emacs Font Lock facilities.
 
 @item reduce-show-delim-mode-on
 Default value the value of @code{show-paren-mode}.  If non-nil then
-turn on @code{reduce-show-delim-mode} initially in each REDUCE mode
-buffer.
+turn on REDUCE Show Delim mode automatically.  REDUCE Show Delim mode
+displays highlighting on whatever group or block delimiter matches the
+one before or after point.
+
+This is a buffer-local minor mode so it can also be turned on and off
+in each buffer independently using the command
+@code{reduce-show-delim-mode}.
 
 @item reduce-show-proc-delay
 Obsolete; replaced by @code{idle-update-delay}.
@@ -1997,9 +2023,11 @@ Obsolete; effectively replaced by @code{reduce-show-proc-mode-on}.
 Default value @code{t}.  If non-nil then turn on REDUCE Show Proc mode
 automatically.  REDUCE Show Proc mode displays the current procedure
 name in the mode line and updates it after @code{idle-update-delay}
-seconds of Emacs idle time.  Since this is a buffer-local minor mode,
-it can also be turned on and off in each buffer independently using
-the command @code{reduce-show-proc-mode}.
+seconds of Emacs idle time.
+
+This is a buffer-local minor mode so it can also be turned on and
+off in each buffer independently using the command
+@code{reduce-show-proc-mode}.
 @end vtable
 
 @subsection Subgroup: Reduce Delim Showing
@@ -2097,14 +2125,6 @@ mode.  The @code{comint} customization group can be accessed via a
 link in the REDUCE Run customization group.
 
 @vtable @code
-@item reduce-run-autoload
-Whether, and if so how, to autoload REDUCE Run mode.  Loading it is
-necessary only if you plan to run REDUCE within REDUCE IDE@.  If the
-value is @code{t} then load REDUCE Run mode after @code{reduce-mode}
-has loaded; if it is @code{menu} (the default) then display a Run
-REDUCE menu stub that can load REDUCE Run mode; if it is @code{nil}
-then do nothing.
-
 @item reduce-input-filter
 Default value @code{"\\`\\([ \t;$]*\\|[ \t]*.[ \t]*\\)\\'"}.  What not
 to save on REDUCE Run mode's input history.  The value is a regular
@@ -2119,11 +2139,13 @@ This option should be set automatically when REDUCE Run mode loads.
 If the directory cannot be found then this option will be set to nil.
 You can customize this variable to override the default setting.
 
-@item reduce-run-mswin-drives
-On Microsoft Windows, this is the list of drives to be searched for
-REDUCE, which defaults to all local drives, e.g. @code{("C:" "D:" "E:"
-"F:")}.  It is undefined on other platforms and is used only to set
-the default value of @code{reduce-run-installation-directory}.
+@item reduce-run-autoload
+Whether, and if so how, to autoload REDUCE Run mode.  Loading it is
+necessary only if you plan to run REDUCE within REDUCE IDE@.  If the
+value is @code{t} then load REDUCE Run mode after @code{reduce-mode}
+has loaded; if it is @code{menu} (the default) then display a Run
+REDUCE menu stub that can load REDUCE Run mode; if it is @code{nil}
+then do nothing.
 
 @item reduce-run-autostart
 Default value @code{t}.  If non-nil then all commands that require a
@@ -2151,6 +2173,10 @@ and moreover it uses a separate batch file to run PSL REDUCE, as
 described above (@pxref{REDUCE on Windows, Running REDUCE on Microsoft
 Windows}).
 
+@item reduce-run-command-name-default
+Default value the first command name in @code{reduce-run-commands}.
+If non-nil then the value specifies the default REDUCE command name.
+
 @item reduce-run-installation-directory
 Default value @file{X:/Program Files/Reduce/} on Microsoft Windows,
 where X is a letter A-Z, and @file{/usr/share/reduce/} on other
@@ -2161,6 +2187,12 @@ containing the user-executable batch files.  On Microsoft Windows,
 REDUCE Run mode attempts to determine the correct value for this
 variable automatically.  Note that you can complete the directory name
 using @kbd{M-@key{TAB}}.
+
+@item reduce-run-mswin-drives
+On Microsoft Windows, this is the list of drives to be searched for
+REDUCE, which defaults to all local drives, e.g. @code{("C:" "D:" "E:"
+"F:")}.  It is undefined on other platforms and is used only to set
+the default value of @code{reduce-run-installation-directory}.
 
 @item reduce-run-multiple
 Default value @code{t}.  If non-nil then commands that explicitly
