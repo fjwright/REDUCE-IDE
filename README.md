@@ -82,3 +82,4 @@ Main Updates since REDUCE IDE 1.10
 * Rename `autoload-reduce-run` to `reduce-run-autoload`.
 * Add menu item to read the REDUCE IDE manual.
 * Comment out obsolete menu item to add a change log entry.
+* Make Auto Indent a proper buffer-local minor mode turned on automatically if the new option `reduce-auto-indent-mode-on` is non-nil.  Revise `reduce-auto-indent-regexp` to allow arbitrary text between the trigger and point, which seems to work much better.

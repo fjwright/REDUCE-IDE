@@ -2,7 +2,7 @@
 @c %**start of header
 @settitle GNU Emacs REDUCE Integrated Development Environment
 @c Manual last updated:
-@set UPDATED Time-stamp: <2023-02-19 17:58:03 franc>
+@set UPDATED Time-stamp: <2023-02-20 15:35:15 franc>
 @c Software version:
 @set VERSION 1.11alpha
 @afourpaper
@@ -845,22 +845,26 @@ is bound by default to @kbd{TAB}.
 With the current indentation style, it is not possible in all cases to
 determine the correct indentation until after some text has been
 entered on a line.  This applies to the terminal delimiter of a block
-@code{end} or group @code{>>} when it appears alone on a line and to
-an @code{else} clause.  Therefore, REDUCE mode can automatically
-re-indent the current line once there is enough text to recognise that
-this is necessary.  It does this only when it is otherwise idle and
-only when the relevant text has just been typed.  It is not done if
-the cursor is later moved onto such a line since it is assumed that
-the desired indentation has been set by then.  (The indentation of any
-text can, of course, be changed at any time, but it will never be
-automatically changed retrospectively!)  This facility is turned on
-and off by the command @code{reduce-auto-indent-mode}, the length of
-idle time required before the facility will operate is controlled by
-the option @code{reduce-auto-indent-delay}, and whether the current
-line is auto-indented by this facility is controlled by the regular
-expression that is the value of the option
-@code{reduce-auto-indent-regexp}.  Auto-indentation is on by default.
-@xref{Customization,, Customization of the REDUCE IDE}.
+(@code{end}) or group (@code{>>}) and to an @code{else} clause.
+Therefore, REDUCE mode can automatically re-indent the current line
+once there is enough text to recognise that this is necessary.  It
+does this only when it is otherwise idle and only when the relevant
+text has just been typed.  It is not done if the cursor is later moved
+onto such a line since it is assumed that the desired indentation has
+been set by then.  (The indentation of any text can, of course, be
+changed at any time, but it will never be automatically changed
+retrospectively!)
+
+This facility can be turned on and off by the command
+@code{reduce-auto-indent-mode}, and it is turned on automatically if
+the value of the option @code{reduce-auto-indent-mode-on} is non-nil,
+which it is by default.  The length of idle time required before the
+facility will operate is controlled by the option
+@code{reduce-auto-indent-delay}, and whether the current line is
+re-indented by this facility is controlled by the regular expression
+that is the value of the option @code{reduce-auto-indent-regexp}.
+Auto-indentation is on by default.  @xref{Customization,,
+Customization of the REDUCE IDE}.
 
 @table @kbd
 @item M-x reduce-auto-indent-mode
@@ -2049,15 +2053,16 @@ REDUCE mode editing commands.
 Default value 0.125.  Time in seconds to delay before maybe re-indenting
 current line.
 
-@item reduce-auto-indent-mode
-Default value @code{t}.  If non-nil then conditionally re-indent the
-current line after @code{reduce-auto-indent-delay} seconds of Emacs idle
-time if the text just typed matches @code{reduce-auto-indent-regex}.
+@item reduce-auto-indent-mode-on
+Default value @code{t}.  If non-nil then turn on REDUCE Auto Indent
+mode automatically.  REDUCE Auto Indent mode re-indents the current
+line after @code{reduce-auto-indent-delay} seconds of Emacs idle time
+if the text just typed matches @code{reduce-auto-indent-regexp}.
 
 @item reduce-auto-indent-regexp
-Default value @code{"\\(else\\|end\\|>>\\)\\="}.  Auto indent the
-current line if the text just typed matches this regexp.  It should end
-with @code{\=}.
+Default value @code{\_<\(?:else\|end\|>>\)\_>.*\=}.  Auto
+indent the current line if the text just typed matches this regexp.
+It should end with @code{\=}.
 
 @item reduce-comment-region-string
 Default value @samp{%% }.  String inserted by
