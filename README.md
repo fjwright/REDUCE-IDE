@@ -80,3 +80,5 @@ Main Updates since REDUCE IDE 1.10
 * Fix a minor font-lock bug causing a transient error message.
 * Add links to the manual to all customizable options.
 * Rename `autoload-reduce-run` to `reduce-run-autoload`.
+* Add menu item to read the REDUCE IDE manual.
+* Comment out obsolete menu item to add a change log entry.

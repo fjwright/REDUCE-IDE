@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1992
-;; Time-stamp: <2023-02-19 16:12:22 franc>
+;; Time-stamp: <2023-02-20 10:06:45 franc>
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.11alpha
 ;; Package-Requires: (cl-lib)
@@ -442,18 +442,20 @@ it is nil then do nothing."
     :keys "C-u M-C-\\" :active t
     :help "Re-indent the current buffer"]
    "--"
+   ["Read the Manual" (info "reduce-ide" "*REDUCE IDE*") :active t
+    :help "Read the REDUCE IDE manual in Info format"]
    ["Command Mini Help" (apropos-command "\\`reduce\\|reduce\\'") :active t
-    :help "Show a REDUCE Mode command summary"]
+    :help "Show a REDUCE IDE active command summary"]
    ["Customize…" (customize-group 'reduce) :active t
-    :help "Customize REDUCE Mode"]
+    :help "Customize REDUCE IDE"]
    ["Show Version" reduce-ide-version :active t
     :help "Show the REDUCE IDE version"]
    ;; This seems to be obsolete in Emacs 26!
    ;; ["Outline" outline-minor-mode
    ;;  :style toggle :selected outline-minor-mode :active t
    ;;  :help "Toggle outline minor mode"]
-   ["Update ChangeLog" add-change-log-entry-other-window :active t
-    :help "Add change log entry other window"]
+   ;; ["Update ChangeLog" add-change-log-entry-other-window :active t
+   ;;  :help "Add change log entry other window"]
    ))
 
 (defun reduce-ide-version ()
