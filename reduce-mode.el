@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1992
-;; Time-stamp: <2023-02-20 10:06:45 franc>
+;; Time-stamp: <2023-02-20 13:56:59 franc>
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.11alpha
 ;; Package-Requires: (cl-lib)
@@ -228,13 +228,16 @@ Optional ‘cdr’ is a replacement string or nullary function (for structures).
   :link '(custom-manual "(reduce-ide)Comments")
   :group 'reduce-format)
 
-(defcustom reduce-auto-indent-mode t
-  "If non-nil then conditionally re-indent the current line.
-This will happen after ‘reduce-auto-indent-delay’ seconds of idle
-time if the text just typed matches ‘reduce-auto-indent-regex’."
-  :set (lambda (_symbol value)
-     (reduce-auto-indent-mode (or value 0)))
-  :initialize 'custom-initialize-default
+(defcustom reduce-auto-indent-mode-on t
+  "If non-nil then turn on REDUCE Auto Indent mode automatically.
+REDUCE Auto Indent mode re-indents the current line after
+‘reduce-auto-indent-delay’ seconds of Emacs idle time if the text
+just typed matches ‘reduce-auto-indent-regexp’.
+
+This is a buffer-local minor mode so it can also be turned on and
+off in each buffer independently using the command
+‘reduce-auto-indent-mode’."
+  :package-version '(reduce-ide . "1.11")
   :type 'boolean
   :link '(custom-manual "(reduce-ide)Indentation")
   :group 'reduce-format)
@@ -245,9 +248,10 @@ time if the text just typed matches ‘reduce-auto-indent-regex’."
   :link '(custom-manual "(reduce-ide)Indentation")
   :group 'reduce-format)
 
-(defcustom reduce-auto-indent-regexp "\\(else\\|end\\|>>\\)\\="
+(defcustom reduce-auto-indent-regexp
+  "\\_<\\(?:else\\|end\\|>>\\)\\_>.*\\="
   "Auto indent current line if text just typed matches this regexp.
-It should end with \\=\\=.  The default value is \"\\(else\\|end\\|>>\\)\\=\\=\"."
+It should end with \\=\\=."
   :type 'regexp
   :link '(custom-manual "(reduce-ide)Indentation")
   :group 'reduce-format)
@@ -553,7 +557,7 @@ also affects this mode.  Entry to this mode runs the hooks on
        (require 'reduce-delim "reduce-delim" t)
        (reduce-show-delim-mode))
   (when reduce-show-proc-mode-on (reduce-show-proc-mode))
-  (when reduce-auto-indent-mode (reduce-auto-indent-mode t))
+  (when reduce-auto-indent-mode-on (reduce-auto-indent-mode))
   ;; This seems to be obsolete in Emacs 26!
   ;; Experimental support for outline minor mode (cf. lisp-mode.el)
   ;; ‘outline-regexp’ must match ‘heading’ from beginning of line;
@@ -1229,38 +1233,31 @@ Interactively with prefix arg, indent the whole buffer."
 ;;;; Support for automatic re-indentation of specific lines
 ;;;; ******************************************************
 
-(defvar reduce-auto-indent-idle-timer nil)
+(defvar-local reduce--auto-indent-idle-timer nil
+  "Timer to maybe auto-indent the current line, or nil.")
 
-(defun reduce-auto-indent-mode (&optional arg)
+(define-minor-mode reduce-auto-indent-mode
   "Toggle REDUCE Auto Indent mode.
-With prefix ARG, turn mode on if and only if ARG is positive.
-Returns the new status of REDUCE Auto Indent mode (non-nil means on).
-
-When REDUCE Auto Indent mode is enabled, after
-‘reduce-auto-indent-delay’ seconds of Emacs idle time re-indent the
-current line if the text just typed matches ‘reduce-auto-indent-regexp’."
-  (interactive "P")
-  (let ((on-p (if arg
-          (> (prefix-numeric-value arg) 0)
-        (not reduce-auto-indent-mode))))
-    (if reduce-auto-indent-idle-timer
-    (cancel-timer reduce-auto-indent-idle-timer))
-    (if on-p
+REDUCE Auto Indent mode re-indents the current line after
+‘reduce-auto-indent-delay’ seconds of Emacs idle time if the text
+just typed matches ‘reduce-auto-indent-regexp’."
+  :init-value nil
+  (when reduce--auto-indent-idle-timer
+    (cancel-timer reduce--auto-indent-idle-timer))
+  (when reduce-auto-indent-mode
     (setq reduce-auto-indent-idle-timer
           (run-with-idle-timer reduce-auto-indent-delay t
-                   'reduce-auto-indent-function)))
-    (setq reduce-auto-indent-mode on-p)
-    (reduce-auto-indent-function)))
+                               #'reduce--auto-indent))))
 
-(defun reduce-auto-indent-function ()
-  "Re-indent current line if match with ‘reduce-auto-indent-regexp’ just typed."
+(defun reduce--auto-indent ()
+  "Re-indent current line maybe.
+Re-indent if the text just typed matches ‘reduce-auto-indent-regexp’."
   (and (eq major-mode 'reduce-mode)
        (eq last-command 'self-insert-command)
        (save-excursion
-     (save-match-data
-       (if (re-search-backward reduce-auto-indent-regexp nil t)
-           (reduce-indent-line))
-       ))))
+         (save-match-data
+           (when (re-search-backward reduce-auto-indent-regexp nil t)
+             (reduce-indent-line))))))
 
 
 ;;;; ******************************
