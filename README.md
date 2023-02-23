@@ -83,3 +83,4 @@ Main Updates since REDUCE IDE 1.10
 * Add menu item to read the REDUCE IDE manual.
 * Comment out obsolete menu item to add a change log entry.
 * Make Auto Indent a proper buffer-local minor mode turned on automatically if the new option `reduce-auto-indent-mode-on` is non-nil.  Revise `reduce-auto-indent-regexp` to allow arbitrary text between the trigger and point, which seems to work much better.
+* Make Show Delim a proper buffer-local minor mode.  Replace `reduce-show-delim-delay` with `show-paren-delay`.
