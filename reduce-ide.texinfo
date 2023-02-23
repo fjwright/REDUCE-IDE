@@ -2,7 +2,7 @@
 @c %**start of header
 @settitle GNU Emacs REDUCE Integrated Development Environment
 @c Manual last updated:
-@set UPDATED Time-stamp: <2023-02-20 15:35:15 franc>
+@set UPDATED Time-stamp: <2023-02-23 16:45:41 franc>
 @c Software version:
 @set VERSION 1.11alpha
 @afourpaper
@@ -1377,11 +1377,10 @@ future.
 @table @kbd
 @item M-x reduce-show-delim-mode
 @findex reduce-show-delim-mode
-Toggle REDUCE Show Delim mode.  With a prefix argument, turn REDUCE
-Show Delim mode on if and only if the argument is positive.  When
-REDUCE Show Delim mode is enabled, any matching delimiter is
-highlighted after @code{reduce-show-delim-delay} seconds of Emacs idle
-time.  @xref{Customization,, Customization of REDUCE IDE}.
+Toggle REDUCE Show Delim mode.  With a prefix argument, turn the mode
+on if and only if the argument is positive.  REDUCE Show Delim mode
+highlights matching group or block delimiters after
+@code{show-paren-delay} seconds of Emacs idle time.
 @end table
 
 Show Delim mode is a buffer-local minor mode.  Whenever point is
