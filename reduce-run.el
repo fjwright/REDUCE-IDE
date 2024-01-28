@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1998
-;; Time-stamp: <2024-01-28 17:17:07 franc>
+;; Time-stamp: <2024-01-28 18:21:10 franc>
 ;; Keywords: languages, processes
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 
@@ -164,10 +164,7 @@ but typically relates to the underlying Lisp system.  The string
 Command should be a relative or absolute pathname, and may
 include switches.  It must invoke a command-line version of
 REDUCE; a GUI version will not work!"
-  :type '(alist :key-type (choice (const "CSL")
-                                  (const "PSL")
-                                  (string :tag "Other"))
-                :value-type string)
+  :type '(alist :key-type string :value-type string)
   :set-after '(reduce-run-installation-directory)
   :link '(custom-manual "(reduce-ide)Run REDUCE")
   :group 'reduce-run)
