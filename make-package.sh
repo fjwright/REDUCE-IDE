@@ -1,7 +1,7 @@
 #! /bin/bash
 
 # Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
-# Time-stamp: <2022-12-14 14:30:13 franc>
+# Time-stamp: <2024-01-28 17:23:59 franc>
 
 # Construct a REDUCE IDE package archive.
 # Usage: make-package.sh version-number

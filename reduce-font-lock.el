@@ -1,10 +1,10 @@
 ;;; reduce-font-lock.el --- Syntax highlighting for REDUCE IDE  -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2022-2023 Francis J. Wright
+;; Copyright (C) 2022-2024 Francis J. Wright
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: 6 June 2022 as a separate file (was part of reduce-mode.el)
-;; Time-stamp: <2023-02-18 12:58:22 franc>
+;; Time-stamp: <2024-01-28 17:23:07 franc>
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 
 ;; This file is part of REDUCE IDE.

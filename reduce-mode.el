@@ -1,10 +1,10 @@
 ;;; reduce-mode.el --- Major mode to edit REDUCE computer-algebra code  -*- lexical-binding: t; -*-
 
-;; Copyright (C) 1998-2001, 2012, 2017-2019, 2022-2023 Francis J. Wright
+;; Copyright (C) 1998-2001, 2012, 2017-2019, 2022-2024 Francis J. Wright
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1992
-;; Time-stamp: <2023-02-20 13:56:59 franc>
+;; Time-stamp: <2024-01-28 17:18:12 franc>
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.11alpha
 ;; Package-Requires: (cl-lib)
@@ -380,87 +380,87 @@ it is nil then do nothing."
 
 ;; REDUCE-mode menu bar and pop-up menu
 (easy-menu-define           ; (symbol maps doc menu)
- reduce-mode-menu
- reduce-mode-map
- "REDUCE Mode Menu."
- '("REDUCE"
-   ["Indent Line" indent-for-tab-command :active t
-    :help "Re-indent the current line"]
-   ["Unindent Line" reduce-unindent-line :active t
-    :help "Unindent the current line by one indentation step"]
-   ["Kill Statement" reduce-kill-statement :active t
-    :help "Kill to the end of the current statement"]
-   ["Fill Comment" reduce-fill-comment :active t
-    :help "Fill the current comment"]
-   ["(Un)Comment Region" reduce-comment-region :active mark-active
-    :help "Toggle the commenting of the current region"]
-   "--"
-   "Procedures:"
-   ["Forward Procedure" reduce-forward-procedure :active t
-    :help "Move forward to the nearest end of a procedure"]
-   ["Backward Procedure" reduce-backward-procedure :active t
-    :help "Move backward to the nearest start of a procedure"]
-   ["Indent Procedure" reduce-indent-procedure :active t
-    :help "Re-indent the current procedure"]
-   ["Mark Procedure" reduce-mark-procedure :active t
-    :help "Mark the current procedure"]
-   ["Reposition Window" reduce-reposition-window :active t
-    :help "Scroll to show the current procedure optimally"]
-   ["Narrow To Procedure" reduce-narrow-to-procedure :active t
-    :help "Narrow the buffer to the current procedure"]
-   ["(Un)Comment Proc" reduce-comment-procedure :active t
-    :help "Toggle the commenting of the current procedure"]
-   ["Kill Procedure" reduce-kill-procedure :active t
-    :help "Kill the current procedure"]
-   "--"
-   ("Show / Find / Tag"
-    ["Show Current Proc" reduce-show-proc-mode
-     :style toggle :selected reduce-show-proc-mode :active t
-     :help "Toggle display of the current procedure name"]
-    ["Add “Index” Menu" (reduce--imenu-add-menubar-index t)
-     :active (not reduce--imenu-added)
-     :help "Show an imenu of procedures, operators and variables"]
+  reduce-mode-menu
+  reduce-mode-map
+  "REDUCE Mode Menu."
+  '("REDUCE"
+    ["Indent Line" indent-for-tab-command :active t
+     :help "Re-indent the current line"]
+    ["Unindent Line" reduce-unindent-line :active t
+     :help "Unindent the current line by one indentation step"]
+    ["Kill Statement" reduce-kill-statement :active t
+     :help "Kill to the end of the current statement"]
+    ["Fill Comment" reduce-fill-comment :active t
+     :help "Fill the current comment"]
+    ["(Un)Comment Region" reduce-comment-region :active mark-active
+     :help "Toggle the commenting of the current region"]
     "--"
-    ["Find Tag…" xref-find-definitions :active t
-     :help "Find a procedure definition using a tag file"]
-    ["New TAGS Table…" visit-tags-table :active t
-     :help "Select a new tag file"]
+    "Procedures:"
+    ["Forward Procedure" reduce-forward-procedure :active t
+     :help "Move forward to the nearest end of a procedure"]
+    ["Backward Procedure" reduce-backward-procedure :active t
+     :help "Move backward to the nearest start of a procedure"]
+    ["Indent Procedure" reduce-indent-procedure :active t
+     :help "Re-indent the current procedure"]
+    ["Mark Procedure" reduce-mark-procedure :active t
+     :help "Mark the current procedure"]
+    ["Reposition Window" reduce-reposition-window :active t
+     :help "Scroll to show the current procedure optimally"]
+    ["Narrow To Procedure" reduce-narrow-to-procedure :active t
+     :help "Narrow the buffer to the current procedure"]
+    ["(Un)Comment Proc" reduce-comment-procedure :active t
+     :help "Toggle the commenting of the current procedure"]
+    ["Kill Procedure" reduce-kill-procedure :active t
+     :help "Kill the current procedure"]
     "--"
-    ["Tag Directory…" reduce-tagify-dir :active t
-     :help "Tag REDUCE files in this directory"]
-    ["Tag Dir & Subdirs…" reduce-tagify-dir-recursively :active t
-     :help "Tag all REDUCE files under this directory"]
-    )
-   "--"
-   "Templates:"
-   ["Insert If-Then" reduce-insert-if-then :active t
-    :help "Insert an ‘if-then’ template"]
-   ["Insert Block" reduce-insert-block :active t
-    :help "Insert a ‘block’ template"]
-   ["Insert Group" reduce-insert-group :active t
-    :help "Insert a ‘group’ template"]
-   "--"
-   ["Indent Region" reduce-indent-region :active mark-active
-    :help "Re-indent the current region"]
-   ["Indent Buffer" (reduce-indent-region (point-min) (point-max))
-    :keys "C-u M-C-\\" :active t
-    :help "Re-indent the current buffer"]
-   "--"
-   ["Read the Manual" (info "reduce-ide" "*REDUCE IDE*") :active t
-    :help "Read the REDUCE IDE manual in Info format"]
-   ["Command Mini Help" (apropos-command "\\`reduce\\|reduce\\'") :active t
-    :help "Show a REDUCE IDE active command summary"]
-   ["Customize…" (customize-group 'reduce) :active t
-    :help "Customize REDUCE IDE"]
-   ["Show Version" reduce-ide-version :active t
-    :help "Show the REDUCE IDE version"]
-   ;; This seems to be obsolete in Emacs 26!
-   ;; ["Outline" outline-minor-mode
-   ;;  :style toggle :selected outline-minor-mode :active t
-   ;;  :help "Toggle outline minor mode"]
-   ;; ["Update ChangeLog" add-change-log-entry-other-window :active t
-   ;;  :help "Add change log entry other window"]
-   ))
+    ("Show / Find / Tag"
+     ["Show Current Proc" reduce-show-proc-mode
+      :style toggle :selected reduce-show-proc-mode :active t
+      :help "Toggle display of the current procedure name"]
+     ["Add “Index” Menu" (reduce--imenu-add-menubar-index t)
+      :active (not reduce--imenu-added)
+      :help "Show an imenu of procedures, operators and variables"]
+     "--"
+     ["Find Tag…" xref-find-definitions :active t
+      :help "Find a procedure definition using a tag file"]
+     ["New TAGS Table…" visit-tags-table :active t
+      :help "Select a new tag file"]
+     "--"
+     ["Tag Directory…" reduce-tagify-dir :active t
+      :help "Tag REDUCE files in this directory"]
+     ["Tag Dir & Subdirs…" reduce-tagify-dir-recursively :active t
+      :help "Tag all REDUCE files under this directory"]
+     )
+    "--"
+    "Templates:"
+    ["Insert If-Then" reduce-insert-if-then :active t
+     :help "Insert an ‘if-then’ template"]
+    ["Insert Block" reduce-insert-block :active t
+     :help "Insert a ‘block’ template"]
+    ["Insert Group" reduce-insert-group :active t
+     :help "Insert a ‘group’ template"]
+    "--"
+    ["Indent Region" reduce-indent-region :active mark-active
+     :help "Re-indent the current region"]
+    ["Indent Buffer" (reduce-indent-region (point-min) (point-max))
+     :keys "C-u M-C-\\" :active t
+     :help "Re-indent the current buffer"]
+    "--"
+    ["Read the Manual" (info "reduce-ide" "*REDUCE IDE*") :active t
+     :help "Read the REDUCE IDE manual in Info format"]
+    ["Command Mini Help" (apropos-command "\\`reduce\\|reduce\\'") :active t
+     :help "Show a REDUCE IDE active command summary"]
+    ["Customize…" (customize-group 'reduce) :active t
+     :help "Customize REDUCE IDE"]
+    ["Show Version" reduce-ide-version :active t
+     :help "Show the REDUCE IDE version"]
+    ;; This seems to be obsolete in Emacs 26!
+    ;; ["Outline" outline-minor-mode
+    ;;  :style toggle :selected outline-minor-mode :active t
+    ;;  :help "Toggle outline minor mode"]
+    ;; ["Update ChangeLog" add-change-log-entry-other-window :active t
+    ;;  :help "Add change log entry other window"]
+    ))
 
 (defun reduce-ide-version ()
   "Echo version information for REDUCE IDE."

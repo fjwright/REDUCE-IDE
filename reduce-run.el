@@ -1,10 +1,10 @@
 ;;; reduce-run.el --- Run the REDUCE computer-algebra system in a buffer  -*- lexical-binding: t; -*-
 
-;; Copyright (C) 1998-2001, 2012, 2017-2019, 2022-2023 Francis J. Wright
+;; Copyright (C) 1998-2001, 2012, 2017-2019, 2022-2024 Francis J. Wright
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1998
-;; Time-stamp: <2023-02-19 14:33:04 franc>
+;; Time-stamp: <2024-01-28 17:17:07 franc>
 ;; Keywords: languages, processes
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 
@@ -296,6 +296,8 @@ Bindings are common to REDUCE mode and REDUCE Run mode."
     ,@reduce-run--menu2
     ["Customize…" (customize-group 'reduce-run) :active t
      :help "Customize REDUCE Run mode"]
+    ["Show Version" reduce-ide-version :active t
+     :help "Show the REDUCE IDE version"]
     ))
 
 (easy-menu-define                       ; (symbol maps doc menu)
@@ -520,7 +522,7 @@ Return the process buffer if successful; nil otherwise."
   "Break CMD into a list of program and arguments.
 The program path-name *may* include spaces.
 This ignores quotes and escapes and so will fail if you have an
-argument with whitespace, as in cmd = \"-ab +c -x 'you lose'\"."
+argument with whitespace, as in cmd = \"-ab +c -x \='you lose\='\"."
   (let ((dir (file-name-directory cmd)))
     (cond (dir
            (setq cmd (reduce-run-args-to-list-1
@@ -532,7 +534,7 @@ argument with whitespace, as in cmd = \"-ab +c -x 'you lose'\"."
   "Break CMD into a list of program and arguments recursively.
 The program path-name *must not* include spaces.
 This ignores quotes and escapes and so will fail if you have an
-argument with whitespace, as in cmd = \"-ab +c -x 'you lose'\"."
+argument with whitespace, as in cmd = \"-ab +c -x \='you lose\='\"."
   (let ((where (string-match "[ \t]" cmd)))
     (cond ((null where) (list cmd))
           ((/= where 0)

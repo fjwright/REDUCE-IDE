@@ -5,7 +5,7 @@ window.  However, many of the facilities require that Emacs is running
 under a GUI such as Microsoft Windows or the X Window System under
 some flavour of UNIX or Linux.
 
-I currently use GNU Emacs 28 (on Microsoft Windows) for development
+I currently use GNU Emacs 29 (on Microsoft Windows) for development
 and testing, and REDUCE IDE may not work correctly with older
 versions.
 
