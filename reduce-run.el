@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1998
-;; Time-stamp: <2024-01-28 18:21:10 franc>
+;; Time-stamp: <2024-01-28 18:39:34 franc>
 ;; Keywords: languages, processes
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 
@@ -154,7 +154,11 @@ It must be in this directory; if it cannot be found then nil.")
                       reduce-run--reduce-run-redpsl-bat-filename
                     ;; otherwise standard batch file:
                     reduce-run--redpsl-bat-filename)))
-    '(("CSL" . "redcsl --nogui") ("PSL" . "redpsl")))
+    ;; Specify a suitable terminal type so that CSL REDUCE responds
+    ;; appropriately to interrupts, which with the default dumb
+    ;; terminal it does not.  Can perhaps do this more elegantly in
+    ;; the code that starts the process!
+    '(("CSL" . "var TERM=Eterm redcsl --nogui") ("PSL" . "redpsl")))
   "Alist of commands to run different versions of REDUCE.
 By default, it should be appropriate for standard installations
 of CSL and PSL REDUCE.  Each element has the form “name .
@@ -401,10 +405,11 @@ also affects this mode.  Entry to this mode runs the hooks on
        (reduce-show-delim-mode))
   (setq comint-input-filter #'reduce-input-filter  ; buffer-local
         comint-input-ignoredups t)                 ; buffer-local
-  ;; ansi-color-process-output causes an error when CSL is terminated
-  ;; and is probably irrelevant anyway, so …
-  (remove-hook (make-local-variable 'comint-output-filter-functions)
-               'ansi-color-process-output t) ; remove locally!
+  ;; ansi-color-process-output may cause an error on MS Windows when
+  ;; CSL is terminated and is probably irrelevant anyway, so …
+  (when (eq system-type 'windows-nt)
+    (remove-hook (make-local-variable 'comint-output-filter-functions)
+                 'ansi-color-process-output t)) ; remove locally!
   ;; Try to ensure graceful shutdown. In particular, PSL REDUCE on
   ;; Windows seems to object to being killed!
   (add-hook 'kill-buffer-hook #'reduce-kill-buffer-tidy-up)
