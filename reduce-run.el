@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1998
-;; Time-stamp: <2024-01-28 18:39:34 franc>
+;; Time-stamp: <2024-01-30 17:16:12 franc>
 ;; Keywords: languages, processes
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 
@@ -552,11 +552,14 @@ argument with whitespace, as in cmd = \"-ab +c -x \='you lose\='\"."
 (defun reduce-run-send-input ()
   "Send input to REDUCE.
 Add a final ’;’ unless there is already a final terminator or a
-’?’ in the current line.  Then call ‘comint-send-input’.
+’?’ in the current line, provided REDUCE is running.  Then call
+‘comint-send-input’.
 \\<reduce-run-mode-map>Note that ‘\\[comint-send-input]’ calls ‘comint-send-input’ directly."
   (interactive)
   (end-of-line)
-  (if (and (eobp) (not (looking-back "[;$]\\s-*\\|\\?.*" nil)))
+  (if (and (get-buffer-process (current-buffer))
+           (eobp)
+           (not (looking-back "[;$]\\s-*\\|\\?.*" nil)))
       (insert ?\;))
   (comint-send-input))
 

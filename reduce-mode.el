@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1992
-;; Time-stamp: <2024-01-28 17:18:12 franc>
+;; Time-stamp: <2024-01-30 17:25:12 franc>
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.11alpha
 ;; Package-Requires: (cl-lib)
@@ -1245,7 +1245,7 @@ just typed matches ‘reduce-auto-indent-regexp’."
   (when reduce--auto-indent-idle-timer
     (cancel-timer reduce--auto-indent-idle-timer))
   (when reduce-auto-indent-mode
-    (setq reduce-auto-indent-idle-timer
+    (setq reduce--auto-indent-idle-timer
           (run-with-idle-timer reduce-auto-indent-delay t
                                #'reduce--auto-indent))))
 
