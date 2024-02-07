@@ -1,17 +1,27 @@
 #! /bin/bash
 
 # Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
-# Time-stamp: <2024-01-28 17:23:59 franc>
+# Time-stamp: <2024-02-07 17:10:32 franc>
 
 # Construct a REDUCE IDE package archive.
-# Usage: make-package.sh version-number
+# Must be run from the REDUCE IDE directory.
+# Usage: make-package.sh version
 
 if [ -z $1 ]; then
-    echo 'Version number required as argument.'
+    echo 'Version required as argument.'
     exit 1
 fi
 
-echo 'Version number is' $1
+dir=reduce-ide-$1
+file=packages/$dir.tar
+
+if [ -e $file ]; then
+    read -p "Package version $1 already exists. Overwrite it? (y/n) " -n 1 input
+    echo
+    [[ ${input@L} == 'y' ]] || exit
+fi
+
+echo 'Version is' $1
 
 # Update reduce-ide.info if necessary:
 if [ reduce-ide.info -ot reduce-ide.texinfo ]; then
@@ -21,8 +31,7 @@ fi
 pkg1='(define-package "reduce-ide" "'
 pkg2="\" \"REDUCE Integrated Development Environment\" '((emacs \"27\")))"
 
-# Construct the reduce-ide-vv directory:
-dir=reduce-ide-$1
+# Construct the reduce-ide-<version> directory:
 mkdir $dir
 cd $dir
 echo 'Website: https://reduce-algebra.sourceforge.io/reduce-ide/
@@ -38,8 +47,8 @@ ln -s ../reduce-ide.info
 echo $pkg1$1$pkg2 > reduce-ide-pkg.el
 cd ..
 
-# Archive the reduce-ide-vv package to the package directory:
-tar --create --dereference --file=packages/$dir.tar $dir
+# Archive the reduce-ide-<version> package to the package directory:
+tar --create --dereference --file=$file $dir
 
 # Tidy up:
 rm -rf $dir
