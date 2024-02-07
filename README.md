@@ -5,7 +5,7 @@ Major modes for editing and running REDUCE source code
 
 **[Francis Wright](https://sites.google.com/site/fjwcentaur)**
 
-Version 1.11alpha, January 2024
+Version 1.11alpha, February 2024
 
 REDUCE IDE is a package that provides an Integrated Development Environment for the [REDUCE computer algebra system](https://reduce-algebra.sourceforge.io/) within the GNU Emacs editor.  Its two major components are Emacs Lisp libraries that provide major modes for editing REDUCE source code and running a *command-line version* of REDUCE in an Emacs window.  It assumes that Emacs is running under a GUI such as Microsoft Windows or the X Window System under some flavour of UNIX or Linux, and displays Unicode character sets correctly.  REDUCE IDE does not include REDUCE, which is available separately from [SourceForge](https://sourceforge.net/projects/reduce-algebra/).  You don't need to install REDUCE in order to edit REDUCE source code using REDUCE IDE, but if you want to run REDUCE in REDUCE IDE then you do need to install REDUCE.
 
@@ -59,7 +59,6 @@ Main Updates since REDUCE IDE 1.10
 * Revise manual and move customization of REDUCE Run mode into the chapter on general customization of REDUCE IDE.
 * Remove `require-reduce-run`, and run `reduce-mode-load-hook` before requiring `reduce-run`.
 * Revise manual and move Run Keys section into other Run mode sections.
-* Incompatible key binding changes: `reduce-input-file` is now bound to `C-c C-f` and `reduce-fasl-file` to `C-c C-c`.
 * Improve Run REDUCE menu.
 * Remove redundant Package-Version headers; keep only in `reduce-mode.el`.
 * Correct `reduce-run-file` and revise `reduce--wait-for-prompt`.
@@ -84,3 +83,8 @@ Main Updates since REDUCE IDE 1.10
 * Comment out obsolete menu item to add a change log entry.
 * Make Auto Indent a proper buffer-local minor mode turned on automatically if the new option `reduce-auto-indent-mode-on` is non-nil.  Revise `reduce-auto-indent-regexp` to allow arbitrary text between the trigger and point, which seems to work much better.
 * Make Show Delim a proper buffer-local minor mode.  Replace `reduce-show-delim-delay` with `show-paren-delay`.
+* Add Show Version item to end of main run menu.
+* Remove choice menu from `reduce-run-commands` customization.
+* New option `reduce-run-terminal` to specify value of TERM to use on Unix-like platforms so that CSL REDUCE responds appropriately to interrupts, which with a dumb terminal it does not.  It defaults to nil on MS Windows and to `Eterm` on all other platforms.
+* Only remove `ansi-color-process-output` on MS Windows; it is necessary for CSL REDUCE on Linux and probably redundant on MS Windows.
+* **Incompatible key binding changes**: `reduce-input-file` is now bound to `C-c C-f`, `reduce-compile-file` to `C-c C-M-c`, `reduce-eval-line` to `C-c C-M-e`, and `reduce-load-package` to `C-c C-M-l` to avoid conflicts with other bindings.  Vector key definitions replaced with strings where possible.

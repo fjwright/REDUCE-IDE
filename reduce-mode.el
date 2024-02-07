@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1992
-;; Time-stamp: <2024-01-30 17:25:12 franc>
+;; Time-stamp: <2024-02-04 11:09:27 franc>
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.11alpha
 ;; Package-Requires: (cl-lib)
@@ -504,7 +504,7 @@ it is nil then do nothing."
 ;;;###autoload
 (define-derived-mode reduce-mode prog-mode "REDUCE"
   "Major mode for editing REDUCE source code – part of REDUCE IDE.
-Version: see ‘reduce-ide-version’.\\<reduce-mode-map>
+Version: see variable ‘reduce-ide-version’.\\<reduce-mode-map>
 Author: Francis J. Wright (URL ‘https://sites.google.com/site/fjwcentaur’).
 Website: URL ‘https://reduce-algebra.sourceforge.io/reduce-ide/’.
 Comments, suggestions, bug reports, etc. are welcome.
@@ -712,8 +712,8 @@ position immediately after the end of that comment statement."
 If POS is omitted then it defaults to point.  If POS is inside a
 string, return the position where the string began; if inside a %
 or /**/ comment, return the position where the comment began; if
-inside a comment statement return a cons of the form (start
-. finish), where start is the position at the start of the
+inside a comment statement return a cons of the form
+‘(start.finish)’, where start is the position at the start of the
 comment statement and finish is the position immediately after
 the end of that comment statement."
   (or (nth 8 (syntax-ppss pos))
@@ -1305,8 +1305,7 @@ next line."
 (defconst reduce--proc-type-regexp
   "\\(?:\\(?:algebraic\\|integer\\|real\\|\
 symbolic\\|lisp\\|inline\\|s?macro\\|expr\\)[ \t\n]+\\)"
-  "Regexp that matches any single possible procedural type followed
-by white space.")
+  "Regexp to match a procedural type followed by white space.")
 
 (defun reduce-backward-procedure (arg)
   "Move backwards to the start of the procedure starting before point.
@@ -1872,7 +1871,7 @@ at the beginning of every line in the region."
 (defun reduce-comment-procedure (arg)
   "Comment/uncomment every line of this procedure.
 This procedure is the one that ends after point.  With
-interactive arg, if non-negative comment out procedure, if null
+interactive ARG, if non-negative comment out procedure, if null
 or negative uncomment all consecutive commented-out lines
 containing or following point (cf. minor modes)."
   (interactive "*P")                    ; error if buffer read-only
@@ -1989,11 +1988,11 @@ With argument put ‘<<’ and ‘>>’ on the same line
   (reduce-insert-block-or-group "<<" ">>" nil nosplit))
 
 (defun reduce-insert-block-or-group (open close block nosplit)
-  "Insert and indent ‘open … close’ structure and position point inside.
+  "Insert and indent ‘OPEN … CLOSE’ structure and position point inside.
 If the mark is transient and active then enclose the region; otherwise
 if point is not at the end of the line then enclose the rest of the line.
-Leave the mark at the insertion point in the body of a block.
-If ‘nosplit’ is true then put ‘open’ and ‘close’ on the same line."
+Leave the mark at the insertion point in the body of a BLOCK.
+If NOSPLIT is non-nil then put OPEN and CLOSE on the same line."
   (let ((region-beginning (and transient-mark-mode mark-active
                    (region-beginning)))
     (region-end (and transient-mark-mode mark-active
@@ -2155,7 +2154,7 @@ Do this only if mark is transient and active.
 Compare that symbol against the elements of ‘reduce-completion-alist’.
 If a perfect match (only) has a cdr then delete the match and insert
 the cdr if it is a string or call it if it is a (nullary) function,
-passing on any prefix argument (in raw form)."
+passing on any prefix ARG (in raw form)."
   ;; Based on lisp-complete-symbol in lisp.el
   (interactive "*P")            ; error if buffer read-only
   (let* ((end (progn

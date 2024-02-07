@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1998
-;; Time-stamp: <2024-01-30 17:16:12 franc>
+;; Time-stamp: <2024-02-04 18:37:03 franc>
 ;; Keywords: languages, processes
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 
@@ -154,11 +154,7 @@ It must be in this directory; if it cannot be found then nil.")
                       reduce-run--reduce-run-redpsl-bat-filename
                     ;; otherwise standard batch file:
                     reduce-run--redpsl-bat-filename)))
-    ;; Specify a suitable terminal type so that CSL REDUCE responds
-    ;; appropriately to interrupts, which with the default dumb
-    ;; terminal it does not.  Can perhaps do this more elegantly in
-    ;; the code that starts the process!
-    '(("CSL" . "var TERM=Eterm redcsl --nogui") ("PSL" . "redpsl")))
+    '(("CSL" . "redcsl --nogui") ("PSL" . "redpsl")))
   "Alist of commands to run different versions of REDUCE.
 By default, it should be appropriate for standard installations
 of CSL and PSL REDUCE.  Each element has the form “name .
@@ -182,6 +178,20 @@ The default is the first command name in ‘reduce-run-commands’."
                  ,@(mapcar #'(lambda (x) (list 'const (car x)))
                            reduce-run-commands))
   :set-after '(reduce-run-commands)
+  :link '(custom-manual "(reduce-ide)Run REDUCE")
+  :group 'reduce-run
+  :package-version '(reduce-ide . "1.11"))
+
+(defcustom reduce-run-terminal
+  (and (not (eq system-type 'windows-nt)) "Eterm")
+  "If non-nil, value of TERM to use on Unix-like platforms.
+This sets `comint-terminfo-terminal' to the value of
+`reduce-run-terminal' and `system-uses-terminfo' to t locally
+within `run-reduce' so that CSL REDUCE responds appropriately to
+interrupts, which with a dumb terminal it does not.
+A nil value means use the Emacs defaults.
+Possible values to try are “Eterm”, “emacs”, “xterm”."
+  :type '(choice (const :tag "Default" nil) string)
   :link '(custom-manual "(reduce-ide)Run REDUCE")
   :group 'reduce-run
   :package-version '(reduce-ide . "1.11"))
@@ -244,25 +254,26 @@ these commands to determine defaults."
 
 ;; The key sequences C-c followed by a control character or digit are
 ;; reserved for major modes, but do not bind C-c C-g (cancel) or C-c
-;; C-h (help).
+;; C-h (help).  Also, avoid binding C-c C-c, C-c C-d, C-c C-z and C-c
+;; C-\, which are bound by Comint mode.
 
 (defun reduce-run--add-common-keys-to-map (map)
   "Add common key bindings to keymap MAP.
 Bindings are common to REDUCE mode and REDUCE Run mode."
-  (define-key map [?\C-x ?\C-e] 'reduce-eval-last-statement) ; Emacs convention
-  (define-key map [?\C-c ?\C-e] 'reduce-eval-line)
-  (define-key map [?\C-c ?\C-f] 'reduce-input-file)
-  (define-key map [?\C-c ?\C-l] 'reduce-load-package)
-  (define-key map [?\C-c ?\C-c] 'reduce-compile-file)
-  (define-key map [?\C-c ?\C-\M-f] 'reduce-run-file))
+  (define-key map "\C-x\C-e" 'reduce-eval-last-statement) ; Emacs convention
+  (define-key map "\C-c\C-\M-e" 'reduce-eval-line)
+  (define-key map "\C-c\C-f" 'reduce-input-file)
+  (define-key map "\C-c\C-\M-l" 'reduce-load-package)
+  (define-key map "\C-c\C-\M-c" 'reduce-compile-file)
+  (define-key map "\C-c\C-\M-f" 'reduce-run-file))
 
 (defvar reduce-run-mode-map
   (let ((map (make-sparse-keymap)))
-    (define-key map "\C-m" 'reduce-run-send-input)
+    (define-key map "\r" 'reduce-run-send-input)
     (define-key map [(shift return)] 'comint-send-input)
     (reduce-run--add-common-keys-to-map map)
-    (define-key map [(meta tab)] 'reduce-complete-symbol)
-    (define-key map [?\C-c (tab)] 'reduce-complete-symbol)
+    (define-key map "\M-\t" 'reduce-complete-symbol)
+    (define-key map "\C-c\t" 'reduce-complete-symbol)
                                         ; since C-M-i used by flyspell
     map))
 
@@ -270,10 +281,10 @@ Bindings are common to REDUCE mode and REDUCE Run mode."
 ;; code in file editing buffers.
 (define-key reduce-mode-map "\C-\M-x"  'reduce-eval-proc) ; Emacs convention
 (define-key reduce-mode-map "\C-c\C-r" 'reduce-eval-region)
-(define-key reduce-mode-map [?\C-c ?\C-\M-b] 'reduce-run-buffer)
+(define-key reduce-mode-map "\C-c\C-\M-b" 'reduce-run-buffer)
 (reduce-run--add-common-keys-to-map reduce-mode-map)
 (define-key reduce-mode-map "\C-c\C-z" 'switch-to-reduce)
-(define-key reduce-mode-map [(meta R)] 'run-reduce)
+(define-key reduce-mode-map "\M-R" 'run-reduce)
 
 (defconst reduce-run--menu2
   '(["Run File…" reduce-run-file :active t
@@ -353,7 +364,7 @@ send REDUCE input.")
 
 (define-derived-mode reduce-run-mode comint-mode "REDUCE Run"
   "Major mode for interacting with a REDUCE process – part of REDUCE IDE.
-Version: see ‘reduce-ide-version’.\\<reduce-run-mode-map>
+Version: see variable ‘reduce-ide-version’.\\<reduce-run-mode-map>
 Author: Francis J. Wright (URL ‘https://sites.google.com/site/fjwcentaur’).
 Website: URL ‘https://reduce-algebra.sourceforge.io/reduce-ide/’.
 Comments, suggestions, bug reports, etc. are welcome.
@@ -443,7 +454,7 @@ distinct REDUCE process; otherwise, if there is a REDUCE process
 already running this command, switch to it.  Runs the hooks from
 ‘reduce-run-mode-hook’ (after the ‘comint-mode-hook’ is run).
 
-(Type ‘\\[describe-mode]’ in the process buffer for a list of commands.)
+\(Type ‘\\[describe-mode]’ in the process buffer for a list of commands.)
 
 Return t unless aborted, in which case return nil."
   (interactive)
@@ -505,10 +516,7 @@ Return the process buffer if successful; nil otherwise."
   (condition-case err
       ;; Protected form:
       (let ((cmdlist (reduce-run-args-to-list cmd)))
-        (set-buffer
-         ;; ‘apply’ used below because last arg is &rest!
-         (apply #'make-comint-in-buffer
-                process-name nil (car cmdlist) nil (cdr cmdlist)))
+        (set-buffer (reduce-run-reduce-2 cmdlist process-name))
         (reduce-run-mode)
         (pop-to-buffer buffer-name))
     ;; Error handler:
@@ -517,6 +525,23 @@ Return the process buffer if successful; nil otherwise."
      (message "%s" (error-message-string err))
      (kill-buffer buffer-name)
      nil)))
+
+(defun reduce-run-reduce-2 (cmdlist process-name)
+  "Run CMDLIST as REDUCE process PROCESS-NAME.
+Use terminal type `reduce-run-terminal' if non-nil.
+Return the process buffer if successful; nil otherwise."
+  (if reduce-run-terminal
+      (let ((comint-terminfo-terminal reduce-run-terminal)
+            (system-uses-terminfo t))
+        (reduce-run-reduce-3 cmdlist process-name))
+    (reduce-run-reduce-3 cmdlist process-name)))
+
+(defun reduce-run-reduce-3 (cmdlist process-name)
+  "Run CMDLIST as REDUCE process PROCESS-NAME.
+Return the process buffer if successful; nil otherwise."
+  ;; ‘apply’ used below because last arg is &rest!
+  (apply #'make-comint-in-buffer
+         process-name nil (car cmdlist) nil (cdr cmdlist)))
 
 (add-hook 'same-window-regexps "REDUCE") ; ??? Not sure about this! ???
 
@@ -665,7 +690,7 @@ Prefix argument SWITCH means also switch to the REDUCE window."
 (defun reduce-run-buffer-p (buf)
   "Return t if cons cell BUF represents an active REDUCE process buffer.
 To be applied to each element of the buffer-read completion list,
-which appears to have the form “buffer-name . buffer-object”."
+which appears to have the form “buffer-name.buffer-object”."
   (setq buf (car buf))
   (and (eq (aref buf 0) ?*)
        (get-buffer-process buf)

@@ -2,7 +2,7 @@
 @c %**start of header
 @settitle GNU Emacs REDUCE Integrated Development Environment
 @c Manual last updated:
-@set UPDATED Time-stamp: <2024-01-28 17:22:36 franc>
+@set UPDATED Time-stamp: <2024-02-04 18:35:44 franc>
 @c Software version:
 @set VERSION 1.11alpha
 @afourpaper
@@ -71,7 +71,7 @@ Manual last updated @value{UPDATED}
 @c ===================================================================
 
 @ifnottex
-@node Top, Introduction
+@node Top, Introduction, (dir), (dir)
 @top REDUCE Integrated Development Environment
 
 @display
@@ -94,8 +94,8 @@ Manual last updated @value{UPDATED}
 * Completion::                  Completion and expansion of REDUCE keywords
 * Font-Lock::                   Font selection for syntactic highlighting
 * Information::                 Procedure, operator and variable information
-* Miscellaneous::               Miscellaneous minor features
-* Run::                         Running REDUCE in a window
+* Running::                     Running REDUCE in an Emacs window
+* Miscellaneous::               Miscellaneous features
 * Customization::               Options that control REDUCE IDE
 * Feedback::                    Bug reports, suggestions, comments, @dots{}
 * Command Index::               Index of REDUCE IDE commands
@@ -106,7 +106,7 @@ Manual last updated @value{UPDATED}
 
 @c ===================================================================
 
-@node Introduction
+@node Introduction, Installation, Top, Top
 @chapter Introduction to REDUCE IDE
 @cindex Introduction to REDUCE IDE
 
@@ -166,7 +166,7 @@ functionality from REDUCE mode and cannot be run alone.  The
 assumption is that normal use will involve editing one or more REDUCE
 source files and running REDUCE simultaneously, and this is what
 REDUCE Run mode aims to support.  REDUCE Run mode is described in its
-own chapter; @ref{Run, Running REDUCE in a buffer}.
+own chapter; @ref{Running, Running REDUCE in a buffer}.
 
 @kindex C-h m
 @findex describe-mode
@@ -178,7 +178,7 @@ of REDUCE mode, select it in some buffer and then give the command
 
 @c ===================================================================
 
-@node Installation
+@node Installation, General, Introduction, Top
 @chapter Installation of REDUCE IDE
 @cindex Installation of REDUCE IDE
 
@@ -254,12 +254,12 @@ file naming convention then make the appropriate change(s) to the above
 statement.  Emacs also provides other facilities that can be used for
 controlling major modes.
 
-Installation of REDUCE Run mode is documented separately; @ref{Run,,
+Installation of REDUCE Run mode is documented separately; @ref{Running,,
 Running REDUCE in a buffer}.
 
 @c ===================================================================
 
-@node General
+@node General, Statements, Installation, Top
 @chapter General features of REDUCE mode
 @cindex General features
 @cindex Features
@@ -296,7 +296,7 @@ runs any functions on @code{prog-mode-hook} and then any functions on
 @code{reduce-mode-hook}, which can be used to customize buffer-local
 features of REDUCE mode, e.g.@: to turn on font-lock mode.
 @xref{Installation,, Installation of the REDUCE IDE}.
-@xref{Customization,, Customization of REDUCE IDE}.
+@xref{Customization,, Options that control REDUCE IDE}.
 
 REDUCE mode is intended to support both the algebraic and symbolic modes
 of REDUCE@.  It provides very limited support for Lisp syntax to the
@@ -320,7 +320,7 @@ facilities of REDUCE mode.
 
 @c ===================================================================
 
-@node Statements
+@node Statements, Procedures, General, Top
 @chapter Statement-oriented commands
 @cindex Statements
 @cindex Operations on Statements
@@ -391,7 +391,7 @@ simple statement-oriented command move out of (but never into) a
 compound or group statement.  Trying hard enough means repeating the
 same command enough times, which is determined by the value of the
 option @code{reduce-max-escape-tries}, which currently has the default
-value 2; @ref{Customization,, Customization of REDUCE IDE}.  The
+value 2; @ref{Customization,, Options that control REDUCE IDE}.  The
 overall effect of this is to enforce a brief pause (one ineffective
 command execution) that serves to prevent you from skipping out of a
 compound or group statement accidentally, but without causing any
@@ -491,7 +491,7 @@ forwards instead of backwards.  This command is modelled on
 
 @c ===================================================================
 
-@node Procedures
+@node Procedures, Comments, Statements, Top
 @chapter Procedure-oriented commands
 @cindex Procedures
 @cindex Operations on Procedures
@@ -613,7 +613,7 @@ preceding blank lines.  If narrowing fails, report a user error.
 
 @c ===================================================================
 
-@node Comments
+@node Comments, Indentation, Procedures, Top
 @chapter Support for REDUCE comments
 @cindex Comment support
 
@@ -750,7 +750,7 @@ after point.
 
 @c ===================================================================
 
-@node Indentation
+@node Indentation, Structures, Comments, Top
 @chapter Indenting REDUCE code automatically
 @cindex Indentation
 
@@ -771,7 +771,7 @@ provide more flexible and customizable indentation.
 Currently all indentation is done in steps consisting of a fixed
 number of spaces determined by the value of the variable
 @code{reduce-indentation}, the default value of which is 3;
-@ref{Customization,, Customization of REDUCE IDE}.  This is the
+@ref{Customization,, Options that control REDUCE IDE}.  This is the
 indentation recommended by A.@ C.@ Hearn (the principal author of
 REDUCE) for the indentation of the first line after a procedure
 (header) statement.
@@ -810,7 +810,7 @@ character (i.e.@: at the end of the indentation), or at the end of the
 line if it contains only white space.  Normally, however, the most
 convenient way to use automatic indentation is to terminate each line
 of code with @kbd{C-j} rather than @kbd{@key{RET}}.
-@xref{Miscellaneous,, Miscellaneous minor features}.
+@xref{Miscellaneous,, Miscellaneous features}.
 
 When called with any argument, which is possible only via the direct
 key binding @kbd{M-i}, @code{reduce-indent-line} will indent the
@@ -940,7 +940,7 @@ additional lines of the same statement rigidly along with this one.
 
 @c ===================================================================
 
-@node Structures
+@node Structures, Completion, Indentation, Top
 @chapter Templates for REDUCE structures
 @cindex Templates for structures
 @cindex Structure templates
@@ -994,7 +994,7 @@ completion and abbreviation expansion,,}.
 
 @c ===================================================================
 
-@node Completion
+@node Completion, Font-Lock, Structures, Top
 @chapter Keyword completion and abbreviation expansion
 @cindex Completion
 @cindex Keyword completion
@@ -1009,10 +1009,9 @@ Abbrevs,, Dynamic Abbrev Expansion, emacs, The Emacs Editor}.  REDUCE
 mode provides completion of common REDUCE key words and phrases, such
 as @samp{procedure}, by typing the first few letters of a key word or
 phrase and then pressing @kbd{Meta-@key{TAB}}.  (For use under
-Microsoft Window @ref{Miscellaneous,,Miscellaneous minor features and
-bugs,,}.)  This works in a similar way to completion in other major
-modes; @ref{Symbol Completion,, Completion for Symbol Names, emacs,
-The Emacs Editor}.
+Microsoft Window @ref{Miscellaneous,,Miscellaneous features,,}.)  This
+works in a similar way to completion in other major modes; @ref{Symbol
+Completion,, Completion for Symbol Names, emacs, The Emacs Editor}.
 
 REDUCE mode also provides @emph{abbreviations} that are expanded like
 completions, except that they are @emph{replaced} by their expansions
@@ -1057,7 +1056,7 @@ argument (in raw form).
 
 @c ===================================================================
 
-@node Font-Lock
+@node Font-Lock, Information, Completion, Top
 @chapter Font-lock support for automatic font selection
 @cindex Font-lock support
 @cindex Font selection
@@ -1069,7 +1068,7 @@ text is displayed (``fontify'' it) so as to indicate its logical
 status.  @xref{Font Lock,, Font Lock mode, emacs, The Emacs Editor}.
 The first version of font-lock support for REDUCE mode was contributed
 by Rainer Schöpf.  The current version applies to both REDUCE mode and
-REDUCE Run mode (@ref{Run}) and provides 4 strictly inclusive level:
+REDUCE Run mode (@ref{Running}) and provides 4 strictly inclusive level:
 ``Symbolic'' includes ``Algebraic'', which includes ``Basic'', which
 includes ``Minimal''.  The level can be selected using the standard
 font-lock facilities, or interactively most easily via the REDUCE
@@ -1083,7 +1082,7 @@ Minimal: strings are displayed using @code{font-lock-string-face} and
 the line, and C-style comments between @code{/*} and @code{*/}
 delimiters) are displayed using @code{font-lock-comment-face}.
 
-In REDUCE Run mode (@ref{Run}) REDUCE warning and error messages, and
+In REDUCE Run mode (@ref{Running}) REDUCE warning and error messages, and
 REDUCE (@code{rtrace}) and Lisp trace output, are displayed using
 @code{font-lock-warning-face}.
 
@@ -1179,7 +1178,7 @@ i.e.@: as @code{!"}, but only within a string.
 
 @c ===================================================================
 
-@node Information
+@node Information, Running, Font-Lock, Top
 @chapter Procedure, operator and variable information
 @cindex Procedure, operator and variable information
 @cindex Information on procedures, operators and variables
@@ -1201,7 +1200,7 @@ procedure or operator definition rapidly in another file.
 * Tags::                        Tag access to procedures and operators
 @end menu
 
-@node Show Proc
+@node Show Proc, Imenu, Information, Information
 @section Show proc mode
 @cindex Show proc mode
 @cindex Procedure display
@@ -1243,7 +1242,7 @@ if it is zero or negative, disable the mode.
 
 @c -------------------------------------------------------------------
 
-@node Imenu
+@node Imenu, Tags, Show Proc, Information
 @section Imenu support
 @cindex Imenu support
 @cindex Support for imenu
@@ -1265,7 +1264,7 @@ or the specified operator or variable is declared.
 
 If the customizable option @code{reduce-imenu-add} is non-nil, which
 it is by default, then REDUCE mode adds an ``Index'' menu
-automatically (@ref{Customization,, Customization of REDUCE IDE}).
+automatically (@ref{Customization,, Options that control REDUCE IDE}).
 Otherwise, selecting the appropriate item in the REDUCE menu adds an
 ``Index'' menu.
 
@@ -1276,7 +1275,7 @@ for procedures.
 
 @c -------------------------------------------------------------------
 
-@node Tags
+@node Tags,  , Imenu, Information
 @section Support for tag files
 @cindex Support for tag files
 @cindex Tags
@@ -1326,161 +1325,7 @@ subdirectories.  The single TAGS file goes in the specified directory.
 
 @c ===================================================================
 
-@node Miscellaneous
-@chapter Miscellaneous minor features
-@cindex Miscellaneous
-@cindex Features
-
-REDUCE mode extends some of the standard Emacs handling of
-parenthesised ``lists'' to include REDUCE group and block constructs.
-It provides a major mode menu and easy access to its version
-information.  This chapter also describes how to access some special
-function keys that are useful in Emacs in general and in REDUCE mode
-in particular.
-
-@menu
-* Groups and blocks highlighting:: Delimiter highlighting
-* Major mode menu::             Major mode menu
-* Version::                     REDUCE IDE version information
-* Special function keys::       Linefeed, Meta-TAB, etc.
-@end menu
-
-@c -------------------------------------------------------------------
-
-@node Groups and blocks highlighting
-@section Groups and blocks: delimiter highlighting
-@cindex Groups
-@cindex Blocks
-@cindex Delimiters
-@cindex Highlighting
-
-Delimiters for groups (@code{<<} and @code{>>}) and blocks
-(@code{begin} and @code{end}) are treated like brackets.  Either
-highlighting of matching group and block delimiters or (group only)
-blink matching is toggled by the command
-@code{reduce-show-delim-mode}.
-
-REDUCE Show Delim mode is based closely on Show Paren mode;
-@ref{Matching,, Automatic Display Of Matching Parentheses, emacs, The
-Emacs Editor}.  It is completely independent except that all settings
-default to the corresponding values for Show Paren mode.  Show Delim
-mode applies to both REDUCE mode and REDUCE Run mode (@ref{Run}) and
-is turned on automatically when a REDUCE mode is selected if
-@code{reduce-show-delim-mode-on} is non-nil, which it is by default if
-Show Paren mode is on.
-
-Note that highlighting of matching group and block delimiters does not
-work when point is @emph{within} a delimiter.  (This cannot happen
-with brackets, which are single characters).  This may be changed in
-future.
-
-@table @kbd
-@item M-x reduce-show-delim-mode
-@findex reduce-show-delim-mode
-Toggle REDUCE Show Delim mode.  With a prefix argument, turn the mode
-on if and only if the argument is positive.  REDUCE Show Delim mode
-highlights matching group or block delimiters after
-@code{show-paren-delay} seconds of Emacs idle time.
-@end table
-
-Show Delim mode is a buffer-local minor mode.  Whenever point is
-before an opening delimiter or after a closing delimiter, the
-delimiter, its matching delimiter, and optionally the text between
-them are highlighted.  To customize REDUCE Show Delim mode, type
-@kbd{M-x customize-group @key{RET} reduce-delim-showing}.  The
-customizable options which control the operation of this mode include
-the following:
-
-@itemize
-@item
-@code{reduce-show-delim-highlight-opendelim} controls whether to
-highlight an opening delimiter when point stands just before it, and
-hence its position is marked by the cursor anyway.  The default is the
-value of @code{show-paren-highlight-openparen}.
-@item
-@code{reduce-show-delim-style} controls whether just the two
-delimiters, or also the space between them get highlighted.  The valid
-options here are @code{delimiter} (show the matching delimiter),
-@code{expression} (highlight the entire expression enclosed by the
-delimiters), and @code{mixed} (highlight the matching delimiter if it
-is visible, the expression otherwise).  The default is determined by
-the value of @code{show-paren-style}.
-@item
-@code{reduce-show-delim-when-point-inside-delim}, when non-@code{nil},
-causes highlighting also when point is immediately inside a delimiter.
-The default is the value of @code{show-paren-when-point-inside-paren}.
-@item
-@code{reduce-show-delim-when-point-in-periphery}, when non-@code{nil},
-causes highlighting also when point is in whitespace at the beginning
-or end of a line, and there is respectively an opening or closing
-delimiter as the first or last non-whitespace characters on the line.
-The default is the value of @code{show-paren-when-point-in-periphery}.
-@end itemize
-
-@c -------------------------------------------------------------------
-
-@node Major mode menu
-@section Major mode menu
-@cindex Major mode menu
-@cindex Menu, Major mode
-
-@kindex C-down-mouse-3
-@findex mouse-major-mode-menu
-REDUCE mode adds a major-mode menu called ``REDUCE'' to the menu bar,
-which is also available as a pop-up menu activated by the command
-@code{mouse-major-mode-menu} on the standard key @kbd{C-down-mouse-3}.
-
-REDUCE Run mode adds a second major-mode menu called ``Run REDUCE'',
-which appears immediately to the right of the ``REDUCE'' menu on the
-menu bar and immediately below the ``REDUCE'' menu on the pop-up menu.
-
-When REDUCE Run mode is not loaded, it is possible to have an
-abbreviated ``Run REDUCE'' menu instead of the full menu.  The
-abbreviated menu can only run REDUCE (which implicitly loads REDUCE
-Run mode) or explicitly load REDUCE Run mode.  Whether or not to load
-REDUCE Run mode or install the abbreviated REDUCE Run mode menu when
-REDUCE mode loads is controlled by the option
-@code{reduce-run-autoload}.  @xref{Run Customization}.
-
-@c -------------------------------------------------------------------
-
-@node Version
-@section REDUCE IDE version information
-@cindex REDUCE IDE version information
-@cindex Version information
-@cindex Information about version
-
-The version of REDUCE IDE that is running is available as the value of
-the variable @code{reduce-ide-version}, which is a string that can be
-displayed in the echo area either by selecting the @code{Show Version}
-menu option from the REDUCE major mode menu or by running the command
-@kbd{M-x reduce-ide-version} (both of which also record it in the
-@code{*Messages*} buffer).  If REDUCE mode is not running then an easy
-way to start it is to switch to a temporary buffer (e.g.@: by using
-@kbd{C-x b tmp}) and then switch it to REDUCE mode (by using @kbd{M-x
-reduce-mode}).
-
-@c -------------------------------------------------------------------
-
-@node Special function keys
-@section Special function keys
-@cindex Special function keys
-@cindex Function keys
-@cindex Keys, special function
-@cindex TAB
-@kindex TAB
-@cindex Meta-TAB
-@kindex Meta-TAB
-
-The standard key to complete a symbol is @kbd{Meta-@key{TAB}}, but
-Microsoft Windows uses this key combination (referred to as @code{Alt
-+ Tab}) to switch between open apps.  However, @kbd{@key{TAB}} can
-always be accessed via its ASCII code as @kbd{C-i}, so
-@kbd{Meta-@key{TAB}} can always be accessed as @kbd{C-M-i}.
-
-@c ===================================================================
-
-@node Run
+@node Running, Miscellaneous, Information, Top
 @chapter Running REDUCE in an Emacs window
 @cindex Running REDUCE
 @cindex Run mode
@@ -1515,6 +1360,7 @@ automatically.
 * Run Introduction::            Introduction to REDUCE Run mode
 * Run Installation::            Installation of REDUCE Run mode
 * REDUCE on Windows::           Running REDUCE on Microsoft Windows
+* REDUCE on Unix::              Running REDUCE on Unix-like platforms
 * Run REDUCE::                  Running, rerunning and switching to REDUCE
 * Run REDUCE Program::          Running complete REDUCE programs
 * Evaluating Code::             Inputting code fragments to REDUCE
@@ -1523,7 +1369,7 @@ automatically.
 
 @c -------------------------------------------------------------------
 
-@node Run Introduction
+@node Run Introduction, Run Installation, Running, Running
 @section Introduction to REDUCE Run mode
 @cindex Introduction to REDUCE Run mode
 
@@ -1588,7 +1434,7 @@ customization group.
 
 @c -------------------------------------------------------------------
 
-@node Run Installation
+@node Run Installation, REDUCE on Windows, Run Introduction, Running
 @section Installation of REDUCE Run mode
 @cindex Installation of REDUCE Run mode
 
@@ -1616,10 +1462,11 @@ Customization}.
 
 @c -------------------------------------------------------------------
 
-@node REDUCE on Windows
+@node REDUCE on Windows, REDUCE on Unix, Run Installation, Running
 @section Running REDUCE on Microsoft Windows
-@cindex REDUCE on Windows
-@cindex Running REDUCE on Windows
+@cindex Microsoft Windows
+@cindex Windows
+@cindex Running REDUCE on Microsoft Windows
 
 On Microsoft Windows, the REDUCE installer does not add the REDUCE
 executable folder to your path, so you can run REDUCE only via
@@ -1647,14 +1494,31 @@ running CSL REDUCE via the standard batch file @file{redcsl.bat}.
 You can customize the values of the options
 @code{reduce-run-MSWin-drives},
 @code{reduce-run-installation-directory} and
-@code{reduce-run-commands} (see the next section) if the default
-values are not correct.  For example, if REDUCE is installed on a
-remote drive then make that the sole entry in
-@code{reduce-run-MSWin-drives}.
+@code{reduce-run-commands} (@pxref{Run REDUCE,, Running@comma{}
+rerunning and switching to REDUCE}) if the default values are not
+correct.  For example, if REDUCE is installed on a remote drive then
+make that the sole entry in @code{reduce-run-MSWin-drives}.
 
 @c -------------------------------------------------------------------
 
-@node Run REDUCE
+@node REDUCE on Unix, Run REDUCE, REDUCE on Windows, Running
+@section Running REDUCE on Unix-like platforms
+@cindex Unix-like platforms
+@cindex Linux, macOS, etc.
+@cindex Running REDUCE on Unix-like platforms
+
+On Unix-like platforms (Linux, macOS, etc.), the behaviour of CSL
+REDUCE depends on the terminal type as specified by the value of the
+environment variable @env{TERM}.  In order to be able to interrupt CSL
+REDUCE without causing it to terminate, @env{TERM} needs to be set to
+something appropriate rather than the default value of @code{dumb}.
+This is controlled by the value of @code{reduce-run-terminal}, which
+defaults to @code{"Eterm"} except on Microsoft Windows, where it
+defaults to @code{nil} to disable this facility.
+
+@c -------------------------------------------------------------------
+
+@node Run REDUCE, Run REDUCE Program, REDUCE on Unix, Running
 @section Running, rerunning and switching to REDUCE
 @cindex Multiple Process Support
 @cindex Process Support, Multiple
@@ -1788,7 +1652,7 @@ REDUCE Run mode commands.
 
 @c -------------------------------------------------------------------
 
-@node Run REDUCE Program
+@node Run REDUCE Program, Evaluating Code, Run REDUCE, Running
 @section Running complete REDUCE programs
 
 The commands @command{reduce-run-file} and @command{reduce-run-buffer}
@@ -1821,7 +1685,7 @@ buffer into REDUCE.  The key binding is provided in REDUCE mode only.
 
 @c -------------------------------------------------------------------
 
-@node Evaluating Code
+@node Evaluating Code, Processing REDUCE Files, Run REDUCE Program, Running
 @section Inputting code fragments to REDUCE
 @cindex Key bindings
 @cindex Menu
@@ -1846,6 +1710,14 @@ the end of a REDUCE statement, but this is not checked so it is
 possible to send an incomplete statement.  (This key binding follows the
 Emacs convention and is available in both REDUCE Edit and Run modes.)
 
+@item C-x C-M-e
+@kindex C-x C-M-e
+@itemx M-x reduce-eval-line
+@findex reduce-eval-line
+This command sends the current line of code to REDUCE.  A prefix
+argument means also switch to the REDUCE window.  (This key binding is
+available in both REDUCE Edit and Run modes.)
+
 @item C-M-x
 @kindex C-M-x
 @itemx C-c C-e
@@ -1864,7 +1736,7 @@ This command sends the code in the selected region to REDUCE.
 
 @c -------------------------------------------------------------------
 
-@node Processing REDUCE Files
+@node Processing REDUCE Files,  , Evaluating Code, Running
 @section Inputting, loading and compiling REDUCE files
 @cindex Key bindings
 @cindex Menu
@@ -1881,8 +1753,8 @@ provided in both REDUCE Edit and Run modes:
 Read a file name from the minibuffer and input the file into a REDUCE
 process.  It asks whether you want the input echoed.
 
-@item C-c C-l
-@kindex C-c C-l
+@item C-c C-M-l
+@kindex C-c C-M-l
 @itemx M-x reduce-load-package
 @findex reduce-load-package
 Read a REDUCE package name from the minibuffer and load it into a
@@ -1894,8 +1766,8 @@ Pressing the @key{TAB} key should list the packages available, from
 which you can select in the usual way, such as by clicking on a
 package name with the mouse.
 
-@item C-c C-c
-@kindex C-c C-c
+@item C-c C-M-c
+@kindex C-c C-M-c
 @itemx M-x reduce-compile-file
 @findex reduce-compile-file
 Read a file name from the minibuffer and compile it into a
@@ -1906,8 +1778,162 @@ want the input echoed.
 
 @c ===================================================================
 
-@node Customization
-@chapter Customization of REDUCE IDE
+@node Miscellaneous, Customization, Running, Top
+@chapter Miscellaneous features
+@cindex Miscellaneous
+@cindex Features
+
+REDUCE mode extends some of the standard Emacs handling of
+parenthesised ``lists'' to include REDUCE group and block constructs.
+It provides a major mode menu and easy access to its version
+information.  This chapter also describes how to access some special
+function keys that are useful in Emacs in general and in REDUCE mode
+in particular.
+
+@menu
+* Groups and blocks highlighting::  Delimiter highlighting
+* Major mode menu::             Major mode menu
+* Version::                     REDUCE IDE version information
+* Special function keys::       Linefeed, Meta-TAB, etc.
+@end menu
+
+@c -------------------------------------------------------------------
+
+@node Groups and blocks highlighting, Major mode menu, Miscellaneous, Miscellaneous
+@section Groups and blocks: delimiter highlighting
+@cindex Groups
+@cindex Blocks
+@cindex Delimiters
+@cindex Highlighting
+
+Delimiters for groups (@code{<<} and @code{>>}) and blocks
+(@code{begin} and @code{end}) are treated like brackets.  Either
+highlighting of matching group and block delimiters or (group only)
+blink matching is toggled by the command
+@code{reduce-show-delim-mode}.
+
+REDUCE Show Delim mode is based closely on Show Paren mode;
+@ref{Matching,, Automatic Display Of Matching Parentheses, emacs, The
+Emacs Editor}.  It is completely independent except that all settings
+default to the corresponding values for Show Paren mode.  Show Delim
+mode applies to both REDUCE mode and REDUCE Run mode (@ref{Running})
+and is turned on automatically when a REDUCE mode is selected if
+@code{reduce-show-delim-mode-on} is non-nil, which it is by default if
+Show Paren mode is on.
+
+Note that highlighting of matching group and block delimiters does not
+work when point is @emph{within} a delimiter.  (This cannot happen
+with brackets, which are single characters).  This may be changed in
+future.
+
+@table @kbd
+@item M-x reduce-show-delim-mode
+@findex reduce-show-delim-mode
+Toggle REDUCE Show Delim mode.  With a prefix argument, turn the mode
+on if and only if the argument is positive.  REDUCE Show Delim mode
+highlights matching group or block delimiters after
+@code{show-paren-delay} seconds of Emacs idle time.
+@end table
+
+Show Delim mode is a buffer-local minor mode.  Whenever point is
+before an opening delimiter or after a closing delimiter, the
+delimiter, its matching delimiter, and optionally the text between
+them are highlighted.  To customize REDUCE Show Delim mode, type
+@kbd{M-x customize-group @key{RET} reduce-delim-showing}.  The
+customizable options which control the operation of this mode include
+the following:
+
+@itemize
+@item
+@code{reduce-show-delim-highlight-opendelim} controls whether to
+highlight an opening delimiter when point stands just before it, and
+hence its position is marked by the cursor anyway.  The default is the
+value of @code{show-paren-highlight-openparen}.
+@item
+@code{reduce-show-delim-style} controls whether just the two
+delimiters, or also the space between them get highlighted.  The valid
+options here are @code{delimiter} (show the matching delimiter),
+@code{expression} (highlight the entire expression enclosed by the
+delimiters), and @code{mixed} (highlight the matching delimiter if it
+is visible, the expression otherwise).  The default is determined by
+the value of @code{show-paren-style}.
+@item
+@code{reduce-show-delim-when-point-inside-delim}, when non-@code{nil},
+causes highlighting also when point is immediately inside a delimiter.
+The default is the value of @code{show-paren-when-point-inside-paren}.
+@item
+@code{reduce-show-delim-when-point-in-periphery}, when non-@code{nil},
+causes highlighting also when point is in whitespace at the beginning
+or end of a line, and there is respectively an opening or closing
+delimiter as the first or last non-whitespace characters on the line.
+The default is the value of @code{show-paren-when-point-in-periphery}.
+@end itemize
+
+@c -------------------------------------------------------------------
+
+@node Major mode menu, Version, Groups and blocks highlighting, Miscellaneous
+@section Major mode menu
+@cindex Major mode menu
+@cindex Menu, Major mode
+
+@kindex C-down-mouse-3
+@findex mouse-major-mode-menu
+REDUCE mode adds a major-mode menu called ``REDUCE'' to the menu bar,
+which is also available as a pop-up menu activated by the command
+@code{mouse-major-mode-menu} on the standard key @kbd{C-down-mouse-3}.
+
+REDUCE Run mode adds a second major-mode menu called ``Run REDUCE'',
+which appears immediately to the right of the ``REDUCE'' menu on the
+menu bar and immediately below the ``REDUCE'' menu on the pop-up menu.
+
+When REDUCE Run mode is not loaded, it is possible to have an
+abbreviated ``Run REDUCE'' menu instead of the full menu.  The
+abbreviated menu can only run REDUCE (which implicitly loads REDUCE
+Run mode) or explicitly load REDUCE Run mode.  Whether or not to load
+REDUCE Run mode or install the abbreviated REDUCE Run mode menu when
+REDUCE mode loads is controlled by the option
+@code{reduce-run-autoload}.  @xref{Run Customization}.
+
+@c -------------------------------------------------------------------
+
+@node Version, Special function keys, Major mode menu, Miscellaneous
+@section REDUCE IDE version information
+@cindex REDUCE IDE version information
+@cindex Version information
+@cindex Information about version
+
+The version of REDUCE IDE that is running is available as the value of
+the variable @code{reduce-ide-version}, which is a string that can be
+displayed in the echo area by selecting the @code{Show Version} menu
+option from the REDUCE Edit or Run mode menu, or by running the
+command @kbd{M-x reduce-ide-version} (both of which also record it in
+the @code{*Messages*} buffer).  If no REDUCE mode is running then an
+easy way to start REDUCE mode is to switch to a temporary buffer
+(e.g.@: by using @kbd{C-x b tmp}) and then switch it to REDUCE mode
+(by using @kbd{M-x reduce-mode}).
+
+@c -------------------------------------------------------------------
+
+@node Special function keys,  , Version, Miscellaneous
+@section Special function keys
+@cindex Special function keys
+@cindex Function keys
+@cindex Keys, special function
+@cindex TAB
+@kindex TAB
+@cindex Meta-TAB
+@kindex Meta-TAB
+
+The standard key to complete a symbol is @kbd{Meta-@key{TAB}}, but
+Microsoft Windows uses this key combination (referred to as @code{Alt
++ Tab}) to switch between open apps.  However, @kbd{@key{TAB}} can
+always be accessed via its ASCII code as @kbd{C-i}, so
+@kbd{Meta-@key{TAB}} can always be accessed as @kbd{C-M-i}.
+
+@c ===================================================================
+
+@node Customization, Feedback, Miscellaneous, Top
+@chapter Options that control REDUCE IDE
 @cindex Customization
 @cindex Options
 @cindex Variables
@@ -1936,7 +1962,7 @@ font selection}).
 * Run Customization::           REDUCE Run mode customization
 @end menu
 
-@node Hooks
+@node Hooks, Display Customization, Customization, Customization
 @section REDUCE IDE hooks
 @cindex Hooks
 
@@ -1989,7 +2015,7 @@ mode.
 
 @c -------------------------------------------------------------------
 
-@node Display Customization
+@node Display Customization, Format Customization, Hooks, Customization
 @section REDUCE mode display customization
 @cindex Display customization
 
@@ -2040,7 +2066,7 @@ enclosed expressions.
 
 @c -------------------------------------------------------------------
 
-@node Format Customization
+@node Format Customization, Interface Customization, Display Customization, Customization
 @section REDUCE mode format customization
 @cindex Format customization
 
@@ -2074,7 +2100,7 @@ Default value 3.  Depth of successive indentation in REDUCE code.
 
 @c -------------------------------------------------------------------
 
-@node Interface Customization
+@node Interface Customization, Run Customization, Format Customization, Customization
 @section REDUCE mode interface customization
 @cindex Interface customization
 
@@ -2116,7 +2142,7 @@ or group.  (This option was previously called
 
 @c -------------------------------------------------------------------
 
-@node Run Customization
+@node Run Customization,  , Interface Customization, Customization
 @section REDUCE Run mode customization
 @cindex Run customization
 
@@ -2161,10 +2187,10 @@ Default value @code{(("CSL" . "redcsl --nogui") ("PSL" . "redpsl"))}
 except on Microsoft Windows.  The value of this variable is an
 association list with one element for each version of REDUCE, by
 default CSL and PSL.  Each element is a ``dotted pair'' of strings, of
-which the first defaults to either "CSL" or "PSL" and the second is
-the command to run that version of REDUCE using a command-line
-interface.  This can include any required options, as illustrated
-above by the default value for CSL REDUCE.
+which the first element is the command name, by defaults either "CSL"
+or "PSL", and the second element is the command to run that version of
+REDUCE using a command-line interface.  This can include any required
+options, as illustrated above by the default value for CSL REDUCE.
 
 The command can be either the command name, as illustrated above, or
 it can be a full path name, which can contain spaces.  (But spaces are
@@ -2209,6 +2235,17 @@ Default value @code{"^\\(?:[0-9]+[:*] \\)+"}.  The regexp to recognise
 prompts in REDUCE Run mode.  This variable is used to initialize
 @code{comint-prompt-regexp} in the REDUCE run buffer.
 
+@item reduce-run-terminal
+Default value @code{nil} on Microsoft Windows and @code{"Eterm"} on
+all other platforms.  If non-@code{nil}, this specifies the value of
+@code{TERM} to use, which is intended only for Unix-like platforms.
+This sets @code{comint-terminfo-terminal} to the value of
+@code{reduce-run-terminal} and @code{system-uses-terminfo} to @code{t}
+locally within @code{run-reduce} so that CSL REDUCE responds
+appropriately to interrupts, which with a dumb terminal it does not.
+A @code{nil} value means use the Emacs defaults.  Possible values to
+try are @code{"Eterm"}, @code{"emacs"}, @code{"xterm"}.
+
 @item reduce-source-modes
 Default value @code{(reduce-mode)}.  Used to determine if a buffer
 contains REDUCE source code.  If a file is loaded into a buffer that is
@@ -2219,7 +2256,7 @@ these commands to determine defaults.
 
 @c ===================================================================
 
-@node Feedback
+@node Feedback, Command Index, Customization, Top
 @chapter Feedback: bug reports, suggestions, comments, @dots{}
 @cindex Feedback
 @cindex Bug reports
@@ -2263,17 +2300,17 @@ echo area at the bottom of the frame; it will also be recorded in the
 @comment END OF MANUAL TEXT
 @page
 
-@node Command Index
+@node Command Index, Variable Index, Feedback, Top
 @unnumbered Command Index
 
 @printindex fn
 
-@node Variable Index
+@node Variable Index, Keystroke Index, Command Index, Top
 @unnumbered Variable Index
 
 @printindex vr
 
-@node Keystroke Index
+@node Keystroke Index, Concept Index, Variable Index, Top
 @unnumbered Keystroke Index
 
 @printindex ky
@@ -2284,7 +2321,7 @@ echo area at the bottom of the frame; it will also be recorded in the
 
 @c @page
 
-@node Concept Index
+@node Concept Index,  , Keystroke Index, Top
 @unnumbered Concept Index
 
 @printindex cp
