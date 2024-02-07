@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1998
-;; Time-stamp: <2024-02-04 18:37:03 franc>
+;; Time-stamp: <2024-02-07 18:05:02 franc>
 ;; Keywords: languages, processes
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 
@@ -166,7 +166,7 @@ include switches.  It must invoke a command-line version of
 REDUCE; a GUI version will not work!"
   :type '(alist :key-type string :value-type string)
   :set-after '(reduce-run-installation-directory)
-  :link '(custom-manual "(reduce-ide)Run REDUCE")
+  :link '(custom-manual "(reduce-ide)Running")
   :group 'reduce-run)
 
 (defcustom reduce-run-command-name-default
@@ -178,7 +178,7 @@ The default is the first command name in ‘reduce-run-commands’."
                  ,@(mapcar #'(lambda (x) (list 'const (car x)))
                            reduce-run-commands))
   :set-after '(reduce-run-commands)
-  :link '(custom-manual "(reduce-ide)Run REDUCE")
+  :link '(custom-manual "(reduce-ide)Running")
   :group 'reduce-run
   :package-version '(reduce-ide . "1.11"))
 
@@ -192,7 +192,7 @@ interrupts, which with a dumb terminal it does not.
 A nil value means use the Emacs defaults.
 Possible values to try are “Eterm”, “emacs”, “xterm”."
   :type '(choice (const :tag "Default" nil) string)
-  :link '(custom-manual "(reduce-ide)Run REDUCE")
+  :link '(custom-manual "(reduce-ide)Running")
   :group 'reduce-run
   :package-version '(reduce-ide . "1.11"))
 
@@ -205,7 +205,7 @@ Possible values to try are “Eterm”, “emacs”, “xterm”."
 (defcustom reduce-run-autostart t
   "If non-nil, automatically start a REDUCE process if necessary."
   :type 'boolean
-  :link '(custom-manual "(reduce-ide)Run REDUCE")
+  :link '(custom-manual "(reduce-ide)Running")
   :group 'reduce-run)
 
 (defcustom reduce-run-multiple t
@@ -213,7 +213,7 @@ Possible values to try are “Eterm”, “emacs”, “xterm”."
 Do this even if REDUCE is already running.
 If nil, re-use any appropriate running REDUCE process."
   :type 'boolean
-  :link '(custom-manual "(reduce-ide)Run REDUCE")
+  :link '(custom-manual "(reduce-ide)Running")
   :group 'reduce-run)
 
 (defcustom reduce-run-mode-hook nil
