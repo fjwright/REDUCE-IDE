@@ -4,9 +4,9 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1992
-;; Time-stamp: <2024-02-07 17:25:00 franc>
+;; Time-stamp: <2024-02-12 12:24:50 franc>
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
-;; Package-Version: 1.11
+;; Package-Version: 1.11.1
 ;; Package-Requires: (cl-lib)
 
 ;; This file is part of REDUCE IDE.
@@ -427,9 +427,9 @@ it is nil then do nothing."
       :help "Select a new tag file"]
      "--"
      ["Tag Directory…" reduce-tagify-dir :active t
-      :help "Tag REDUCE files in this directory"]
+      :help "Tag REDUCE files in selected directory"]
      ["Tag Dir & Subdirs…" reduce-tagify-dir-recursively :active t
-      :help "Tag all REDUCE files under this directory"]
+      :help "Tag REDUCE files under selected directory"]
      )
     "--"
     "Templates:"
@@ -2475,27 +2475,31 @@ MSG is the message displayed when the tagging process started."
 
 (defvar reduce--tagify-root)
 
-(defun reduce-tagify-dir-recursively (dir)
-  "Generate a REDUCE TAGS file for all ‘*.red’ files under directory DIR.
-TAGS goes in DIR, which by default is the current directory."
+(defun reduce-tagify-dir-recursively (dir depth)
+  "Generate a REDUCE TAGS file for ‘*.red’ files under directory DIR.
+Recursion DEPTH <= 0 means the search depth is unlimited.  The TAGS
+file goes in DIR, which by default is the current directory."
   (interactive
-   (list (read-directory-name
-          "Tag all files under dir: "   ; PROMPT
-          nil                           ; DIR (default cwd)
-          nil                           ; DEFAULT-DIRNAME
-          t)))                          ; MUSTMATCH
+   ;; (list (read-directory-name
+   ;;        "Tag all files under dir: "   ; PROMPT
+   ;;        nil                           ; DIR (default cwd)
+   ;;        nil                           ; DEFAULT-DIRNAME
+   ;;        t))                           ; MUSTMATCH
+   "DTag all files under directory: \nNSearch directories to depth (e.g. 2): ")
   (setq dir (directory-file-name (expand-file-name dir)))
+  (when (eq depth 0) (setq depth -1))
   (let ((reduce--tagify-root dir))
     ;; reduce--tagify-root required by ‘reduce--directory-files-recursively’.
     (reduce--tagify
-     dir (reduce--directory-files-recursively dir)
+     dir (reduce--directory-files-recursively dir depth)
      (message "Tagging all files ‘%s/…*.red’…" dir))))
 
-(defun reduce--directory-files-recursively (dir)
-  "Return a list of all ‘*.red’ files under DIR.
-This function works recursively.  Files are returned in \"depth first\"
-order, and files from each directory are sorted in alphabetical order.
-Each file name appears in the returned list relative to directory
+(defun reduce--directory-files-recursively (dir depth)
+  "Return a list of ‘*.red’ files under directory DIR to specified DEPTH.
+Recursion DEPTH <= -1 means the search depth is unlimited.  Files
+are returned in \"depth first\" order, and files from each
+directory are sorted in alphabetical order.  Each file name
+appears in the returned list relative to directory
 ‘reduce--tagify-root’, assumed to be bound locally in the caller."
   ;; Modelled on ‘directory-files-recursively’.
   (let (result
@@ -2505,12 +2509,12 @@ Each file name appears in the returned list relative to directory
         (tramp-mode (and tramp-mode (file-remote-p (expand-file-name dir)))))
     (dolist (file (sort (file-name-all-completions "" dir) 'string<))
       (unless (member file '("./" "../"))
-        (if (directory-name-p file)
+        (if (and (directory-name-p file) (/= depth 0))
             (let* ((leaf (substring file 0 -1))
                    (full-file (expand-file-name leaf dir)))
               (setq result
                     (nconc result (reduce--directory-files-recursively
-                                   full-file))))
+                                   full-file (1- depth)))))
           (when (string-match "\\.red\\'" file)
             (push (file-relative-name
                    (expand-file-name file dir)
