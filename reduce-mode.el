@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1992
-;; Time-stamp: <2024-02-12 12:24:50 franc>
+;; Time-stamp: <2024-02-12 17:00:57 franc>
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.11.1
 ;; Package-Requires: (cl-lib)
@@ -2458,20 +2458,25 @@ TAGS goes in DIR, which by default is the current directory."
   "Generate a REDUCE TAGS file in directory DIR for specified FILES.
 FILES must be a list of filenames, which can be relative to DIR.
 MSG is the message displayed when the tagging process started."
-  (let* ((default-directory dir)
-         (value
-          (apply
-           #'call-process              ; creates a synchronous process
-           (concat reduce-etags-directory "etags") ; program
-           nil                                     ; infile
-           "*rtags-log*"                           ; destination
-           nil                                     ; display
-           "--lang=none"                           ; args …
-           "--regex=/[^%]*procedure[ \\t]+\\([^ \\t\(;$]+\\)/\\1/i"
-           files)))                     ; LIST of filenames
-    (if (eq value 0)
-        (message "%sdone" msg)
-      (message "etags failed with status: %s" value))))
+  (condition-case nil
+      (let* ((default-directory dir)
+             (value
+              (apply
+               #'call-process          ; creates a synchronous process
+               (concat reduce-etags-directory "etags") ; program
+               nil                                     ; infile
+               "*rtags-log*"                           ; destination
+               nil                                     ; display
+               "--lang=none"                           ; args …
+               "--regex=/[^%]*procedure[ \\t]+\\([^ \\t\(;$]+\\)/\\1/i"
+               files)))                 ; LIST of filenames
+        (if (eq value 0)
+            (message "%sdone" msg)
+          (message "Etags failed with status: %s" value)))
+    (error
+     (error
+      "Etags could not be run -- try tagging fewer files by using \
+a smaller recursion depth and tagging directories separately"))))
 
 (defvar reduce--tagify-root)
 
@@ -2480,19 +2485,22 @@ MSG is the message displayed when the tagging process started."
 Recursion DEPTH <= 0 means the search depth is unlimited.  The TAGS
 file goes in DIR, which by default is the current directory."
   (interactive
-   ;; (list (read-directory-name
-   ;;        "Tag all files under dir: "   ; PROMPT
-   ;;        nil                           ; DIR (default cwd)
-   ;;        nil                           ; DEFAULT-DIRNAME
-   ;;        t))                           ; MUSTMATCH
-   "DTag all files under directory: \nNSearch directories to depth (e.g. 2): ")
+   (list (read-directory-name
+          "Tag files under directory: " ; PROMPT
+          nil                           ; DIR (default cwd)
+          nil                           ; DEFAULT-DIRNAME
+          t)                            ; MUSTMATCH
+         (read-number
+          "Search directories to depth (unlimited if <= 0): "
+          2                             ; DEFAULT
+          nil)))                        ; HIST
   (setq dir (directory-file-name (expand-file-name dir)))
   (when (eq depth 0) (setq depth -1))
   (let ((reduce--tagify-root dir))
     ;; reduce--tagify-root required by ‘reduce--directory-files-recursively’.
     (reduce--tagify
      dir (reduce--directory-files-recursively dir depth)
-     (message "Tagging all files ‘%s/…*.red’…" dir))))
+     (message "Tagging files ‘%s/…*.red’ to depth %s…" dir depth))))
 
 (defun reduce--directory-files-recursively (dir depth)
   "Return a list of ‘*.red’ files under directory DIR to specified DEPTH.
