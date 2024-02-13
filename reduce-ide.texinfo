@@ -2,9 +2,9 @@
 @c %**start of header
 @settitle GNU Emacs REDUCE Integrated Development Environment
 @c Manual last updated:
-@set UPDATED Time-stamp: <2024-02-07 17:25:01 franc>
+@set UPDATED Time-stamp: <2024-02-13 15:51:54 franc>
 @c Software version:
-@set VERSION 1.11
+@set VERSION 1.11.1
 @afourpaper
 @c With different size paper the printed page breaks will need attention!
 @c Look for @page and @need commands.
@@ -1284,10 +1284,10 @@ for procedures.
 A REDUCE mode submenu provides rapid access to some of the main
 facilities for finding a procedure definition via a tag file.  Two
 commands (and submenu options) facilitate tagging the REDUCE files in
-one directory or in a directory and all its sub-directories.  The
-former is useful for tagging all the files associated with a single
-project or package; the latter for tagging all REDUCE packages in a
-single tag file.
+one directory or in a directory and its sub-directories.  The former
+is useful for tagging all the files associated with a single project
+or package; the latter for tagging all REDUCE packages in a single tag
+file.
 
 Once a TAGS file has been generated, the standard Emacs @code{xref}
 interface is available to find identifier references, in particular
@@ -1319,8 +1319,13 @@ goes in the specified directory.
 @item M-x reduce-tagify-dir-recursively
 @findex reduce-tagify-dir-recursively
 Generate a REDUCE TAGS file for (all @code{.red} files in) the
-specified directory, by default the current directory, and all its
-subdirectories.  The single TAGS file goes in the specified directory.
+specified directory, by default the current directory, and its
+sub-directories to the specified depth.  The depth defaults to 2,
+which means the specified directory and each of its immediate
+sub-directories, but no deeper sub-directories.  Specifying a depth
+less than or equal to 0 means all sub-directories with no limit.  This
+may fail on the REDUCE packages directory because it attempts to tag
+too many files.  The single TAGS file goes in the specified directory.
 @end table
 
 @c ===================================================================

@@ -51,4 +51,5 @@ To Do
 Main Updates since REDUCE IDE 1.11
 ----------------------------------
 
-* The command `reduce-tagify-dir-recursively` fails on the REDUCE packages directory (at least on MS Windows) because the list of files is too long.  Add a depth arg to `reduce--directory-files-recursively` to limit the recursion depth, which works around the problem.  Improve tagging menu tooltips.
+* v1.11.1: The command `reduce-tagify-dir-recursively` fails on the REDUCE packages directory (at least on MS Windows) because the list of files is too long.  Add a depth arg to `reduce--directory-files-recursively` to limit the recursion depth, which works around the problem.  Handle errors better and improve tagging menu tooltips.
+* Update the manual.
