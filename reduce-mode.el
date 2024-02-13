@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1992
-;; Time-stamp: <2024-02-12 17:00:57 franc>
+;; Time-stamp: <2024-02-12 18:25:56 franc>
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.11.1
 ;; Package-Requires: (cl-lib)
@@ -2496,8 +2496,11 @@ file goes in DIR, which by default is the current directory."
           nil)))                        ; HIST
   (setq dir (directory-file-name (expand-file-name dir)))
   (when (eq depth 0) (setq depth -1))
-  (let ((reduce--tagify-root dir))
-    ;; reduce--tagify-root required by ‘reduce--directory-files-recursively’.
+  (let (;; Required by ‘reduce--directory-files-recursively’...
+        (reduce--tagify-root dir)
+        ;; When DIR is "/", remote file names like "/method:" could
+        ;; also be offered.  We shall suppress them.
+        (tramp-mode (and tramp-mode (file-remote-p (expand-file-name dir)))))
     (reduce--tagify
      dir (reduce--directory-files-recursively dir depth)
      (message "Tagging files ‘%s/…*.red’ to depth %s…" dir depth))))
@@ -2505,29 +2508,23 @@ file goes in DIR, which by default is the current directory."
 (defun reduce--directory-files-recursively (dir depth)
   "Return a list of ‘*.red’ files under directory DIR to specified DEPTH.
 Recursion DEPTH <= -1 means the search depth is unlimited.  Files
-are returned in \"depth first\" order, and files from each
-directory are sorted in alphabetical order.  Each file name
-appears in the returned list relative to directory
-‘reduce--tagify-root’, assumed to be bound locally in the caller."
+are returned in depth-first order, and files from each directory
+are sorted in alphabetical order.  Each file name appears in the
+returned list relative to directory ‘reduce--tagify-root’,
+assumed to be bound locally in the caller."
   ;; Modelled on ‘directory-files-recursively’.
-  (let (result
-        files
-        ;; When DIR is "/", remote file names like "/method:" could
-        ;; also be offered.  We shall suppress them.
-        (tramp-mode (and tramp-mode (file-remote-p (expand-file-name dir)))))
-    (dolist (file (sort (file-name-all-completions "" dir) 'string<))
-      (unless (member file '("./" "../"))
-        (if (and (directory-name-p file) (/= depth 0))
-            (let* ((leaf (substring file 0 -1))
-                   (full-file (expand-file-name leaf dir)))
-              (setq result
-                    (nconc result (reduce--directory-files-recursively
-                                   full-file (1- depth)))))
-          (when (string-match "\\.red\\'" file)
-            (push (file-relative-name
-                   (expand-file-name file dir)
-                   reduce--tagify-root)
-                  files)))))
+  (let (result                   ; list of files in all subdirs of DIR
+        files)                   ; reversed list of files in DIR
+    (dolist (file (directory-files dir nil
+                                   directory-files-no-dot-files-regexp))
+      (setq file (expand-file-name file dir))
+      (if (and (file-directory-p file) (/= depth 0))
+          (setq result
+                (nconc result (reduce--directory-files-recursively
+                               file (1- depth))))
+        (when (string-match "\\.red\\'" file)
+          (push (file-relative-name file reduce--tagify-root)
+                files))))
     (nconc result (nreverse files))))
 
 ;;;; **********************************************************************
