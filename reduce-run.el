@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1998
-;; Time-stamp: <2024-02-07 18:05:02 franc>
+;; Time-stamp: <2024-02-15 18:15:28 franc>
 ;; Keywords: languages, processes
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 
@@ -146,7 +146,7 @@ It must be in this directory; if it cannot be found then nil.")
 (defcustom reduce-run-commands
   (if (and (eq system-type 'windows-nt) reduce-run-installation-directory)
       (list (cons "CSL" (concat reduce-run-installation-directory
-                                "bin/redcsl.bat --nogui"))
+                                "bin/redcsl.bat -nocd --nogui"))
             (cons "PSL"
                   (if (and reduce-run--reduce-run-redpsl-bat-filename
                            (file-exists-p reduce-run--reduce-run-redpsl-bat-filename))

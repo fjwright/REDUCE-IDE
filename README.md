@@ -5,7 +5,7 @@ Major modes for editing and running REDUCE source code
 
 **[Francis Wright](https://sites.google.com/site/fjwcentaur)**
 
-Version 1.11.1, February 2024
+Version 1.11.2, February 2024
 
 REDUCE IDE is a package that provides an Integrated Development Environment for the [REDUCE computer algebra system](https://reduce-algebra.sourceforge.io/) within the GNU Emacs editor.  Its two major components are Emacs Lisp libraries that provide major modes for editing REDUCE source code and running a *command-line version* of REDUCE in an Emacs window.  It assumes that Emacs is running under a GUI such as Microsoft Windows or the X Window System under some flavour of UNIX or Linux, and displays Unicode character sets correctly.  REDUCE IDE does not include REDUCE, which is available separately from [SourceForge](https://sourceforge.net/projects/reduce-algebra/).  You don't need to install REDUCE in order to edit REDUCE source code using REDUCE IDE, but if you want to run REDUCE in REDUCE IDE then you do need to install REDUCE.
 
@@ -53,3 +53,5 @@ Main Updates since REDUCE IDE 1.11
 
 * v1.11.1: The command `reduce-tagify-dir-recursively` fails on the REDUCE packages directory (at least on MS Windows) because the list of files is too long.  Add a depth arg to `reduce--directory-files-recursively` to limit the recursion depth, which works around the problem.  Handle errors better and improve tagging menu tooltips.
 * Update the manual.
+
+* v1.11.2: Update the default CSL REDUCE command on Microsoft Windows to preserve the current working directory.
