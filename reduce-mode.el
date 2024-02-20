@@ -4,9 +4,9 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1992
-;; Time-stamp: <2024-02-15 18:14:33 franc>
+;; Time-stamp: <2024-02-20 17:39:26 franc>
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
-;; Package-Version: 1.11.2
+;; Package-Version: 1.11.3
 ;; Package-Requires: (cl-lib)
 
 ;; This file is part of REDUCE IDE.
@@ -2244,7 +2244,8 @@ followed by white space or comments followed by an identifier.")
         (end-of-line)
         (when (reduce--re-search-backward reduce--show-proc-regexp)
           (setq procname (match-string-no-properties 1))
-          (reduce-forward-procedure 1)
+          (ignore-errors
+           (reduce-forward-procedure 1))
           (if (<= (point) start)        ; not in procedure
               (setq procname nil)))))
     (goto-char start)
