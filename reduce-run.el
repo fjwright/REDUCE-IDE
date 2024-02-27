@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1998
-;; Time-stamp: <2024-02-15 18:15:28 franc>
+;; Time-stamp: <2024-02-27 17:41:06 franc>
 ;; Keywords: languages, processes
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 
@@ -112,48 +112,12 @@ can complete the directory name using \\<widget-field-keymap>‘\\[widget-comple
   :link '(custom-manual "(reduce-ide)REDUCE on Windows")
   :group 'reduce-run)
 
-
-(defconst reduce-run--redpsl-bat-filename
-  (if reduce-run-installation-directory
-      (concat reduce-run-installation-directory "bin/redpsl.bat")
-    "redpsl.bat")
-  "The absolute pathname of the standard file “redpsl.bat”.
-If it cannot be found then just “redpsl.bat”.")
-
-(defconst reduce-run--this-filepath
-  (or load-file-name (buffer-file-name))
-  "The absolute pathname of this file, “reduce-run.el”.
-If it cannot be found then nil (which might be the case if REDUCE
-Run mode is customized before it is otherwise used).")
-
-(defconst reduce-run--reduce-run-redpsl-bat-filename
-  (if reduce-run--this-filepath
-      (concat (file-name-directory reduce-run--this-filepath)
-              "reduce-run-redpsl.bat"))
-  "The absolute pathname of the local file “reduce-run-redpsl.bat”.
-It must be in this directory; if it cannot be found then nil.")
-
-
-;; Construct "reduce-run-redpsl.bat" in this directory.  Doing this
-;; every time this file is loaded allows for changes between loads.
-
-(when reduce-run--reduce-run-redpsl-bat-filename
-  (with-temp-file
-      reduce-run--reduce-run-redpsl-bat-filename
-    (insert "@echo off\r\n\"" reduce-run--redpsl-bat-filename "\"")))
-
-
 (defcustom reduce-run-commands
   (if (and (eq system-type 'windows-nt) reduce-run-installation-directory)
       (list (cons "CSL" (concat reduce-run-installation-directory
                                 "bin/redcsl.bat -nocd --nogui"))
-            (cons "PSL"
-                  (if (and reduce-run--reduce-run-redpsl-bat-filename
-                           (file-exists-p reduce-run--reduce-run-redpsl-bat-filename))
-                      ;; local batch file if possible:
-                      reduce-run--reduce-run-redpsl-bat-filename
-                    ;; otherwise standard batch file:
-                    reduce-run--redpsl-bat-filename)))
+            (cons "PSL" (concat reduce-run-installation-directory
+                                "bin/redpsl.bat")))
     '(("CSL" . "redcsl --nogui") ("PSL" . "redpsl")))
   "Alist of commands to run different versions of REDUCE.
 By default, it should be appropriate for standard installations
