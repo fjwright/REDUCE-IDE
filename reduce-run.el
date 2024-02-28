@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1998
-;; Time-stamp: <2024-02-28 17:10:03 franc>
+;; Time-stamp: <2024-02-28 18:05:14 franc>
 ;; Keywords: languages, processes
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 
@@ -114,12 +114,19 @@ can complete the directory name using \\<widget-field-keymap>‘\\[widget-comple
 
 (defcustom reduce-run-commands
   (if (and (eq system-type 'windows-nt) reduce-run-installation-directory)
-      (list
-       (list "CSL"
-             (concat reduce-run-installation-directory "bin/redcsl.bat")
-             "-nocd" "--nogui")
-       (list "PSL"
-             (concat reduce-run-installation-directory "bin/redpsl.bat")))
+      `(("CSL"
+         ,(concat reduce-run-installation-directory "lib/csl/reduce.exe")
+         "--nogui")
+        ("PSL"
+         ,(concat reduce-run-installation-directory "lib/psl/psl/bpsl.exe")
+         "-td" "1000" "-f"
+         ,(concat
+           reduce-run-installation-directory "lib/psl/red/reduce.img"))
+        ("redcsl.bat"
+         ,(concat reduce-run-installation-directory "bin/redcsl.bat")
+         "-nocd" "--nogui")
+        ("redpsl.bat"
+         ,(concat reduce-run-installation-directory "bin/redpsl.bat")))
     '(("CSL" "redcsl" "--nogui") ("PSL" "redpsl")))
   "Alist of commands to run different versions of REDUCE.
 By default, it should be appropriate for standard installations
@@ -142,7 +149,9 @@ The command string should begin with an absolute pathname that
 be followed by arguments, which *may not* include spaces.
 
 The command (together with its arguments) must invoke a
-command-line version of REDUCE; a GUI version will not work!"
+command-line version of REDUCE; a GUI version will not work!  On
+Microsoft Windows, it is best to run REDUCE directly and not via
+a “.bat” file."
   :type '(alist :key-type string :value-type (repeat string))
   :set-after '(reduce-run-installation-directory)
   :link '(custom-manual "(reduce-ide)Running")
