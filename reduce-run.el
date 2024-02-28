@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1998
-;; Time-stamp: <2024-02-27 17:41:06 franc>
+;; Time-stamp: <2024-02-28 12:16:56 franc>
 ;; Keywords: languages, processes
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 
@@ -114,21 +114,36 @@ can complete the directory name using \\<widget-field-keymap>‘\\[widget-comple
 
 (defcustom reduce-run-commands
   (if (and (eq system-type 'windows-nt) reduce-run-installation-directory)
-      (list (cons "CSL" (concat reduce-run-installation-directory
-                                "bin/redcsl.bat -nocd --nogui"))
-            (cons "PSL" (concat reduce-run-installation-directory
-                                "bin/redpsl.bat")))
-    '(("CSL" . "redcsl --nogui") ("PSL" . "redpsl")))
+      (list
+       (list "CSL"
+             (concat reduce-run-installation-directory "bin/redcsl.bat")
+             "-nocd" "--nogui")
+       (list "PSL"
+             (concat reduce-run-installation-directory "bin/redpsl.bat")))
+    '(("CSL" "redcsl" "--nogui") ("PSL" "redpsl")))
   "Alist of commands to run different versions of REDUCE.
 By default, it should be appropriate for standard installations
-of CSL and PSL REDUCE.  Each element has the form “name .
-command”, where name and command are strings.  Name is arbitrary
-but typically relates to the underlying Lisp system.  The string
-\" REDUCE\" is appended to it to name the interaction buffer.
-Command should be a relative or absolute pathname, and may
-include switches.  It must invoke a command-line version of
-REDUCE; a GUI version will not work!"
-  :type '(alist :key-type string :value-type string)
+of CSL and PSL REDUCE.
+
+Each element has the form “name.command.arguments”, where “name”
+and “command” are strings, and “arguments” is a possibly empty
+list of strings.  The name is arbitrary but typically relates to
+the underlying Lisp system.  The string \" REDUCE\" is appended
+to it to name the interaction buffer.
+
+The command should be an absolute pathname or a command on the
+search path, and the arguments list consists of optional command
+arguments. The command and argument strings *may* include spaces.
+
+For backward compatibility, each element may alternatively have
+the form “name.command”, where “name” and “command” are strings.
+The command string should begin with an absolute pathname that
+*may* include spaces or a command on the search path, and it may
+be followed by arguments, which *may not* include spaces.
+
+The command (together with its arguments) must invoke a
+command-line version of REDUCE; a GUI version will not work!"
+  :type '(alist :key-type string :value-type (repeat string))
   :set-after '(reduce-run-installation-directory)
   :link '(custom-manual "(reduce-ide)Running")
   :group 'reduce-run)
@@ -154,7 +169,7 @@ This sets `comint-terminfo-terminal' to the value of
 within `run-reduce' so that CSL REDUCE responds appropriately to
 interrupts, which with a dumb terminal it does not.
 A nil value means use the Emacs defaults.
-Possible values to try are “Eterm”, “emacs”, “xterm”."
+Possible values to try are “Eterm”, “\emacs”, “xterm”."
   :type '(choice (const :tag "Default" nil) string)
   :link '(custom-manual "(reduce-ide)Running")
   :group 'reduce-run
@@ -441,46 +456,49 @@ Return t unless aborted, in which case return nil."
             (lwarn '(reduce-run) :warning
                    "REDUCE command name \"%s\" not found!" cmd)))))))
 
-(defun reduce-run-reduce (cmd xsl &optional label)
-  "Run CMD as an XSL REDUCE process with I/O via a buffer.
-If LABEL is nil then the process is named “XSL REDUCE” and the
-buffer is named “*XSL REDUCE*”; otherwise, the process is named
-“XSL REDUCE LABEL” and the buffer is named “*XSL REDUCE LABEL*”.
-XSL is the name of a REDUCE command in ’reduce-run-commands’ (by
+(defun reduce-run-reduce (cmd name &optional label)
+  "Run CMD as a NAME REDUCE process with I/O via a buffer.
+If LABEL is nil then the process is named “NAME REDUCE” and the
+buffer is named “*NAME REDUCE*”; otherwise, the process is named
+“NAME REDUCE LABEL” and the buffer is named “*NAME REDUCE LABEL*”.
+NAME is the name of a REDUCE command in ’reduce-run-commands’ (by
 default \"CSL\" or \"PSL\") or \"\".  If there is a process
 already running this command name, just switch to it.
 Return t if successful; otherwise return nil."
-  (let ((proc-name (if (equal xsl "") "REDUCE" (concat xsl " REDUCE")))
-        (reduce-run-buffer-xsl (assoc xsl reduce-run--buffer-alist))
+  (let ((proc-name (if (equal name "") "REDUCE" (concat name " REDUCE")))
+        (reduce-run-buffer-name (assoc name reduce-run--buffer-alist))
         buf-name buf-number)
     (when label (setq proc-name (concat proc-name " " label)))
     (setq buf-name (concat "*" proc-name "*"))
     (cond (reduce-run-multiple
            ;; Always create a new process buffer with an appropriate name:
-           (if reduce-run-buffer-xsl
-               (setq buf-number (1+ (or (nth 2 reduce-run-buffer-xsl) 0))
+           (if reduce-run-buffer-name
+               (setq buf-number (1+ (or (nth 2 reduce-run-buffer-name) 0))
                      proc-name (concat proc-name " "
                                        (number-to-string buf-number))
                      buf-name (concat "*" proc-name "*")))
            (when (reduce-run-reduce-1 cmd proc-name buf-name)
-             (push (list xsl buf-name buf-number) reduce-run--buffer-alist)
+             (push (list name buf-name buf-number) reduce-run--buffer-alist)
              t))
-          ;; Re-use any existing buffer for XSL REDUCE:
-          ((and reduce-run-buffer-xsl
-                (string-match proc-name (cdr reduce-run-buffer-xsl))
+          ;; Re-use any existing buffer for NAME REDUCE:
+          ((and reduce-run-buffer-name
+                (string-match proc-name (cdr reduce-run-buffer-name))
                 (comint-check-proc buf-name))
            (pop-to-buffer buf-name)) ; just re-visit this process buffer
           (t (when (reduce-run-reduce-1 cmd proc-name buf-name)
-               (push (list xsl buf-name) reduce-run--buffer-alist)
+               (push (list name buf-name) reduce-run--buffer-alist)
                t)))))
 
 (defun reduce-run-reduce-1 (cmd process-name buffer-name)
   "Run CMD as REDUCE process PROCESS-NAME in buffer BUFFER-NAME.
+CMD may be either a list of strings or a single string
+representing a command followed by optional arguments.
 Return the process buffer if successful; nil otherwise."
   (condition-case err
-      ;; Protected form:
-      (let ((cmdlist (reduce-run-args-to-list cmd)))
-        (set-buffer (reduce-run-reduce-2 cmdlist process-name))
+      (progn                            ; protected form
+        (when (stringp cmd)
+          (setq cmd (reduce-run-args-to-list cmd)))
+        (set-buffer (reduce-run-reduce-2 cmd process-name))
         (reduce-run-mode)
         (pop-to-buffer buffer-name))
     ;; Error handler:
