@@ -48,8 +48,8 @@ To Do
 * Check relation between standard and REDUCE mode key bindings.
 * Check switch-to-reduce and related commands.
 * Resolve REDUCE Run mode fontification clash with Comint mode.
-* On Windows, make REDUCE interruptible; try running without using the BAT files; ensure that PSL can load fasl files.
-* Use treesitter for parsing.
+* On Windows, make REDUCE interruptible; try running without using the BAT files.
+* Version 2 (maybe): Use treesitter for parsing.
 
 Main Updates since REDUCE IDE 1.11
 ----------------------------------
@@ -62,3 +62,4 @@ Main Updates since REDUCE IDE 1.11
 * v1.11.4: On Microsoft Windows, remove special support for PSL REDUCE, which is not needed from REDUCE revision 6726.  Note that if you have customized `reduce-run-commands` then you need to erase the customization, at least for PSL REDUCE, so that the command to run PSL REDUCE reverts to its (new) default value, which should probably be `C:/Program Files/Reduce/bin/redpsl.bat`, possibly with a different drive letter.
 * v1.11.5: Change `reduce-run-commands` so that a REDUCE command is a list of strings rather than a single string, which allows spaces in both the command and its arguments.  Replace `XSL` by `NAME` in variables in `reduce-run-reduce`.
 * Automatically update option `reduce-run-commands` to new structure and save it. Not quite right yet!
+* Update REDUCE Run internal variable names to include `--` and mostly to begin with `reduce-run--`.
