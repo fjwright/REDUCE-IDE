@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1998
-;; Time-stamp: <2024-02-28 12:16:56 franc>
+;; Time-stamp: <2024-02-28 16:08:34 franc>
 ;; Keywords: languages, processes
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 
@@ -146,7 +146,8 @@ command-line version of REDUCE; a GUI version will not work!"
   :type '(alist :key-type string :value-type (repeat string))
   :set-after '(reduce-run-installation-directory)
   :link '(custom-manual "(reduce-ide)Running")
-  :group 'reduce-run)
+  :group 'reduce-run
+  :package-version '(reduce-ide . "1.12"))
 
 (defcustom reduce-run-command-name-default
   (caar reduce-run-commands)
@@ -491,13 +492,11 @@ Return t if successful; otherwise return nil."
 
 (defun reduce-run-reduce-1 (cmd process-name buffer-name)
   "Run CMD as REDUCE process PROCESS-NAME in buffer BUFFER-NAME.
-CMD may be either a list of strings or a single string
-representing a command followed by optional arguments.
-Return the process buffer if successful; nil otherwise."
+CMD is a list of strings representing a command followed by
+optional arguments.  Return the process buffer if successful; nil
+otherwise."
   (condition-case err
       (progn                            ; protected form
-        (when (stringp cmd)
-          (setq cmd (reduce-run-args-to-list cmd)))
         (set-buffer (reduce-run-reduce-2 cmd process-name))
         (reduce-run-mode)
         (pop-to-buffer buffer-name))
@@ -988,5 +987,15 @@ Also remove the buffer from ‘reduce-run--buffer-alist’."
 (provide 'reduce-run)
 
 (run-hooks 'reduce-run-load-hook)
+
+;; Temporary backward compatibility code run at load time:
+(when (stringp (cdar reduce-run-commands))
+  ;; Update ‘reduce-run-commands’ to new structure.
+  (mapc
+   #'(lambda (x) (setcdr x (reduce-run-args-to-list (cdr x))))
+   reduce-run-commands)
+  (when (y-or-n-p "Option ‘reduce-run-commands’ updated to new structure. \
+Please check and save it for future sessions (once only). Do it now?")
+    (customize-option 'reduce-run-commands)))
 
 ;;; reduce-run.el ends here
