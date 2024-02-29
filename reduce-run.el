@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1998
-;; Time-stamp: <2024-02-29 17:32:02 franc>
+;; Time-stamp: <2024-02-29 18:11:15 franc>
 ;; Keywords: languages, processes
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 
@@ -70,6 +70,7 @@ Not defined on other platforms."
         ;; https://stackoverflow.com/questions/3652631/
         ;; is-there-a-way-to-list-drive-letters-in-dired
         :type '(repeat
+                :tag "Drives"
                 :validate
                 (lambda (widget)
                   ;; value should be a list of strings
@@ -83,7 +84,7 @@ Not defined on other platforms."
                                   (format "Invalid drive: ‘%s’.  \
 Each drive must be specified as ‘X:’, where X is a letter A-Z." invalid))
                       widget)))
-                string)
+                (string :tag "Drive"))
         :link '(custom-manual "(reduce-ide)REDUCE on Windows")
         :group 'reduce-run)))
 
@@ -524,20 +525,31 @@ Return t if successful; otherwise return nil."
                (push (list name buf-name) reduce-run--buffer-alist)
                t)))))
 
+;; The error handling below doesn't seem helpful.  It leads to a
+;; second error "No buffer named *CSL REDUCE*" from the tidy-up code!
+;; Consider this again later.
+
+;; (defun reduce-run--run-reduce-1 (cmd process-name buffer-name)
+;;   "Run CMD as REDUCE process PROCESS-NAME in buffer BUFFER-NAME.
+;; Return the process buffer if successful; nil otherwise."
+;;   (condition-case err
+;;       (progn                            ; protected form
+;;         (set-buffer (reduce-run--run-reduce-2 cmd process-name))
+;;         (reduce-run-mode)
+;;         (pop-to-buffer buffer-name))
+;;     ;; Error handler:
+;;     (error            ; condition
+;;      ;; Display the usual error message then tidy up:
+;;      (message "%s" (error-message-string err))
+;;      (kill-buffer buffer-name)
+;;      nil)))
+
 (defun reduce-run--run-reduce-1 (cmd process-name buffer-name)
   "Run CMD as REDUCE process PROCESS-NAME in buffer BUFFER-NAME.
 Return the process buffer if successful; nil otherwise."
-  (condition-case err
-      (progn                            ; protected form
-        (set-buffer (reduce-run--run-reduce-2 cmd process-name))
-        (reduce-run-mode)
-        (pop-to-buffer buffer-name))
-    ;; Error handler:
-    (error            ; condition
-     ;; Display the usual error message then tidy up:
-     (message "%s" (error-message-string err))
-     (kill-buffer buffer-name)
-     nil)))
+  (set-buffer (reduce-run--run-reduce-2 cmd process-name))
+  (reduce-run-mode)
+  (pop-to-buffer buffer-name))
 
 (defun reduce-run--run-reduce-2 (cmd process-name)
   "Run CMD as REDUCE process PROCESS-NAME.
