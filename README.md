@@ -64,4 +64,4 @@ Main Updates since REDUCE IDE 1.11
 * Automatically update option `reduce-run-commands` to new structure and save it. **Not quite right yet!**
 * Update REDUCE Run internal variable names to include `--` and mostly to begin with `reduce-run--`.
 * On Microsoft Windows, run REDUCE directly rather than via the `.bat` files, which avoids the query "Terminate batch job (Y/N)?" when REDUCE is killed (such as by attempting to interrupt it).  But keep the `.bat` commands for now for comparison.
-* **When running directly, need a way to set $REDUCE, as is done by the `.bat` files.**
+* Add a facility to set $REDUCE.  Include a placeholder for future use to indicate use of a shell.  Also, better labelling of the customization for `reduce-run-commands`.

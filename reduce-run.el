@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1998
-;; Time-stamp: <2024-02-28 18:05:14 franc>
+;; Time-stamp: <2024-02-29 15:19:09 franc>
 ;; Keywords: languages, processes
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 
@@ -114,33 +114,42 @@ can complete the directory name using \\<widget-field-keymap>‘\\[widget-comple
 
 (defcustom reduce-run-commands
   (if (and (eq system-type 'windows-nt) reduce-run-installation-directory)
-      `(("CSL"
+      `(("CSL" nil t
          ,(concat reduce-run-installation-directory "lib/csl/reduce.exe")
          "--nogui")
-        ("PSL"
+        ("PSL" nil t
          ,(concat reduce-run-installation-directory "lib/psl/psl/bpsl.exe")
          "-td" "1000" "-f"
          ,(concat
            reduce-run-installation-directory "lib/psl/red/reduce.img"))
-        ("redcsl.bat"
+        ("redcsl.bat" nil t
          ,(concat reduce-run-installation-directory "bin/redcsl.bat")
          "-nocd" "--nogui")
-        ("redpsl.bat"
+        ("redpsl.bat" nil t
          ,(concat reduce-run-installation-directory "bin/redpsl.bat")))
-    '(("CSL" "redcsl" "--nogui") ("PSL" "redpsl")))
+    '(("CSL" nil t "redcsl" "--nogui")
+      ("PSL" nil t "redpsl")))
   "Alist of commands to run different versions of REDUCE.
 By default, it should be appropriate for standard installations
 of CSL and PSL REDUCE.
 
-Each element has the form “name.command.arguments”, where “name”
-and “command” are strings, and “arguments” is a possibly empty
-list of strings.  The name is arbitrary but typically relates to
-the underlying Lisp system.  The string \" REDUCE\" is appended
-to it to name the interaction buffer.
+Each element has the form “name.env.t.command.arguments”, where
+“name” and “command” are strings, “env” is nil or a string, t is
+a placeholder for future use and “arguments” is a possibly empty
+list of strings.  The “name” component is arbitrary but typically
+relates to the underlying Lisp system.  The string \" REDUCE\" is
+appended to it to name the interaction buffer.
 
-The command should be an absolute pathname or a command on the
-search path, and the arguments list consists of optional command
-arguments. The command and argument strings *may* include spaces.
+If the “env” component is non-nil then it should be a string that
+*may* include spaces.  It will become the value of the
+environment variable REDUCE within the REDUCE process and should
+be the absolute pathname of the root of the REDUCE file tree.
+This is used only by a few specialized REDUCE packages.
+
+The “command” component should be an absolute pathname or a
+command on the search path, and the “arguments” component
+consists of optional command arguments.  The command and argument
+strings *may* include spaces.
 
 For backward compatibility, each element may alternatively have
 the form “name.command”, where “name” and “command” are strings.
@@ -152,7 +161,18 @@ The command (together with its arguments) must invoke a
 command-line version of REDUCE; a GUI version will not work!  On
 Microsoft Windows, it is best to run REDUCE directly and not via
 a “.bat” file."
-  :type '(alist :key-type string :value-type (repeat string))
+  :type
+  '(alist :tag "Commands" :key-type (string :tag "Name")
+          :value-type
+          (cons :tag "$REDUCE environment variable"
+                (choice (const :tag "Unset" nil)
+                        (string :tag "Value"))
+                (cons :tag "Place Holder" ; use shell (in future)?
+                      (const :tag "Ignored" t)
+                      (cons :tag "Command and Arguments"
+                            (string :tag "Command")
+                            (repeat :tag "Arguments"
+                                    (string :tag "Arg"))))))
   :set-after '(reduce-run-installation-directory)
   :link '(custom-manual "(reduce-ide)Running")
   :group 'reduce-run
@@ -501,9 +521,7 @@ Return t if successful; otherwise return nil."
 
 (defun reduce-run--run-reduce-1 (cmd process-name buffer-name)
   "Run CMD as REDUCE process PROCESS-NAME in buffer BUFFER-NAME.
-CMD is a list of strings representing a command followed by
-optional arguments.  Return the process buffer if successful; nil
-otherwise."
+Return the process buffer if successful; nil otherwise."
   (condition-case err
       (progn                            ; protected form
         (set-buffer (reduce-run--run-reduce-2 cmd process-name))
@@ -516,22 +534,30 @@ otherwise."
      (kill-buffer buffer-name)
      nil)))
 
-(defun reduce-run--run-reduce-2 (cmdlist process-name)
-  "Run CMDLIST as REDUCE process PROCESS-NAME.
-Use terminal type `reduce-run-terminal' if non-nil.
+(defun reduce-run--run-reduce-2 (cmd process-name)
+  "Run CMD as REDUCE process PROCESS-NAME.
+Use terminal type ‘reduce-run-terminal’ if non-nil.
 Return the process buffer if successful; nil otherwise."
   (if reduce-run-terminal
       (let ((comint-terminfo-terminal reduce-run-terminal)
             (system-uses-terminfo t))
-        (reduce-run--run-reduce-3 cmdlist process-name))
-    (reduce-run--run-reduce-3 cmdlist process-name)))
+        (reduce-run--run-reduce-3 cmd process-name))
+    (reduce-run--run-reduce-3 cmd process-name)))
 
-(defun reduce-run--run-reduce-3 (cmdlist process-name)
-  "Run CMDLIST as REDUCE process PROCESS-NAME.
+(defun reduce-run--run-reduce-3 (cmd process-name)
+  "Run CMD as REDUCE process PROCESS-NAME.
+CMD has the form “env.t.command.arguments”, where “env” is nil or
+the value for the environment variable REDUCE within the REDUCE
+process; t is a placeholder; “command.arguments” is a list of
+strings representing a command followed by optional arguments.
 Return the process buffer if successful; nil otherwise."
-  ;; ‘apply’ used below because last arg is &rest!
-  (apply #'make-comint-in-buffer
-         process-name nil (car cmdlist) nil (cdr cmdlist)))
+  (let ((process-environment process-environment)
+        (env (car cmd)) (cmdlist (cddr cmd)))
+    (when env
+      (push (concat "REDUCE=" env) process-environment))
+    ;; ‘apply’ used below because last arg is &rest!
+    (apply #'make-comint-in-buffer
+           process-name nil (car cmdlist) nil (cdr cmdlist))))
 
 (add-hook 'same-window-regexps "REDUCE") ; ??? Not sure about this! ???
 
@@ -1001,7 +1027,8 @@ Also remove the buffer from ‘reduce-run--buffer-alist’."
 (when (stringp (cdar reduce-run-commands))
   ;; Update ‘reduce-run-commands’ to new structure.
   (mapc
-   #'(lambda (x) (setcdr x (reduce-run--args-to-list (cdr x))))
+   #'(lambda (x)
+       (setcdr x (cons nil (cons t (reduce-run--args-to-list (cdr x))))))
    reduce-run-commands)
   (when (y-or-n-p "Option ‘reduce-run-commands’ updated to new structure. \
 Please check and save it for future sessions (once only). Do it now?")
