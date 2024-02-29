@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1998
-;; Time-stamp: <2024-02-29 16:47:14 franc>
+;; Time-stamp: <2024-02-29 17:32:02 franc>
 ;; Keywords: languages, processes
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 
@@ -117,10 +117,10 @@ name using \\<widget-field-keymap>‘\\[widget-complete]’."
 
 (defcustom reduce-run-commands
   (if (and (eq system-type 'windows-nt) reduce-root-dir-file-name)
-      `(("CSL" nil t
+      `(("CSL" ,reduce-root-dir-file-name t
          ,(concat reduce-root-dir-file-name "/lib/csl/reduce.exe")
          "--nogui")
-        ("PSL" nil t
+        ("PSL" ,reduce-root-dir-file-name t
          ,(concat reduce-root-dir-file-name "/lib/psl/psl/bpsl.exe")
          "-td" "1000" "-f"
          ,(concat
@@ -145,9 +145,11 @@ appended to it to name the interaction buffer.
 
 If the “env” component is non-nil then it should be a string that
 *may* include spaces.  It will become the value of the
-environment variable REDUCE within the REDUCE process and should
-be the absolute pathname of the root of the REDUCE file tree.
-This is used only by a few specialized REDUCE packages.
+environment variable “reduce” within the REDUCE process and
+should be the absolute pathname of the root of the REDUCE file
+tree.  This is used only by a few specialized REDUCE packages.
+It is not useful if REDUCE is run via a shell script that sets
+the environment variable “reduce” itself.
 
 The “command” component should be an absolute pathname or a
 command on the search path, and the “arguments” component
@@ -245,24 +247,6 @@ file by ‘reduce-input-file’ and ‘reduce-compile-file’.  Used by
 these commands to determine defaults."
   :type '(repeat symbol)
   :link '(custom-manual "(reduce-ide)Run Customization")
-  :group 'reduce-run)
-
-(defcustom reduce-packages-directory
-  (and reduce-root-dir-file-name
-       (let ((dir (concat reduce-root-dir-file-name "/packages/")))
-         (and (file-accessible-directory-p dir) dir)))
-  "Directory of REDUCE packages, or nil if not set.
-It should be an absolute pathname ending with “…/packages/” and
-should be set automatically.  Note that you can complete the
-directory name using \\<widget-field-keymap>‘\\[widget-complete]’.
-Customizing this variable sets up completion for
-‘reduce-load-package’; setting it directly has no effect."
-  :set #'(lambda (symbol value)
-           (if value (reduce-run--set-package-completion-alist value))
-           (set-default symbol value))
-  :set-after '(reduce-root-dir-file-name)
-  :type '(choice (const :tag "None" nil) directory)
-  :link '(custom-manual "(reduce-ide)Processing REDUCE Files")
   :group 'reduce-run)
 
 (defcustom reduce-run-mode-hook nil
@@ -575,7 +559,7 @@ Return the process buffer if successful; nil otherwise."
   (let ((process-environment process-environment)
         (env (car cmd)) (cmdlist (cddr cmd)))
     (when env
-      (push (concat "REDUCE=" env) process-environment))
+      (push (concat "reduce=" env) process-environment))
     ;; ‘apply’ used below because last arg is &rest!
     (apply #'make-comint-in-buffer
            process-name nil (car cmdlist) nil (cdr cmdlist))))
@@ -906,6 +890,27 @@ REDUCE packages directory."
               packages (sort packages #'string<)
               reduce-run--package-completion-alist
               (mapcar #'list packages))))))
+
+;; Note that ‘reduce-packages-directory’ must be defined after
+;; ‘reduce-run--set-package-completion-alist’!
+
+(defcustom reduce-packages-directory
+  (and reduce-root-dir-file-name
+       (let ((dir (concat reduce-root-dir-file-name "/packages/")))
+         (and (file-accessible-directory-p dir) dir)))
+  "Directory of REDUCE packages, or nil if not set.
+It should be an absolute pathname ending with “…/packages/” and
+should be set automatically.  Note that you can complete the
+directory name using \\<widget-field-keymap>‘\\[widget-complete]’.
+Customizing this variable sets up completion for
+‘reduce-load-package’; setting it directly has no effect."
+  :set #'(lambda (symbol value)
+           (if value (reduce-run--set-package-completion-alist value))
+           (set-default symbol value))
+  :set-after '(reduce-root-dir-file-name)
+  :type '(choice (const :tag "None" nil) directory)
+  :link '(custom-manual "(reduce-ide)Processing REDUCE Files")
+  :group 'reduce-run)
 
 (defvar reduce-run--load-package-history nil
      "A history list for ‘reduce-load-package’.")
