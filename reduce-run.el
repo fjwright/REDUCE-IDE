@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1998
-;; Time-stamp: <2024-02-29 15:19:09 franc>
+;; Time-stamp: <2024-02-29 16:47:14 franc>
 ;; Keywords: languages, processes
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 
@@ -65,7 +65,7 @@
               (shell-command-to-string "wmic LogicalDisk get Caption")))
         "On MS Windows (only), the list of drives to be searched for REDUCE.
 Default is all local drives, e.g. (\"C:\" \"D:\" \"E:\" \"F:\").
-Used only by ‘reduce-run-installation-directory’.
+Used only by ‘reduce-root-dir-file-name’.
 Not defined on other platforms."
         ;; https://stackoverflow.com/questions/3652631/
         ;; is-there-a-way-to-list-drive-letters-in-dired
@@ -87,11 +87,12 @@ Each drive must be specified as ‘X:’, where X is a letter A-Z." invalid))
         :link '(custom-manual "(reduce-ide)REDUCE on Windows")
         :group 'reduce-run)))
 
-(defcustom reduce-run-installation-directory
+(defcustom reduce-root-dir-file-name
   (if (eq system-type 'windows-nt)
       (let ((drives (eval 'reduce-run-MSWin-drives))
-	        ;; because reduce-run-MSWin-drives is undefined except on MS Windows
-            (skeleton "/Program Files/Reduce/")
+	        ;; because reduce-run-MSWin-drives is
+                ;; undefined except on Microsoft Windows
+            (skeleton "/Program Files/Reduce")
             dir d)
         (while drives
           (setq d (concat (car drives) skeleton))
@@ -99,34 +100,36 @@ Each drive must be specified as ‘X:’, where X is a letter A-Z." invalid))
               (setq dir d drives nil)
             (setq drives (cdr drives))))
         dir)
-    "/usr/share/reduce/")
-  "Absolute root directory of the REDUCE installation, or nil if not set.
-It is the directory containing the “packages” directory and, on
-Microsoft Windows, the “bin” directory containing the
-user-executable batch files.  On Microsoft Windows, it defaults
-to “X:/Program Files/Reduce/”, where X is a letter A-Z that
-REDUCE Run mode attempts to determine automatically.  On other
-platforms, it defaults to “/usr/share/reduce/”.  Note that you
-can complete the directory name using \\<widget-field-keymap>‘\\[widget-complete]’."
+    "/usr/share/reduce")
+  "Root directory of the REDUCE installation, or nil if not set.
+It must be an absolute file name and must *not* end with a
+directory separator.  It is the directory containing the
+“packages” directory and, on Microsoft Windows, the “bin”
+directory containing the user-executable batch files.  On
+Microsoft Windows, it defaults to “X:/Program Files/Reduce”,
+where X is a letter A-Z that REDUCE Run mode attempts to
+determine automatically.  On other platforms, it defaults to
+“/usr/share/reduce”.  Note that you can complete the directory
+name using \\<widget-field-keymap>‘\\[widget-complete]’."
   :type  '(choice (const :tag "None" nil) directory)
   :link '(custom-manual "(reduce-ide)REDUCE on Windows")
   :group 'reduce-run)
 
 (defcustom reduce-run-commands
-  (if (and (eq system-type 'windows-nt) reduce-run-installation-directory)
+  (if (and (eq system-type 'windows-nt) reduce-root-dir-file-name)
       `(("CSL" nil t
-         ,(concat reduce-run-installation-directory "lib/csl/reduce.exe")
+         ,(concat reduce-root-dir-file-name "/lib/csl/reduce.exe")
          "--nogui")
         ("PSL" nil t
-         ,(concat reduce-run-installation-directory "lib/psl/psl/bpsl.exe")
+         ,(concat reduce-root-dir-file-name "/lib/psl/psl/bpsl.exe")
          "-td" "1000" "-f"
          ,(concat
-           reduce-run-installation-directory "lib/psl/red/reduce.img"))
+           reduce-root-dir-file-name "/lib/psl/red/reduce.img"))
         ("redcsl.bat" nil t
-         ,(concat reduce-run-installation-directory "bin/redcsl.bat")
+         ,(concat reduce-root-dir-file-name "/bin/redcsl.bat")
          "-nocd" "--nogui")
         ("redpsl.bat" nil t
-         ,(concat reduce-run-installation-directory "bin/redpsl.bat")))
+         ,(concat reduce-root-dir-file-name "/bin/redpsl.bat")))
     '(("CSL" nil t "redcsl" "--nogui")
       ("PSL" nil t "redpsl")))
   "Alist of commands to run different versions of REDUCE.
@@ -173,7 +176,7 @@ a “.bat” file."
                             (string :tag "Command")
                             (repeat :tag "Arguments"
                                     (string :tag "Arg"))))))
-  :set-after '(reduce-run-installation-directory)
+  :set-after '(reduce-root-dir-file-name)
   :link '(custom-manual "(reduce-ide)Running")
   :group 'reduce-run
   :package-version '(reduce-ide . "1.12"))
@@ -225,19 +228,6 @@ If nil, re-use any appropriate running REDUCE process."
   :link '(custom-manual "(reduce-ide)Running")
   :group 'reduce-run)
 
-(defcustom reduce-run-mode-hook nil
-  "Hook for customising REDUCE Run mode."
-  :type 'hook
-  :link '(custom-manual "(reduce-ide)Hooks")
-  :group 'reduce-run)
-
-(defcustom reduce-run-load-hook nil
-  "Hook run when REDUCE Run mode is loaded.
-It is a good place to put keybindings."
-  :type 'hook
-  :link '(custom-manual "(reduce-ide)Hooks")
-  :group 'reduce-run)
-
 (defcustom reduce-input-filter "\\`\\([ \t;$]*\\|[ \t]*.[ \t]*\\)\\'"
   "What not to save on REDUCE Run mode's input history.
 The value is a regexp.  The default matches any combination of zero or
@@ -255,6 +245,37 @@ file by ‘reduce-input-file’ and ‘reduce-compile-file’.  Used by
 these commands to determine defaults."
   :type '(repeat symbol)
   :link '(custom-manual "(reduce-ide)Run Customization")
+  :group 'reduce-run)
+
+(defcustom reduce-packages-directory
+  (and reduce-root-dir-file-name
+       (let ((dir (concat reduce-root-dir-file-name "/packages/")))
+         (and (file-accessible-directory-p dir) dir)))
+  "Directory of REDUCE packages, or nil if not set.
+It should be an absolute pathname ending with “…/packages/” and
+should be set automatically.  Note that you can complete the
+directory name using \\<widget-field-keymap>‘\\[widget-complete]’.
+Customizing this variable sets up completion for
+‘reduce-load-package’; setting it directly has no effect."
+  :set #'(lambda (symbol value)
+           (if value (reduce-run--set-package-completion-alist value))
+           (set-default symbol value))
+  :set-after '(reduce-root-dir-file-name)
+  :type '(choice (const :tag "None" nil) directory)
+  :link '(custom-manual "(reduce-ide)Processing REDUCE Files")
+  :group 'reduce-run)
+
+(defcustom reduce-run-mode-hook nil
+  "Hook for customising REDUCE Run mode."
+  :type 'hook
+  :link '(custom-manual "(reduce-ide)Hooks")
+  :group 'reduce-run)
+
+(defcustom reduce-run-load-hook nil
+  "Hook run when REDUCE Run mode is loaded.
+It is a good place to put keybindings."
+  :type 'hook
+  :link '(custom-manual "(reduce-ide)Hooks")
   :group 'reduce-run)
 
 
@@ -885,24 +906,6 @@ REDUCE packages directory."
               packages (sort packages #'string<)
               reduce-run--package-completion-alist
               (mapcar #'list packages))))))
-
-(defcustom reduce-packages-directory
-  (and reduce-run-installation-directory
-       (let ((dir (concat reduce-run-installation-directory "packages/")))
-         (and (file-accessible-directory-p dir) dir)))
-  "Directory of REDUCE packages, or nil if not set.
-It should be an absolute pathname ending with “…/packages/” and
-should be set automatically.  Note that you can complete the
-directory name using \\<widget-field-keymap>‘\\[widget-complete]’.
-Customizing this variable sets up completion for
-‘reduce-load-package’; setting it directly has no effect."
-  :set #'(lambda (symbol value)
-           (if value (reduce-run--set-package-completion-alist value))
-           (set-default symbol value))
-  :set-after '(reduce-run-installation-directory)
-  :type '(choice (const :tag "None" nil) directory)
-  :link '(custom-manual "(reduce-ide)Processing REDUCE Files")
-  :group 'reduce-run)
 
 (defvar reduce-run--load-package-history nil
      "A history list for ‘reduce-load-package’.")
