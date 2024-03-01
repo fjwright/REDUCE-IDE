@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1998
-;; Time-stamp: <2024-03-01 16:18:15 franc>
+;; Time-stamp: <2024-03-01 17:23:16 franc>
 ;; Keywords: languages, processes
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 
@@ -78,13 +78,17 @@ directory separator.  It is the directory containing the
 “packages” directory and, on Microsoft Windows, the “bin”
 directory containing the user-executable batch files.  On
 Microsoft Windows, it defaults to “?:/Program Files/Reduce”,
-where ? is a letter C-Z that REDUCE Run mode attempts to
+where ? is a letter C--Z that REDUCE Run mode attempts to
 determine automatically.  On other platforms, it defaults to
 “/usr/share/reduce”.  It is used as the default value for the
 environment variable “reduce”.
 
 Note that you can complete the directory name using \
-\\<widget-field-keymap>‘\\[widget-complete]’."
+\\<widget-field-keymap>‘\\[widget-complete]’.
+
+If the “env”, “command” or any argument component of the value of
+‘reduce-run-commands’ begins with “$reduce” then it is replaced
+with the value of this option."
   :type  '(choice (const :tag "None" nil) directory)
   :link '(custom-manual "(reduce-ide)REDUCE on Windows")
   :group 'reduce-run
@@ -92,19 +96,16 @@ Note that you can complete the directory name using \
 
 (defcustom reduce-run-commands
   (if (and (eq system-type 'windows-nt) reduce-root-dir-file-name)
-      `(("CSL" ,reduce-root-dir-file-name t
-         ,(concat reduce-root-dir-file-name "/lib/csl/reduce.exe")
+      '(("CSL" "$reduce" t
+         "$reduce/lib/csl/reduce.exe"
          "--nogui")
-        ("PSL" ,reduce-root-dir-file-name t
-         ,(concat reduce-root-dir-file-name "/lib/psl/psl/bpsl.exe")
-         "-td" "1000" "-f"
-         ,(concat
-           reduce-root-dir-file-name "/lib/psl/red/reduce.img"))
+        ("PSL" "$reduce" t
+         "$reduce/lib/psl/psl/bpsl.exe"
+         "-td" "1000" "-f" "$reduce/lib/psl/red/reduce.img")
         ("redcsl.bat" nil t
-         ,(concat reduce-root-dir-file-name "/bin/redcsl.bat")
-         "-nocd" "--nogui")
+         "$reduce/bin/redcsl.bat" "-nocd" "--nogui")
         ("redpsl.bat" nil t
-         ,(concat reduce-root-dir-file-name "/bin/redpsl.bat")))
+         "$reduce/bin/redpsl.bat"))
     '(("CSL" nil t "redcsl" "--nogui")
       ("PSL" nil t "redpsl")))
   "Alist of commands to run different versions of REDUCE.
@@ -117,6 +118,10 @@ a placeholder for future use and “arguments” is a possibly empty
 list of strings.  The “name” component is arbitrary but typically
 relates to the underlying Lisp system.  The string \" REDUCE\" is
 appended to it to name the interaction buffer.
+
+If “env”, “command” or any argument begins with “$reduce” then it
+is replaced with the value of ‘reduce-root-dir-file-name’ before
+it is used.
 
 If the “env” component is non-nil then it should be a string that
 *may* include spaces.  It will become the value of the
@@ -535,6 +540,13 @@ Return the process buffer if successful; nil otherwise."
         (reduce-run--run-reduce-3 cmd process-name))
     (reduce-run--run-reduce-3 cmd process-name)))
 
+(defun reduce-run--replace-$reduce (strng)
+  "Return STRNG with “$reduce” at the start replaced.
+If STRNG begins with “$reduce” then replace it with the value of
+‘reduce-root-dir-file-name’."
+  (replace-regexp-in-string
+   "\\`\\$reduce" reduce-root-dir-file-name strng))
+
 (defun reduce-run--run-reduce-3 (cmd process-name)
   "Run CMD as REDUCE process PROCESS-NAME.
 CMD has the form “env.t.command.arguments”, where “env” is nil or
@@ -543,7 +555,8 @@ process; t is a placeholder; “command.arguments” is a list of
 strings representing a command followed by optional arguments.
 Return the process buffer if successful; nil otherwise."
   (let ((process-environment process-environment)
-        (env (car cmd)) (cmdlist (cddr cmd)))
+        (env (reduce-run--replace-$reduce (car cmd)))
+        (cmdlist (mapcar #'reduce-run--replace-$reduce (cddr cmd))))
     (when env
       (push (concat "reduce=" env) process-environment))
     ;; ‘apply’ used below because last arg is &rest!
@@ -1024,8 +1037,8 @@ Also remove the buffer from ‘reduce-run--buffer-alist’."
    #'(lambda (x)
        (setcdr x (cons nil (cons t (reduce-run--args-to-list (cdr x))))))
    reduce-run-commands)
-  (when (y-or-n-p "Option ‘reduce-run-commands’ updated to new structure. \
-Please check and save it for future sessions (once only). Do it now?")
+  (when (y-or-n-p "Option ‘reduce-run-commands’ updated to new structure.  \
+Please check and save it for future sessions (once only).  Do it now?")
     (customize-option 'reduce-run-commands)))
 
 ;;; reduce-run.el ends here
