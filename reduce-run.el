@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1998
-;; Time-stamp: <2024-02-29 18:11:15 franc>
+;; Time-stamp: <2024-03-01 16:18:15 franc>
 ;; Keywords: languages, processes
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 
@@ -53,68 +53,42 @@
 (require 'reduce-mode)
 (require 'comint)
 
+(eval-when-compile (require 'cl-lib))
+
 ;;; Customizable user options
 ;;; =========================
 
-;; Define this variable only on Microsoft Windows:
-(eval-and-compile
-  (if (eq system-type 'windows-nt)
-      (defcustom reduce-run-MSWin-drives
-        (cdr (split-string
-              ;; Beware that WMIC is deprecated!
-              (shell-command-to-string "wmic LogicalDisk get Caption")))
-        "On MS Windows (only), the list of drives to be searched for REDUCE.
-Default is all local drives, e.g. (\"C:\" \"D:\" \"E:\" \"F:\").
-Used only by ‘reduce-root-dir-file-name’.
-Not defined on other platforms."
-        ;; https://stackoverflow.com/questions/3652631/
-        ;; is-there-a-way-to-list-drive-letters-in-dired
-        :type '(repeat
-                :tag "Drives"
-                :validate
-                (lambda (widget)
-                  ;; value should be a list of strings
-                  (let ((value (widget-value widget)) invalid)
-                    (while value
-                      (if (string-match "\\`[A-Z]:\\'" (car value))
-                          (setq value (cdr value))
-                        (setq invalid (car value) value nil)))
-                    (when invalid
-                      (widget-put widget :error
-                                  (format "Invalid drive: ‘%s’.  \
-Each drive must be specified as ‘X:’, where X is a letter A-Z." invalid))
-                      widget)))
-                (string :tag "Drive"))
-        :link '(custom-manual "(reduce-ide)REDUCE on Windows")
-        :group 'reduce-run)))
+(define-obsolete-variable-alias
+  'reduce-run-installation-directory 'reduce-root-dir-file-name "1.12"
+  "But note that ‘reduce-root-dir-file-name’ has slightly different
+semantics.  It is a directory file name and so must *not* end
+with a directory separator.")
 
 (defcustom reduce-root-dir-file-name
   (if (eq system-type 'windows-nt)
-      (let ((drives (eval 'reduce-run-MSWin-drives))
-	        ;; because reduce-run-MSWin-drives is
-                ;; undefined except on Microsoft Windows
-            (skeleton "/Program Files/Reduce")
-            dir d)
-        (while drives
-          (setq d (concat (car drives) skeleton))
-          (if (file-accessible-directory-p d)
-              (setq dir d drives nil)
-            (setq drives (cdr drives))))
-        dir)
+      (let ((path "?:/Program Files/Reduce"))
+        (cl-do ((drive ?C (1+ drive))) ((> drive ?Z))
+          (aset path 0 drive)
+          (when (file-accessible-directory-p path)
+            (cl-return path))))
     "/usr/share/reduce")
   "Root directory of the REDUCE installation, or nil if not set.
 It must be an absolute file name and must *not* end with a
 directory separator.  It is the directory containing the
 “packages” directory and, on Microsoft Windows, the “bin”
 directory containing the user-executable batch files.  On
-Microsoft Windows, it defaults to “X:/Program Files/Reduce”,
-where X is a letter A-Z that REDUCE Run mode attempts to
+Microsoft Windows, it defaults to “?:/Program Files/Reduce”,
+where ? is a letter C-Z that REDUCE Run mode attempts to
 determine automatically.  On other platforms, it defaults to
-“/usr/share/reduce”.  Note that you can complete the directory
-name using \\<widget-field-keymap>‘\\[widget-complete]’."
+“/usr/share/reduce”.  It is used as the default value for the
+environment variable “reduce”.
+
+Note that you can complete the directory name using \
+\\<widget-field-keymap>‘\\[widget-complete]’."
   :type  '(choice (const :tag "None" nil) directory)
   :link '(custom-manual "(reduce-ide)REDUCE on Windows")
-  :group 'reduce-run)
+  :group 'reduce-run
+  :package-version '(reduce-ide . "1.12"))
 
 (defcustom reduce-run-commands
   (if (and (eq system-type 'windows-nt) reduce-root-dir-file-name)
