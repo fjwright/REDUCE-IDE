@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1998
-;; Time-stamp: <2024-03-01 17:23:16 franc>
+;; Time-stamp: <2024-03-01 18:05:04 franc>
 ;; Keywords: languages, processes
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 
@@ -147,7 +147,9 @@ command-line version of REDUCE; a GUI version will not work!  On
 Microsoft Windows, it is best to run REDUCE directly and not via
 a “.bat” file."
   :type
-  '(alist :tag "Commands" :key-type (string :tag "Name")
+  `(alist :tag ,(format "Commands ($reduce = %s)"
+                        reduce-root-dir-file-name)
+          :key-type (string :tag "Name")
           :value-type
           (cons :tag "$REDUCE environment variable"
                 (choice (const :tag "Unset" nil)
