@@ -69,5 +69,6 @@ Main Updates since REDUCE IDE 1.11
 * Set default value for $reduce when REDUCE is run directly on Windows.
 * Remove error handling from `reduce-run--run-reduce-1`, which doesn't seem helpful.  It leads to a second error `No buffer named *CSL REDUCE*` from the tidy-up code!  **Consider this again later.**
 * Declare `reduce-run-installation-directory` obsolete.  **Incompatible change**: Remove the option `reduce-run-MSWin-drives` and incorporate its use into the definition of `reduce-root-dir-file-name` without using any external programs.
-* Replace “$reduce” at the start of strings (other than Name) in `reduce-run-commands` with the value of `reduce-root-dir-file-name` before they are used.
-* Add "(%reduce = C:/Program Files/Reduce)" at the top of the customization buffer for `reduce-run-commands`.
+* Replace `$reduce` at the start of strings (other than Name) in `reduce-run-commands` with the value of `reduce-root-dir-file-name` before they are used.
+* Add "($reduce = C:/Program Files/Reduce)" at the top of the customization buffer for `reduce-run-commands`.
+* Allow use of `$reduce` in `reduce-packages-directory`.
