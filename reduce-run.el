@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1998
-;; Time-stamp: <2024-03-01 18:05:04 franc>
+;; Time-stamp: <2024-03-04 15:09:33 franc>
 ;; Keywords: languages, processes
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 
@@ -80,13 +80,13 @@ directory containing the user-executable batch files.  On
 Microsoft Windows, it defaults to “?:/Program Files/Reduce”,
 where ? is a letter C--Z that REDUCE Run mode attempts to
 determine automatically.  On other platforms, it defaults to
-“/usr/share/reduce”.  It is used as the default value for the
+“/usr/share/reduce”.  It the appropriate default value for the
 environment variable “reduce”.
 
 Note that you can complete the directory name using \
 \\<widget-field-keymap>‘\\[widget-complete]’.
 
-If the “env”, “command” or any argument component of the value of
+If the “env”, “program” or any argument component of the value of
 ‘reduce-run-commands’ begins with “$reduce” then it is replaced
 with the value of this option."
   :type  '(choice (const :tag "None" nil) directory)
@@ -96,45 +96,48 @@ with the value of this option."
 
 (defcustom reduce-run-commands
   (if (and (eq system-type 'windows-nt) reduce-root-dir-file-name)
-      '(("CSL" "$reduce" t
+      '(("CSL"
+         "$reduce"
          "$reduce/lib/csl/reduce.exe"
          "--nogui")
-        ("PSL" "$reduce" t
+        ("PSL"
+         "$reduce"
          "$reduce/lib/psl/psl/bpsl.exe"
          "-td" "1000" "-f" "$reduce/lib/psl/red/reduce.img")
-        ("redcsl.bat" nil t
+        ("redcsl.bat"
+         nil
          "$reduce/bin/redcsl.bat" "-nocd" "--nogui")
-        ("redpsl.bat" nil t
+        ("redpsl.bat"
+         nil
          "$reduce/bin/redpsl.bat"))
-    '(("CSL" nil t "redcsl" "--nogui")
-      ("PSL" nil t "redpsl")))
+    '(("CSL" nil "redcsl" "--nogui")
+      ("PSL" nil "redpsl")))
   "Alist of commands to run different versions of REDUCE.
 By default, it should be appropriate for standard installations
 of CSL and PSL REDUCE.
 
-Each element has the form “name.env.t.command.arguments”, where
-“name” and “command” are strings, “env” is nil or a string, t is
-a placeholder for future use and “arguments” is a possibly empty
-list of strings.  The “name” component is arbitrary but typically
+Each element has the form “name.env.program.arguments”, where
+“name” and “program” are strings, “env” is nil or a string and
+“arguments” is a possibly empty list of strings.  All strings may
+include spaces.  The “name” component is arbitrary but typically
 relates to the underlying Lisp system.  The string \" REDUCE\" is
-appended to it to name the interaction buffer.
+appended to it to provide the default name for the interaction
+buffer.
 
-If “env”, “command” or any argument begins with “$reduce” then it
+If “env”, “program” or any argument begins with “$reduce” then it
 is replaced with the value of ‘reduce-root-dir-file-name’ before
 it is used.
 
-If the “env” component is non-nil then it should be a string that
-*may* include spaces.  It will become the value of the
-environment variable “reduce” within the REDUCE process and
-should be the absolute pathname of the root of the REDUCE file
-tree.  This is used only by a few specialized REDUCE packages.
-It is not useful if REDUCE is run via a shell script that sets
-the environment variable “reduce” itself.
+If the “env” component is non-nil then it will become the value
+of the environment variable “reduce” within the REDUCE process
+and should be the absolute pathname of the root of the REDUCE
+file tree.  This is used only by a few specialized REDUCE
+packages.  It is not useful if REDUCE is run via a shell script
+that sets the environment variable “reduce” itself.
 
-The “command” component should be an absolute pathname or a
+The “program” component should be an absolute pathname or a
 command on the search path, and the “arguments” component
-consists of optional command arguments.  The command and argument
-strings *may* include spaces.
+consists of optional command arguments.
 
 For backward compatibility, each element may alternatively have
 the form “name.command”, where “name” and “command” are strings.
@@ -143,23 +146,22 @@ The command string should begin with an absolute pathname that
 be followed by arguments, which *may not* include spaces.
 
 The command (together with its arguments) must invoke a
-command-line version of REDUCE; a GUI version will not work!  On
-Microsoft Windows, it is best to run REDUCE directly and not via
-a “.bat” file."
+command-line version of REDUCE; a GUI version will not work!  A
+binary program is run directly, whereas a shell script is run via
+the default shell.  On Microsoft Windows, it is best to run
+REDUCE directly and not via a “.bat” file."
   :type
   `(alist :tag ,(format "Commands ($reduce = %s)"
                         reduce-root-dir-file-name)
           :key-type (string :tag "Name")
           :value-type
-          (cons :tag "$REDUCE environment variable"
+          (cons :tag "$reduce environment variable"
                 (choice (const :tag "Unset" nil)
                         (string :tag "Value"))
-                (cons :tag "Place Holder" ; use shell (in future)?
-                      (const :tag "Ignored" t)
-                      (cons :tag "Command and Arguments"
-                            (string :tag "Command")
-                            (repeat :tag "Arguments"
-                                    (string :tag "Arg"))))))
+                (cons :tag "Program and Arguments"
+                      (string :tag "Program")
+                      (repeat :tag "Arguments"
+                              (string :tag "Arg")))))
   :set-after '(reduce-root-dir-file-name)
   :link '(custom-manual "(reduce-ide)Running")
   :group 'reduce-run
@@ -546,19 +548,19 @@ Return the process buffer if successful; nil otherwise."
   "Return STRNG with “$reduce” at the start replaced.
 If STRNG begins with “$reduce” then replace it with the value of
 ‘reduce-root-dir-file-name’."
-  (replace-regexp-in-string
-   "\\`\\$reduce" reduce-root-dir-file-name strng))
+  (and strng (replace-regexp-in-string
+              "\\`\\$reduce" reduce-root-dir-file-name strng)))
 
 (defun reduce-run--run-reduce-3 (cmd process-name)
   "Run CMD as REDUCE process PROCESS-NAME.
-CMD has the form “env.t.command.arguments”, where “env” is nil or
-the value for the environment variable REDUCE within the REDUCE
-process; t is a placeholder; “command.arguments” is a list of
-strings representing a command followed by optional arguments.
-Return the process buffer if successful; nil otherwise."
+CMD has the form “env.program.arguments”, where “env” is nil or
+the value for the environment variable “reduce” within the REDUCE
+process; “program.arguments” is a list of strings representing a
+command and its arguments.  Return the process buffer if
+successful; nil otherwise."
   (let ((process-environment process-environment)
         (env (reduce-run--replace-$reduce (car cmd)))
-        (cmdlist (mapcar #'reduce-run--replace-$reduce (cddr cmd))))
+        (cmdlist (mapcar #'reduce-run--replace-$reduce (cdr cmd))))
     (when env
       (push (concat "reduce=" env) process-environment))
     ;; ‘apply’ used below because last arg is &rest!
@@ -566,35 +568,6 @@ Return the process buffer if successful; nil otherwise."
            process-name nil (car cmdlist) nil (cdr cmdlist))))
 
 (add-hook 'same-window-regexps "REDUCE") ; ??? Not sure about this! ???
-
-(defun reduce-run--args-to-list (cmd)
-  "Break CMD into a list of program and arguments.
-The program path-name *may* include spaces.
-This ignores quotes and escapes and so will fail if you have an
-argument with whitespace, as in cmd = \"-ab +c -x \='you lose\='\"."
-  (let ((dir (file-name-directory cmd)))
-    (cond (dir
-           (setq cmd (reduce-run--args-to-list-1
-                      (file-name-nondirectory cmd)))
-           (cons (concat dir (car cmd)) (cdr cmd)))
-          (t (reduce-run--args-to-list-1 cmd)))))
-
-(defun reduce-run--args-to-list-1 (cmd)
-  "Break CMD into a list of program and arguments recursively.
-The program path-name *must not* include spaces.
-This ignores quotes and escapes and so will fail if you have an
-argument with whitespace, as in cmd = \"-ab +c -x \='you lose\='\"."
-  (let ((where (string-match "[ \t]" cmd)))
-    (cond ((null where) (list cmd))
-          ((/= where 0)
-           (cons (substring cmd 0 where)
-                 (reduce-run--args-to-list-1
-                  (substring cmd (1+ where)))))
-          (t (let ((pos (string-match "[^ \t]" cmd)))
-               (if (null pos)
-                   ()
-                 (reduce-run--args-to-list-1
-                  (substring cmd pos))))))))
 
 (defun reduce-run-send-input ()
   "Send input to REDUCE.
@@ -1033,11 +1006,40 @@ Also remove the buffer from ‘reduce-run--buffer-alist’."
 (run-hooks 'reduce-run-load-hook)
 
 ;; Temporary backward compatibility code run at load time:
+
+(defun reduce-run--args-to-list (cmd)
+  "Break CMD into a list of program and arguments.
+The program path-name *may* include spaces.
+This ignores quotes and escapes and so will fail if you have an
+argument with whitespace, as in cmd = \"-ab +c -x \='you lose\='\"."
+  (let ((dir (file-name-directory cmd)))
+    (cond (dir
+           (setq cmd (reduce-run--args-to-list-1
+                      (file-name-nondirectory cmd)))
+           (cons (concat dir (car cmd)) (cdr cmd)))
+          (t (reduce-run--args-to-list-1 cmd)))))
+
+(defun reduce-run--args-to-list-1 (cmd)
+  "Break CMD into a list of program and arguments recursively.
+The program path-name *must not* include spaces.
+This ignores quotes and escapes and so will fail if you have an
+argument with whitespace, as in cmd = \"-ab +c -x \='you lose\='\"."
+  (let ((where (string-match "[ \t]" cmd)))
+    (cond ((null where) (list cmd))
+          ((/= where 0)
+           (cons (substring cmd 0 where)
+                 (reduce-run--args-to-list-1
+                  (substring cmd (1+ where)))))
+          (t (let ((pos (string-match "[^ \t]" cmd)))
+               (unless (null pos)
+                 (reduce-run--args-to-list-1
+                  (substring cmd pos))))))))
+
 (when (stringp (cdar reduce-run-commands))
   ;; Update ‘reduce-run-commands’ to new structure.
   (mapc
    #'(lambda (x)
-       (setcdr x (cons nil (cons t (reduce-run--args-to-list (cdr x))))))
+       (setcdr x (cons nil (reduce-run--args-to-list (cdr x)))))
    reduce-run-commands)
   (when (y-or-n-p "Option ‘reduce-run-commands’ updated to new structure.  \
 Please check and save it for future sessions (once only).  Do it now?")
