@@ -72,3 +72,4 @@ Main Updates since REDUCE IDE 1.11
 * Replace `$reduce` at the start of strings (other than Name) in `reduce-run-commands` with the value of `reduce-root-dir-file-name` before they are used.
 * Add "($reduce = C:/Program Files/Reduce)" at the top of the customization buffer for `reduce-run-commands`.
 * Allow use of `$reduce` in `reduce-packages-directory`.
+* Set the default value of `reduce-packages-directory` to `"$reduce/packages/"`.
