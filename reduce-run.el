@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1998
-;; Time-stamp: <2024-03-05 16:13:07 franc>
+;; Time-stamp: <2024-03-05 18:10:15 franc>
 ;; Keywords: languages, processes
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 
@@ -1057,12 +1057,14 @@ argument with whitespace, as in cmd = \"-ab +c -x \='you lose\='\"."
 
 (when (stringp (cdar reduce-run-commands))
   ;; Update ‘reduce-run-commands’ to new structure.
-  (mapc
-   #'(lambda (x)
-       (setcdr x (cons nil (reduce-run--args-to-list (cdr x)))))
-   reduce-run-commands)
+  (setq reduce-run-commands
+        (mapcar
+         #'(lambda (x)
+             (cons (car x) (cons nil (reduce-run--args-to-list (cdr x)))))
+         reduce-run-commands))
+  (put 'reduce-run-commands 'customized-value reduce-run-commands)
   (when (y-or-n-p "Option ‘reduce-run-commands’ updated to new structure.  \
-Please check and save it for future sessions (once only).  Do it now?")
+Please check, edit and/or save it for future sessions.  Do it now?")
     (customize-option 'reduce-run-commands)))
 
 ;;; reduce-run.el ends here

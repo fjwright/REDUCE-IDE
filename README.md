@@ -5,7 +5,7 @@ Major modes for editing and running REDUCE source code
 
 **[Francis Wright](https://sites.google.com/site/fjwcentaur)**
 
-Version 1.11.5, March 2024
+Version 1.12beta, March 2024
 
 REDUCE IDE is a package that provides an Integrated Development Environment for the [REDUCE computer algebra system](https://reduce-algebra.sourceforge.io/) within the GNU Emacs editor.  Its two major components are Emacs Lisp libraries that provide major modes for editing REDUCE source code and running a *command-line version* of REDUCE in an Emacs window.  It assumes that Emacs is running under a GUI such as Microsoft Windows or the X Window System under some flavour of UNIX or Linux, and displays Unicode character sets correctly.  REDUCE IDE does not include REDUCE, which is available separately from [SourceForge](https://sourceforge.net/projects/reduce-algebra/).  You don't need to install REDUCE in order to edit REDUCE source code using REDUCE IDE, but if you want to run REDUCE in REDUCE IDE then you do need to install REDUCE.
 
@@ -54,22 +54,12 @@ To Do
 Main Updates since REDUCE IDE 1.11
 ----------------------------------
 
-* v1.11.1: The command `reduce-tagify-dir-recursively` failed on the REDUCE packages directory (at least on MS Windows) because the list of files is too long.  Add a depth arg to `reduce--directory-files-recursively` to limit the recursion depth, which works around the problem.  Handle errors better and improve tagging menu tooltips.
-* Update the manual.
-
-* v1.11.2: Update the default CSL REDUCE command on Microsoft Windows to preserve the current working directory.
-* v1.11.3: Fix a bug in `reduce--current-proc-name`.
-* v1.11.4: On Microsoft Windows, remove special support for PSL REDUCE, which is not needed from REDUCE revision 6726.  Note that if you have customized `reduce-run-commands` then you need to erase the customization, at least for PSL REDUCE, so that the command to run PSL REDUCE reverts to its (new) default value, which should probably be `C:/Program Files/Reduce/bin/redpsl.bat`, possibly with a different drive letter.
-* v1.11.5: **Incompatible change**: Change `reduce-run-commands` so that a REDUCE command is a list of strings rather than a single string, which allows spaces in both the command and its arguments.  Replace `XSL` by `NAME` in variables in `reduce-run-reduce`.
-* Automatically update option `reduce-run-commands` to new structure and save it. **Not quite right yet!**
-* Update REDUCE Run internal variable names to include `--` and mostly to begin with `reduce-run--`.
-* On Microsoft Windows, run REDUCE directly rather than via the `.bat` files, which avoids the query "Terminate batch job (Y/N)?" when REDUCE is killed (such as by attempting to interrupt it).  But keep the `.bat` commands for now for comparison.
-* Add a facility to set $reduce.  Include a placeholder for future use to indicate use of a shell.  Also, better labelling of the customization for `reduce-run-commands`.
-* **Incompatible change**: Rename `reduce-run-installation-directory` to `reduce-root-dir-file-name` and make it a directory file name rather than a directory name, i.e. remove the final directory separator, so that it can be used as the value of $reduce (which must be lower case).  Move the hook definitions to the end of this section.
-* Set default value for $reduce when REDUCE is run directly on Windows.
-* Remove error handling from `reduce-run--run-reduce-1`, which doesn't seem helpful.  It leads to a second error `No buffer named *CSL REDUCE*` from the tidy-up code!  **Consider this again later.**
-* Declare `reduce-run-installation-directory` obsolete.  **Incompatible change**: Remove the option `reduce-run-MSWin-drives` and incorporate its use into the definition of `reduce-root-dir-file-name` without using any external programs.
-* Replace `$reduce` at the start of strings (other than Name) in `reduce-run-commands` with the value of `reduce-root-dir-file-name` before they are used.
-* Add "($reduce = C:/Program Files/Reduce)" at the top of the customization buffer for `reduce-run-commands`.
-* Allow use of `$reduce` in `reduce-packages-directory`.
-* Set the default value of `reduce-packages-directory` to `"$reduce/packages/"`.
+* The command `reduce-tagify-dir-recursively` failed on the REDUCE packages directory (at least on Microsoft Windows) because the list of files is too long.  Add a depth argument to `reduce--directory-files-recursively` to limit the recursion depth, which works around the problem.  Handle errors better and improve the tagging menu tooltips.
+* Fix a bug in the display of the current procedure name.
+* **Incompatible changes**:
+  * Change the option `reduce-run-commands` so that a REDUCE command is a list of strings rather than a single string, which allows spaces in both the command and its arguments.  Automatically update a saved value to the new structure and offer to edit and/or save it.  Add a facility to set the environment variable `reduce`.  Better labelling of the customization buffer.
+  * Rename the option `reduce-run-installation-directory` to `reduce-root-dir-file-name` and make it a directory file name rather than a directory name, i.e. remove the final directory separator.  This makes it suitable as the default value of the environment variable `reduce`.
+  * Remove the option `reduce-run-MSWin-drives` and incorporate its use into the definition of `reduce-root-dir-file-name`, without using any external programs.
+* Introduce the shorthand `$reduce` to be replaced at the start of strings (other than Name) in `reduce-run-commands` and `reduce-packages-directory` with the value of `reduce-root-dir-file-name` before they are used.
+* On Microsoft Windows, run REDUCE directly by default rather than via the `.bat` files, which avoids the query "Terminate batch job (Y/N)?" when REDUCE is killed (such as by attempting to interrupt it).  Keep the `.bat` commands for now for comparison, but update the default CSL REDUCE command to preserve the current working directory.  Remove special support for PSL REDUCE, which is no longer needed from REDUCE revision 6726.  Note that if you have customized `reduce-run-commands` then you **may** need to erase the customization (at least for PSL REDUCE) and then re-customize it.
+* Updated manual.

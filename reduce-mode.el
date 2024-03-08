@@ -4,9 +4,9 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1992
-;; Time-stamp: <2024-02-28 12:30:03 franc>
+;; Time-stamp: <2024-03-05 16:26:22 franc>
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
-;; Package-Version: 1.11.5
+;; Package-Version: 1.12beta
 ;; Package-Requires: (cl-lib)
 
 ;; This file is part of REDUCE IDE.
