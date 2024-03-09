@@ -5,7 +5,7 @@ Major modes for editing and running REDUCE source code
 
 **[Francis Wright](https://sites.google.com/site/fjwcentaur)**
 
-Version 1.12beta, March 2024
+Version 1.12, March 2024
 
 REDUCE IDE is a package that provides an Integrated Development Environment for the [REDUCE computer algebra system](https://reduce-algebra.sourceforge.io/) within the GNU Emacs editor.  Its two major components are Emacs Lisp libraries that provide major modes for editing REDUCE source code and running a *command-line version* of REDUCE in an Emacs window.  It assumes that Emacs is running under a GUI such as Microsoft Windows or the X Window System under some flavour of UNIX or Linux, and displays Unicode character sets correctly.  REDUCE IDE does not include REDUCE, which is available separately from [SourceForge](https://sourceforge.net/projects/reduce-algebra/).  You don't need to install REDUCE in order to edit REDUCE source code using REDUCE IDE, but if you want to run REDUCE in REDUCE IDE then you do need to install REDUCE.
 
@@ -62,4 +62,4 @@ Main Updates since REDUCE IDE 1.11
   * Remove the option `reduce-run-MSWin-drives` and incorporate its use into the definition of `reduce-root-dir-file-name`, without using any external programs.
 * Introduce the shorthand `$reduce` to be replaced at the start of strings (other than Name) in `reduce-run-commands` and `reduce-packages-directory` with the value of `reduce-root-dir-file-name` before they are used.
 * On Microsoft Windows, run REDUCE directly by default rather than via the `.bat` files, which avoids the query "Terminate batch job (Y/N)?" when REDUCE is killed (such as by attempting to interrupt it).  Keep the `.bat` commands for now for comparison, but update the default CSL REDUCE command to preserve the current working directory.  Remove special support for PSL REDUCE, which is no longer needed from REDUCE revision 6726.  Note that if you have customized `reduce-run-commands` then you **may** need to erase the customization (at least for PSL REDUCE) and then re-customize it.
-* Updated manual.
+* Update manual.

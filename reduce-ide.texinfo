@@ -2,9 +2,9 @@
 @c %**start of header
 @settitle GNU Emacs REDUCE Integrated Development Environment
 @c Manual last updated:
-@set UPDATED Time-stamp: <2024-03-08 15:01:12 franc>
+@set UPDATED Time-stamp: <2024-03-09 09:56:44 franc>
 @c Software version:
-@set VERSION 1.12beta
+@set VERSION 1.12
 @afourpaper
 @c With different size paper the printed page breaks will need attention!
 @c Look for @page and @need commands.
@@ -1494,7 +1494,7 @@ variable @code{reduce}.
 
 The option @code{reduce-run-installation-directory} has been renamed
 to @code{reduce-root-dir-file-name} and become a directory file name
-rather than a directory name, i.e. the final directory separator has
+rather than a directory name, i.e.@: the final directory separator has
 been removed.  This makes it suitable as the default value of the
 environment variable @code{reduce}.
 
@@ -2251,10 +2251,10 @@ the shortcut @code{$reduce}, which is replaced with the value of the
 option @code{reduce-root-dir-file-name} before it is used.  Each
 command must run REDUCE using a command-line interface.
 
-By default, REDUCE Run mode on Microsoft Windows uses full pathnames
-and runs REDUCE directly rather than via batch files, whereas on other
-platforms it uses the shell scripts that should be found on the
-execution path.
+By default, REDUCE Run mode on Microsoft Windows uses absolute
+pathnames and runs REDUCE directly rather than via batch files,
+whereas on other platforms it uses the shell scripts that should be
+found on the execution path.
 
 @item reduce-run-command-name-default
 Default value the first command name in @code{reduce-run-commands}.
@@ -2265,7 +2265,8 @@ Renamed to @code{reduce-root-dir-file-name} with a slightly different
 definition in version 1.12.
 
 @item reduce-run-mswin-drives
-Subsumed into @code{reduce-root-dir-file-name} in version 1.12.
+Subsumed into @code{reduce-root-dir-file-name} and removed in version
+1.12.
 
 @item reduce-run-multiple
 Default value @code{t}.  If non-nil then commands that explicitly
