@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1998
-;; Time-stamp: <2024-03-05 18:10:15 franc>
+;; Time-stamp: <2024-07-03 17:26:08 franc>
 ;; Keywords: languages, processes
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 
@@ -574,16 +574,19 @@ successful; nil otherwise."
 
 (defun reduce-run-send-input ()
   "Send input to REDUCE.
-Add a final ’;’ unless there is already a final terminator or a
-’?’ in the current line, provided REDUCE is running.  Then call
-‘comint-send-input’.
+Provided REDUCE is running, the cursor is at the end of the
+buffer. and there is no final terminator or ’?’ in the current
+line then if there is no (non-blank) input send a newline to
+support “on demo”, otherwise add a final ’;’.
+Then call ‘comint-send-input’.
 \\<reduce-run-mode-map>Note that ‘\\[comint-send-input]’ calls ‘comint-send-input’ directly."
   (interactive)
   (end-of-line)
   (if (and (get-buffer-process (current-buffer))
            (eobp)
            (not (looking-back "[;$]\\s-*\\|\\?.*" nil)))
-      (insert ?\;))
+      ;; If no input, send a newline to support "on demo":
+      (insert (if (looking-back "[[:digit:]][:*]\\s-+" nil) ?\n ?\;)))
   (comint-send-input))
 
 
