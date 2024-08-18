@@ -5,7 +5,7 @@ Major modes for editing and running REDUCE source code
 
 **[Francis Wright](https://sites.google.com/site/fjwcentaur)**
 
-Version 1.12.1, July 2024
+Version 1.12.1, August 2024
 
 REDUCE IDE is a package that provides an Integrated Development Environment for the [REDUCE computer algebra system](https://reduce-algebra.sourceforge.io/) within the GNU Emacs editor.  Its two major components are Emacs Lisp libraries that provide major modes for editing REDUCE source code and running a *command-line version* of REDUCE in an Emacs window.  It assumes that Emacs is running under a GUI such as Microsoft Windows or the X Window System under some flavour of UNIX or Linux, and displays Unicode character sets correctly.  REDUCE IDE does not include REDUCE, which is available separately from [SourceForge](https://sourceforge.net/projects/reduce-algebra/).  You don't need to install REDUCE in order to edit REDUCE source code using REDUCE IDE, but if you want to run REDUCE in REDUCE IDE then you do need to install REDUCE.
 
@@ -51,20 +51,8 @@ To Do
 * On Microsoft Windows, make REDUCE interruptible.
 * Version 2 (maybe): use treesitter for parsing.
 
-Main Updates since REDUCE IDE 1.11
-----------------------------------
-
-* The command `reduce-tagify-dir-recursively` failed on the REDUCE packages directory (at least on Microsoft Windows) because the list of files is too long.  Add a depth argument to `reduce--directory-files-recursively` to limit the recursion depth, which works around the problem.  Handle errors better and improve the tagging menu tooltips.
-* Fix a bug in the display of the current procedure name.
-* **Incompatible changes**:
-  * Change the option `reduce-run-commands` so that a REDUCE command is a list of strings rather than a single string, which allows spaces in both the command and its arguments.  Automatically update a saved value to the new structure and offer to edit and/or save it.  Add a facility to set the environment variable `reduce`.  Better labelling of the customization buffer.
-  * Rename the option `reduce-run-installation-directory` to `reduce-root-dir-file-name` and make it a directory file name rather than a directory name, i.e. remove the final directory separator.  This makes it suitable as the default value of the environment variable `reduce`.
-  * Remove the option `reduce-run-MSWin-drives` and incorporate its use into the definition of `reduce-root-dir-file-name`, without using any external programs.
-* Introduce the shorthand `$reduce` to be replaced at the start of strings (other than Name) in `reduce-run-commands` and `reduce-packages-directory` with the value of `reduce-root-dir-file-name` before they are used.
-* On Microsoft Windows, run REDUCE directly by default rather than via the `.bat` files, which avoids the query "Terminate batch job (Y/N)?" when REDUCE is killed (such as by attempting to interrupt it).  Keep the `.bat` commands for now for comparison, but update the default CSL REDUCE command to preserve the current working directory.  Remove special support for PSL REDUCE, which is no longer needed from REDUCE revision 6726.  Note that if you have customized `reduce-run-commands` then you **may** need to erase the customization (at least for PSL REDUCE) and then re-customize it.
-* Update manual.
-
 Main Updates since REDUCE IDE 1.12
 ----------------------------------
 
 * If no input, send a newline to REDUCE to support `on demo`.
+* Add `Run Buffer` and `Run File…` to REDUCE Mode Run Menu stub.
