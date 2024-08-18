@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1998
-;; Time-stamp: <2024-07-03 18:21:48 franc>
+;; Time-stamp: <2024-08-17 18:17:26 franc>
 ;; Keywords: languages, processes
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 
@@ -287,14 +287,14 @@ Bindings are common to REDUCE mode and REDUCE Run mode."
 (define-key reduce-mode-map "\M-R" 'run-reduce)
 
 (defconst reduce-run--menu2
-  '(["Run File…" reduce-run-file :active t
+  '(["Run File…" reduce-run-file
      :help "Run selected REDUCE source file in a new REDUCE process"]
     "--"
-    ["Input File…" reduce-input-file :active t
+    ["Input File…" reduce-input-file
      :help "Input selected REDUCE source file into selected REDUCE process"]
-    ["Load Package…" reduce-load-package :active t
+    ["Load Package…" reduce-load-package
      :help "Load selected REDUCE package into selected REDUCE process"]
-    ["Compile File…" reduce-compile-file :active t
+    ["Compile File…" reduce-compile-file
      :help "Compile selected REDUCE source file to selected FASL file"]
     "--"))
 
@@ -303,12 +303,12 @@ Bindings are common to REDUCE mode and REDUCE Run mode."
   reduce-run-mode-map
   "REDUCE Run Menu."
   `("Run REDUCE"
-    ["(Re)Run REDUCE" rerun-reduce :active t
+    ["(Re)Run REDUCE" rerun-reduce
      :help "Stop REDUCE if running in this buffer, then (re)start it"]
     ,@reduce-run--menu2
-    ["Customize…" (customize-group 'reduce-run) :active t
+    ["Customize…" (customize-group 'reduce-run)
      :help "Customize REDUCE Run mode"]
-    ["Show Version" reduce-ide-version :active t
+    ["Show Version" reduce-ide-version
      :help "Show the REDUCE IDE version"]
     ))
 
@@ -317,23 +317,23 @@ Bindings are common to REDUCE mode and REDUCE Run mode."
   nil
   "REDUCE Mode Run Menu -- updates stub when this file is loaded."
   `("Run REDUCE"
-    ["Run REDUCE" run-reduce :active t
+    ["Run REDUCE" run-reduce
      :help "Start a new REDUCE process if necessary"]
-    ["Run Buffer" reduce-run-buffer :active t
+    ["Run Buffer" reduce-run-buffer
      :help "Run the current buffer in a new REDUCE process"]
     ,@reduce-run--menu2
-    ["Input Last Statement" reduce-eval-last-statement :active t
+    ["Input Last Statement" reduce-eval-last-statement
      :help "Input the statement before point to a REDUCE process"]
-    ["Input Line" reduce-eval-line :active t
+    ["Input Line" reduce-eval-line
      :help "Input the line containing point to a REDUCE process"]
-    ["Input Procedure" reduce-eval-proc :active t
+    ["Input Procedure" reduce-eval-proc
      :help "Input the procedure containing point to a REDUCE process"]
     ["Input Region" reduce-eval-region :active mark-active
      :help "Input the selected region to a REDUCE process"]
     "--"
-    ["Switch To REDUCE" switch-to-reduce :active t
+    ["Switch To REDUCE" switch-to-reduce
      :help "Select and switch to a REDUCE process"]
-    ["Customize…" (customize-group 'reduce-run) :active t
+    ["Customize…" (customize-group 'reduce-run)
      :help "Customize REDUCE Run mode"]
     ))
 

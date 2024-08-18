@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1992
-;; Time-stamp: <2024-07-03 17:27:19 franc>
+;; Time-stamp: <2024-08-17 18:12:36 franc>
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.12.1
 ;; Package-Requires: (cl-lib)
@@ -367,98 +367,105 @@ it is nil then do nothing."
   "Keymap for REDUCE mode.")
 
 ;; REDUCE-run menu bar and pop-up menu stub
+;; (Must be defined before reduce-mode-menu so as to be displayed after!)
 (when (eq reduce-run-autoload 'menu)
   (easy-menu-define                     ; (symbol maps doc menu)
-    reduce-mode-run-menu
+    nil
     reduce-mode-map
     "REDUCE Mode Run Menu stub -- updated when REDUCE Run is loaded."
     '("Run REDUCE"
-      ["Run REDUCE" run-reduce :active t
+      ["Run REDUCE" run-reduce
        :help "Start a new REDUCE process"]
-      ["Load REDUCE Run Mode" (require 'reduce-run) :active t
+      ["Run Buffer" (and (require 'reduce-run)
+                         (call-interactively #'reduce-run-buffer))
+       :help "Run the current buffer in a new REDUCE process"]
+      ["Run File…" (and (require 'reduce-run)
+                        (call-interactively #'reduce-run-file))
+       :help "Run selected REDUCE source file in a new REDUCE process"]
+      ["Load REDUCE Run Mode" (require 'reduce-run)
        :help "Load the full REDUCE Run mode functionality"])))
 
 ;; REDUCE-mode menu bar and pop-up menu
-(easy-menu-define           ; (symbol maps doc menu)
+(easy-menu-define                       ; (symbol maps doc menu)
   reduce-mode-menu
   reduce-mode-map
   "REDUCE Mode Menu."
   '("REDUCE"
-    ["Indent Line" indent-for-tab-command :active t
+    ["Indent Line" indent-for-tab-command
      :help "Re-indent the current line"]
-    ["Unindent Line" reduce-unindent-line :active t
+    ["Unindent Line" reduce-unindent-line
      :help "Unindent the current line by one indentation step"]
-    ["Kill Statement" reduce-kill-statement :active t
+    ["Kill Statement" reduce-kill-statement
      :help "Kill to the end of the current statement"]
-    ["Fill Comment" reduce-fill-comment :active t
+    ["Fill Comment" reduce-fill-comment
      :help "Fill the current comment"]
     ["(Un)Comment Region" reduce-comment-region :active mark-active
      :help "Toggle the commenting of the current region"]
     "--"
     "Procedures:"
-    ["Forward Procedure" reduce-forward-procedure :active t
+    ["Forward Procedure" reduce-forward-procedure
      :help "Move forward to the nearest end of a procedure"]
-    ["Backward Procedure" reduce-backward-procedure :active t
+    ["Backward Procedure" reduce-backward-procedure
      :help "Move backward to the nearest start of a procedure"]
-    ["Indent Procedure" reduce-indent-procedure :active t
+    ["Indent Procedure" reduce-indent-procedure
      :help "Re-indent the current procedure"]
-    ["Mark Procedure" reduce-mark-procedure :active t
+    ["Mark Procedure" reduce-mark-procedure
      :help "Mark the current procedure"]
-    ["Reposition Window" reduce-reposition-window :active t
+    ["Reposition Window" reduce-reposition-window
      :help "Scroll to show the current procedure optimally"]
-    ["Narrow To Procedure" reduce-narrow-to-procedure :active t
+    ["Narrow To Procedure" reduce-narrow-to-procedure
      :help "Narrow the buffer to the current procedure"]
-    ["(Un)Comment Proc" reduce-comment-procedure :active t
+    ["(Un)Comment Proc" reduce-comment-procedure
      :help "Toggle the commenting of the current procedure"]
-    ["Kill Procedure" reduce-kill-procedure :active t
+    ["Kill Procedure" reduce-kill-procedure
      :help "Kill the current procedure"]
     "--"
     ("Show / Find / Tag"
      ["Show Current Proc" reduce-show-proc-mode
-      :style toggle :selected reduce-show-proc-mode :active t
+      :style toggle :selected reduce-show-proc-mode
       :help "Toggle display of the current procedure name"]
      ["Add “Index” Menu" (reduce--imenu-add-menubar-index t)
       :active (not reduce--imenu-added)
       :help "Show an imenu of procedures, operators and variables"]
      "--"
-     ["Find Tag…" xref-find-definitions :active t
+     ["Find Tag…" xref-find-definitions
       :help "Find a procedure definition using a tag file"]
-     ["New TAGS Table…" visit-tags-table :active t
+     ["New TAGS Table…" visit-tags-table
       :help "Select a new tag file"]
      "--"
-     ["Tag Directory…" reduce-tagify-dir :active t
+     ["Tag Directory…" reduce-tagify-dir
       :help "Tag REDUCE files in selected directory"]
-     ["Tag Dir & Subdirs…" reduce-tagify-dir-recursively :active t
+     ["Tag Dir & Subdirs…" reduce-tagify-dir-recursively
       :help "Tag REDUCE files under selected directory"]
      )
     "--"
     "Templates:"
-    ["Insert If-Then" reduce-insert-if-then :active t
+    ["Insert If-Then" reduce-insert-if-then
      :help "Insert an ‘if-then’ template"]
-    ["Insert Block" reduce-insert-block :active t
+    ["Insert Block" reduce-insert-block
      :help "Insert a ‘block’ template"]
-    ["Insert Group" reduce-insert-group :active t
+    ["Insert Group" reduce-insert-group
      :help "Insert a ‘group’ template"]
     "--"
     ["Indent Region" reduce-indent-region :active mark-active
      :help "Re-indent the current region"]
     ["Indent Buffer" (reduce-indent-region (point-min) (point-max))
-     :keys "C-u M-C-\\" :active t
+     :keys "C-u M-C-\\"
      :help "Re-indent the current buffer"]
     "--"
-    ["Read the Manual" (info "reduce-ide" "*REDUCE IDE*") :active t
+    ["Read the Manual" (info "reduce-ide" "*REDUCE IDE*")
      :help "Read the REDUCE IDE manual in Info format"]
-    ["Command Mini Help" (apropos-command "\\`reduce\\|reduce\\'") :active t
+    ["Command Mini Help" (apropos-command "\\`reduce\\|reduce\\'")
      :help "Show a REDUCE IDE active command summary"]
-    ["Customize…" (customize-group 'reduce) :active t
+    ["Customize…" (customize-group 'reduce)
      :help "Customize REDUCE IDE"]
-    ["Show Version" reduce-ide-version :active t
+    ["Show Version" reduce-ide-version
      :help "Show the REDUCE IDE version"]
     ;; This seems to be obsolete in Emacs 26!
     ;; ["Outline" outline-minor-mode
-    ;;  :style toggle :selected outline-minor-mode :active t
+    ;;  :style toggle :selected outline-minor-mode
     ;;  :help "Toggle outline minor mode"]
-    ;; ["Update ChangeLog" add-change-log-entry-other-window :active t
+    ;; ["Update ChangeLog" add-change-log-entry-other-window
     ;;  :help "Add change log entry other window"]
     ))
 
@@ -474,13 +481,13 @@ it is nil then do nothing."
 
 (defvar reduce-mode-syntax-table
   (let ((table (make-syntax-table)))
-    (modify-syntax-entry ?\n ">" table) ; comment ender
-    (modify-syntax-entry ?! "/" table)  ; single character quote
-    (modify-syntax-entry ?# "'" table)  ; expression prefix
-    (modify-syntax-entry ?$ "." table)  ; punctuation (RS)
-    (modify-syntax-entry ?% "<" table)  ; comment starter
-    (modify-syntax-entry ?& "." table)  ; punctuation
-    (modify-syntax-entry ?' "'" table)  ; expression prefix
+    (modify-syntax-entry ?\n ">" table)    ; comment ender
+    (modify-syntax-entry ?! "/" table)     ; single character quote
+    (modify-syntax-entry ?# "'" table)     ; expression prefix
+    (modify-syntax-entry ?$ "." table)     ; punctuation (RS)
+    (modify-syntax-entry ?% "<" table)     ; comment starter
+    (modify-syntax-entry ?& "." table)     ; punctuation
+    (modify-syntax-entry ?' "'" table)     ; expression prefix
     (modify-syntax-entry ?* ". 23b" table) ; C-style comment
     (modify-syntax-entry ?+ "." table)
     (modify-syntax-entry ?- "." table)
