@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1998
-;; Time-stamp: <2024-08-17 18:17:26 franc>
+;; Time-stamp: <2024-09-06 18:18:29 franc>
 ;; Keywords: languages, processes
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 
@@ -286,26 +286,14 @@ Bindings are common to REDUCE mode and REDUCE Run mode."
 (define-key reduce-mode-map "\C-c\C-z" 'switch-to-reduce)
 (define-key reduce-mode-map "\M-R" 'run-reduce)
 
-(defconst reduce-run--menu2
-  '(["Run File…" reduce-run-file
-     :help "Run selected REDUCE source file in a new REDUCE process"]
-    "--"
-    ["Input File…" reduce-input-file
-     :help "Input selected REDUCE source file into selected REDUCE process"]
-    ["Load Package…" reduce-load-package
-     :help "Load selected REDUCE package into selected REDUCE process"]
-    ["Compile File…" reduce-compile-file
-     :help "Compile selected REDUCE source file to selected FASL file"]
-    "--"))
-
 (easy-menu-define                       ; (symbol maps doc menu)
-  reduce-run--menu
+  nil
   reduce-run-mode-map
   "REDUCE Run Menu."
   `("Run REDUCE"
     ["(Re)Run REDUCE" rerun-reduce
      :help "Stop REDUCE if running in this buffer, then (re)start it"]
-    ,@reduce-run--menu2
+    ,@reduce-mode--run-menu2
     ["Customize…" (customize-group 'reduce-run)
      :help "Customize REDUCE Run mode"]
     ["Show Version" reduce-ide-version
@@ -315,37 +303,19 @@ Bindings are common to REDUCE mode and REDUCE Run mode."
 (easy-menu-define                       ; (symbol maps doc menu)
   reduce-mode--run-menu
   nil
-  "REDUCE Mode Run Menu -- updates stub when this file is loaded."
-  `("Run REDUCE"
-    ["Run REDUCE" run-reduce
-     :help "Start a new REDUCE process if necessary"]
-    ["Run Buffer" reduce-run-buffer
-     :help "Run the current buffer in a new REDUCE process"]
-    ,@reduce-run--menu2
-    ["Input Last Statement" reduce-eval-last-statement
-     :help "Input the statement before point to a REDUCE process"]
-    ["Input Line" reduce-eval-line
-     :help "Input the line containing point to a REDUCE process"]
-    ["Input Procedure" reduce-eval-proc
-     :help "Input the procedure containing point to a REDUCE process"]
-    ["Input Region" reduce-eval-region :active mark-active
-     :help "Input the selected region to a REDUCE process"]
-    "--"
-    ["Switch To REDUCE" switch-to-reduce
-     :help "Select and switch to a REDUCE process"]
-    ["Customize…" (customize-group 'reduce-run)
-     :help "Customize REDUCE Run mode"]
-    ))
+  "REDUCE Mode Run Menu -- \
+updates autoload version when this file is loaded."
+  reduce-mode--run-menu1)
 
 (let ((keymap (lookup-key reduce-mode-map [menu-bar]))
       (definition (cons "Run REDUCE" reduce-mode--run-menu)))
-  ;; Redefine the Run REDUCE menu stub if it exists:
+  ;; Redefine the REDUCE Mode Run menu autoload version if it exists:
   (if (lookup-key keymap [run\ reduce])
       (define-key keymap
         [run\ reduce]                   ; MUST be lower case!
         definition)
-    ;; Otherwise, put the Run REDUCE menu on the menu bar AFTER the
-    ;; REDUCE menu:
+    ;; Otherwise, put the REDUCE Mode Run menu on the menu bar AFTER
+    ;; the REDUCE menu:
     (define-key-after keymap
       [Run\ REDUCE]
       definition 'REDUCE)))

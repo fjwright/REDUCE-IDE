@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1992
-;; Time-stamp: <2024-08-17 18:12:36 franc>
+;; Time-stamp: <2024-09-06 18:20:06 franc>
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.12.1
 ;; Package-Requires: (cl-lib)
@@ -307,10 +307,10 @@ off in each buffer independently using the command
 Loading it is necessary only if you plan to run REDUCE within
 REDUCE IDE.  If the value is t then load REDUCE Run mode after
 ‘reduce-mode’ has loaded; if it is ‘menu’ (the default) then
-display a Run REDUCE menu stub that can load REDUCE Run mode; if
-it is nil then do nothing."
+display a version of the REDUCE Mode Run menu that loads REDUCE
+Run mode when used; if it is nil then do nothing."
   :type '(choice (const :tag "Load REDUCE Run mode" t)
-                 (const :tag "Display Run REDUCE menu stub" menu)
+                 (const :tag "Display REDUCE Mode Run menu" menu)
                  (const :tag "Do nothing" nil))
   :link '(custom-manual "(reduce-ide)Major mode menu")
   :group 'reduce-run)
@@ -366,28 +366,63 @@ it is nil then do nothing."
     map)
   "Keymap for REDUCE mode.")
 
-;; REDUCE-run menu bar and pop-up menu stub
-;; (Must be defined before reduce-mode-menu so as to be displayed after!)
+(defconst reduce-mode--run-menu2
+  '(["Run File…" reduce-run-file
+     :help "Run selected REDUCE source file in a new REDUCE process"]
+    "--"
+    ["Input File…" reduce-input-file
+     :help "Input selected REDUCE source file into selected REDUCE process"]
+    ["Load Package…" reduce-load-package
+     :help "Load selected REDUCE package into selected REDUCE process"]
+    ["Compile File…" reduce-compile-file
+     :help "Compile selected REDUCE source file to selected FASL file"]
+    "--"))
+
+(defconst reduce-mode--run-menu1
+  `("Run REDUCE"
+    ["Run REDUCE" run-reduce
+     :help "Start a new REDUCE process if necessary"]
+    ["Run Buffer" reduce-run-buffer
+     :help "Run the current buffer in a new REDUCE process"]
+    ,@reduce-mode--run-menu2
+    ["Input Last Statement" reduce-eval-last-statement
+     :help "Input the statement before point to a REDUCE process"]
+    ["Input Line" reduce-eval-line
+     :help "Input the line containing point to a REDUCE process"]
+    ["Input Procedure" reduce-eval-proc
+     :help "Input the procedure containing point to a REDUCE process"]
+    ["Input Region" reduce-eval-region :active mark-active
+     :help "Input the selected region to a REDUCE process"]
+    "--"
+    ["Switch To REDUCE" switch-to-reduce
+     :help "Select and switch to a REDUCE process"]
+    ["Customize…" (customize-group 'reduce-run)
+     :help "Customize REDUCE Run mode"]))
+
+;; REDUCE-run menu bar and pop-up menu autoload version
+;; Must be defined before reduce-mode-menu so as to be displayed after!
 (when (eq reduce-run-autoload 'menu)
+  (defun reduce-mode--run-menu-item-autoload (menu-item)
+    "Load Run mode and then run MENU-ITEM."
+    (and (require 'reduce-run) (call-interactively menu-item)))
   (easy-menu-define                     ; (symbol maps doc menu)
     nil
     reduce-mode-map
-    "REDUCE Mode Run Menu stub -- updated when REDUCE Run is loaded."
-    '("Run REDUCE"
-      ["Run REDUCE" run-reduce
-       :help "Start a new REDUCE process"]
-      ["Run Buffer" (and (require 'reduce-run)
-                         (call-interactively #'reduce-run-buffer))
-       :help "Run the current buffer in a new REDUCE process"]
-      ["Run File…" (and (require 'reduce-run)
-                        (call-interactively #'reduce-run-file))
-       :help "Run selected REDUCE source file in a new REDUCE process"]
-      ["Load REDUCE Run Mode" (require 'reduce-run)
-       :help "Load the full REDUCE Run mode functionality"])))
+    "REDUCE Mode Run Menu autoload version -- \
+updated when REDUCE Run is loaded."
+    (cons (car reduce-mode--run-menu1)
+          (mapcar (lambda (v) ; make menu item autoload run mode
+                    (if (and (vectorp v) (functionp (aref v 1)))
+                        (let ((vv (copy-sequence v)))
+                          (aset vv 1 `(reduce-mode--run-menu-item-autoload
+                                       #',(aref vv 1)))
+                          vv)
+                      v))
+                  (cdr reduce-mode--run-menu1)))))
 
 ;; REDUCE-mode menu bar and pop-up menu
 (easy-menu-define                       ; (symbol maps doc menu)
-  reduce-mode-menu
+  nil
   reduce-mode-map
   "REDUCE Mode Menu."
   '("REDUCE"

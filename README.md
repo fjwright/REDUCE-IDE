@@ -5,7 +5,7 @@ Major modes for editing and running REDUCE source code
 
 **[Francis Wright](https://sites.google.com/site/fjwcentaur)**
 
-Version 1.12.1, August 2024
+Version 1.12.1, September 2024
 
 REDUCE IDE is a package that provides an Integrated Development Environment for the [REDUCE computer algebra system](https://reduce-algebra.sourceforge.io/) within the GNU Emacs editor.  Its two major components are Emacs Lisp libraries that provide major modes for editing REDUCE source code and running a *command-line version* of REDUCE in an Emacs window.  It assumes that Emacs is running under a GUI such as Microsoft Windows or the X Window System under some flavour of UNIX or Linux, and displays Unicode character sets correctly.  REDUCE IDE does not include REDUCE, which is available separately from [SourceForge](https://sourceforge.net/projects/reduce-algebra/).  You don't need to install REDUCE in order to edit REDUCE source code using REDUCE IDE, but if you want to run REDUCE in REDUCE IDE then you do need to install REDUCE.
 
@@ -55,4 +55,4 @@ Main Updates since REDUCE IDE 1.12
 ----------------------------------
 
 * If no input, send a newline to REDUCE to support `on demo`.
-* Add `Run Buffer` and `Run File…` to REDUCE Mode Run Menu stub.
+* Replace the REDUCE Mode Run menu stub with a version of the full REDUCE Mode Run menu that autoloads REDUCE Run.
