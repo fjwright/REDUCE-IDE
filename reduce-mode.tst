@@ -87,7 +87,11 @@ integer
    procedure
    foo2 /* comment here OK */ x; /* comment here OK */ bar;
 
-!Strange + var!"iable + !!names + ! spaced! ;
+% Implied products of variables with strange but legal names:
+
+{10light!-years, 2d!*!*n, 3good! morning, 4!$sign, 5!5goldrings};
+
+1 !Strange + 2 var!"iable + 3 !!names + 4 ! spaced! ;
 
 "This is a string!";
 "It contains keywords: comment, procedure, operator, lisp, algebraic.";
