@@ -23,8 +23,9 @@ or move backwards ARG times if negative."
              (and
               (re-search-forward "\\(?:\\sw\\|\\s_\\|!.\\)+" nil 'move arg)
               ;; If this has found an integer then repeat:
-              (string-match "\\`[[:digit:]]*\\'" (match-string 0)))))
-        ((< arg 0) (reduce--backward-identifier (- arg)))))
+              (string-match "\\`[[:digit:]]*\\'"
+                            (match-string-no-properties 0)))))
+        ((< arg 0) (reduce-backward-identifier (- arg)))))
 
 (defun reduce-backward-identifier (arg)
   "Move backwards until encountering the beginning of an identifier.
@@ -56,4 +57,4 @@ or move forwards ARG times if negative."
            ;; A number preceding an identifier implies a product, so...
            (skip-chars-forward "[:digit:]")
            (setq arg (1- arg))))
-        ((< arg 0) (reduce--forward-identifier (- arg)))))
+        ((< arg 0) (reduce-forward-identifier (- arg)))))
