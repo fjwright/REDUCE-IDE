@@ -89,9 +89,9 @@ integer
 
 % Implied products of variables with strange but legal names:
 
-{10light!-years, 2d!*!*n, 3good! morning, 4!$sign, 5!5goldrings};
+{10light!-years, 2d!*!*n, 3.3good! morning, 4.4!$sign, 5.5!5goldrings};
 
-1 !Strange + 2 var!"iable + 3 !!names + 4 ! spaced! ;
+1 !Strange1 + 2 var!"iable2 + 3.0 !!names3 + 4.0 ! spaced! 4;
 
 "This is a string!";
 "It contains keywords: comment, procedure, operator, lisp, algebraic.";
