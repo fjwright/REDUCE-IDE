@@ -1,10 +1,10 @@
-;;; reduce-mode.el --- Major mode to edit REDUCE computer-algebra code  -*- lexical-binding: t; -*-
+;;; reduce-mode.el --- Major mode to edit REDUCE computer-algebra code  -*- lexical-binding:t -*-
 
 ;; Copyright (C) 1998-2001, 2012, 2017-2019, 2022-2024 Francis J. Wright
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1992
-;; Time-stamp: <2024-09-06 18:20:06 franc>
+;; Time-stamp: <2024-09-22 18:27:59 franc>
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.12.1
 ;; Package-Requires: (cl-lib)
@@ -636,9 +636,7 @@ also affects this mode.  Entry to this mode runs the hooks on
    #'reduce--syntax-propertize
    ;; Make syntax scanning functions, like ‘forward-sexp’, pay
    ;; attention to ‘syntax-table’ text properties:
-   parse-sexp-lookup-properties t
-   ;; Treat escape char (!) as part of word:
-   words-include-escapes t)
+   parse-sexp-lookup-properties t)
   ;; This is needed for the comment statement parser:
   (add-hook 'before-change-functions
             'reduce--comment-seq-reset nil t))
