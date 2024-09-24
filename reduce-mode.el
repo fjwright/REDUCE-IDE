@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1992
-;; Time-stamp: <2024-09-22 18:27:59 franc>
+;; Time-stamp: <2024-09-23 18:17:21 franc>
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.12.1
 ;; Package-Requires: (cl-lib)
@@ -115,18 +115,19 @@ Note that REDUCE Run inherits from comint."
   ;; Include the REDUCE Run customization options:
   :load "reduce-run")
 
-(defcustom reduce-mode-load-hook nil
+(defcustom reduce-mode-load-hook
+  '((lambda () (require 'reduce-ident)))
   "List of functions to be called when REDUCE mode is loaded.
-It can be used to customize global features of REDUCE mode and so
-is a good place to put keybindings."
+It can be used to customize buffer-independent features of REDUCE mode
+such as keybindings.  By default it loads ‘reduce-ident’."
   :type 'hook
   :link '(custom-manual "(reduce-ide)Hooks")
   :group 'reduce)
 
-(defcustom reduce-mode-hook nil
+(defcustom reduce-mode-hook '(reduce-identifier-mode)
   "List of functions to be called when REDUCE mode is entered.
-For example, ‘turn-on-font-lock’ to turn on font-lock mode locally.
-It can be used to customize buffer-local features of REDUCE mode."
+It can be used to customize buffer-local features of REDUCE mode.
+By default it turns on ‘reduce-identifier-mode’."
   :type 'hook
   :link '(custom-manual "(reduce-ide)Hooks")
   :group 'reduce)
@@ -284,11 +285,19 @@ Defaults to the value of ‘show-paren-mode’."
   :link '(custom-manual "(reduce-ide)Groups and blocks highlighting")
   :group 'reduce-display)
 
+(defcustom reduce-show-proc-delay 0.5
+  "Idle time delay in seconds before showing current procedure name."
+  ;; Reinstated since Emacs 30 obsoletes ‘idle-update-delay.’
+  :package-version '(reduce-ide . "1.12.1")
+  :type 'number
+  :link '(custom-manual "(reduce-ide)Show Proc")
+  :group 'reduce-display)
+
 (defcustom reduce-show-proc-mode-on t
   "If non-nil then turn on REDUCE Show Proc mode automatically.
-REDUCE Show Proc mode displays the current procedure name in the
-mode line and updates it after ‘idle-update-delay’ seconds of
-Emacs idle time.
+REDUCE Show Proc mode displays the current procedure name in the mode
+line and updates it after ‘reduce-show-proc-delay’ seconds of Emacs idle
+time.
 
 This is a buffer-local minor mode so it can also be turned on and
 off in each buffer independently using the command
@@ -2196,45 +2205,43 @@ If a perfect match (only) has a cdr then delete the match and insert
 the cdr if it is a string or call it if it is a (nullary) function,
 passing on any prefix ARG (in raw form)."
   ;; Based on lisp-complete-symbol in lisp.el
-  (interactive "*P")            ; error if buffer read-only
+  (interactive "*P")                    ; error if buffer read-only
   (let* ((end (progn
-        (cond ((and transient-mark-mode mark-active)
-               (if (= (point) (region-beginning))
-               ()
-             (exchange-point-and-mark)
-             (skip-syntax-backward " "))))
-        (point)))
-     (beg (unwind-protect
-          (save-excursion
-            (reduce-backward-sexp)
-            ;; (while (= (char-syntax (following-char)) ?\')
-              ;; (forward-char 1))
-            (skip-syntax-forward "\'")
-            (point))
-        ))
-     (pattern (buffer-substring-no-properties beg end))
-     (completion (try-completion pattern reduce-completion-alist)))
-    (cond ((eq completion t)        ; perfect match
-       (let ((fn (cdr (assoc pattern reduce-completion-alist))))
-         (if fn
-         (cond ((stringp fn) (delete-region beg end) (insert fn))
-               ((fboundp fn) (delete-region beg end) (funcall fn arg))
-               (t (error "Completion for \"%s\" not a string or function" pattern)))
-           )))
-      ((null completion)
-       (message "Can't find completion for \"%s\"" pattern)
-       (ding))
-      ((not (string= pattern completion))
-       (delete-region beg end)
-       (insert completion)
-       (if (fboundp (cdr (assoc completion reduce-completion-alist)))
-           (setq deactivate-mark nil))) ; for beg -> begin -> …
-      (t
-       (message "Making completion list…")
-       (let ((list (all-completions pattern reduce-completion-alist)))
-         (with-output-to-temp-buffer "*Completions*"
-           (display-completion-list list)))
-       (message "Making completion list…%s" "done")))))
+                (cond ((and transient-mark-mode mark-active)
+                       (if (= (point) (region-beginning))
+                           ()
+                         (exchange-point-and-mark)
+                         (skip-syntax-backward " "))))
+                (point)))
+         (beg (save-excursion
+                (reduce-backward-sexp)
+                ;; (while (= (char-syntax (following-char)) ?\')
+                ;; (forward-char 1))
+                (skip-syntax-forward "\'")
+                (point)))
+         (pattern (buffer-substring-no-properties beg end))
+         (completion (try-completion pattern reduce-completion-alist)))
+    (cond ((eq completion t)            ; perfect match
+           (let ((fn (cdr (assoc pattern reduce-completion-alist))))
+             (when fn
+               (cond ((stringp fn) (delete-region beg end) (insert fn))
+                     ((fboundp fn) (delete-region beg end) (funcall fn arg))
+                     (t (error "Completion for \"%s\" not a string or function"
+                               pattern))))))
+          ((null completion)
+           (message "Can't find completion for \"%s\"" pattern)
+           (ding))
+          ((not (string= pattern completion))
+           (delete-region beg end)
+           (insert completion)
+           (if (fboundp (cdr (assoc completion reduce-completion-alist)))
+               (setq deactivate-mark nil))) ; for beg -> begin -> …
+          (t
+           (message "Making completion list…")
+           (let ((list (all-completions pattern reduce-completion-alist)))
+             (with-output-to-temp-buffer "*Completions*"
+               (display-completion-list list)))
+           (message "Making completion list…%s" "done")))))
 
 
 ;;;; **********************************************************
@@ -2252,15 +2259,15 @@ passing on any prefix ARG (in raw form)."
 
 (define-minor-mode reduce-show-proc-mode
   "Toggle REDUCE Show Proc mode.
-REDUCE Show Proc mode displays the current procedure name in the
-mode line and updates it after ‘idle-update-delay’ seconds of
-Emacs idle time."
+REDUCE Show Proc mode displays the current procedure name in the mode
+line and updates it after ‘reduce-show-proc-delay’ seconds of Emacs idle
+time."
   :init-value nil
   (when reduce--show-proc-idle-timer
     (cancel-timer reduce--show-proc-idle-timer))
   (when reduce-show-proc-mode
     (setq reduce--show-proc-idle-timer
-          (run-with-idle-timer idle-update-delay t
+          (run-with-idle-timer reduce-show-proc-delay t
                                #'reduce--show-proc-name))))
 
 (defconst reduce--show-proc-regexp

@@ -1,10 +1,10 @@
-;;; reduce-run.el --- Run the REDUCE computer-algebra system in a buffer  -*- lexical-binding: t; -*-
+;;; reduce-run.el --- Run the REDUCE computer-algebra system in a buffer  -*- lexical-binding:t -*-
 
 ;; Copyright (C) 1998-2001, 2012, 2017-2019, 2022-2024 Francis J. Wright
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1998
-;; Time-stamp: <2024-09-06 18:18:29 franc>
+;; Time-stamp: <2024-09-24 18:24:56 franc>
 ;; Keywords: languages, processes
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 
@@ -66,7 +66,7 @@ with a directory separator.")
 
 (defcustom reduce-root-dir-file-name
   (if (eq system-type 'windows-nt)
-      (let ((path "?:/Program Files/Reduce"))
+      (let ((path (copy-sequence "?:/Program Files/Reduce"))) ; mutable
         (cl-do ((drive ?C (1+ drive))) ((> drive ?Z))
           (aset path 0 drive)
           (when (file-accessible-directory-p path)
@@ -185,12 +185,11 @@ The default is the first command name in ‘reduce-run-commands’."
 (defcustom reduce-run-terminal
   (and (not (eq system-type 'windows-nt)) "Eterm")
   "If non-nil, value of TERM to use on Unix-like platforms.
-This sets `comint-terminfo-terminal' to the value of
-`reduce-run-terminal' and `system-uses-terminfo' to t locally
-within `run-reduce' so that CSL REDUCE responds appropriately to
-interrupts, which with a dumb terminal it does not.
-A nil value means use the Emacs defaults.
-Possible values to try are “Eterm”, “\emacs”, “xterm”."
+This sets ‘comint-terminfo-terminal’ to the value of
+‘reduce-run-terminal’ and ‘system-uses-terminfo’ to t locally within
+‘run-reduce’ so that CSL REDUCE responds appropriately to interrupts,
+which with a dumb terminal it does not.  A nil value means use the Emacs
+defaults.  Possible values to try are “Eterm”, “emacs”, “xterm”."
   :type '(choice (const :tag "Default" nil) string)
   :link '(custom-manual "(reduce-ide)Running")
   :group 'reduce-run

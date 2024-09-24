@@ -56,3 +56,5 @@ Main Updates since REDUCE IDE 1.12
 
 * If no input, send a newline to REDUCE to support `on demo`.
 * Replace the REDUCE Mode Run menu stub with a version of the full REDUCE Mode Run menu that autoloads REDUCE Run.
+* Updates to accommodate Emacs 30.
+* Added `reduce-ident.el`, which adds optional identifier motion functionality to REDUCE mode and/or REDUCE run.  At present by default it is loaded and `reduce-identifier-mode` is turned on automatically, in REDUCE mode only, via `reduce-mode-load-hook`.

@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: September 2024
-;; Time-stamp: <2024-09-22 18:22:08 franc>
+;; Time-stamp: <2024-09-23 18:06:56 franc>
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 
 ;; This file is part of REDUCE IDE.
@@ -24,9 +24,14 @@
 
 ;;; Commentary:
 
-;; *Must* be evaluated in a REDUCE Mode buffer.
-;; See ‘Word Motion’ in ELisp manual.
+;; This file adds optional identifier motion functionality to REDUCE
+;; mode and/or REDUCE run; see ‘Word Motion’ in the ELisp manual.  At
+;; present by default it is loaded and ‘reduce-identifier-mode’ is
+;; turned on automatically, in REDUCE mode only, via
+;; ‘reduce-mode-load-hook’.  This could, alternatively, simply be done
+;; by hand when required.
 
+(defvar reduce-mode-map)                ; defined in "reduce-mode.el"
 (define-key reduce-mode-map [(control shift right)] 'reduce-forward-identifier)
 (define-key reduce-mode-map [(control shift left)] 'reduce-backward-identifier)
 
@@ -83,7 +88,12 @@ or move forwards ARG times if negative."
 
 
 ;; Make word motion into identifier motion!  Like ‘superword-mode’ but
-;; (mostly!) handle not only ‘_’ but also ‘!’ correctly.
+;; (mostly!) handles not only ‘_’ but also ‘!’ correctly.
+
+(defconst reduce--ident-find-word-boundary-function-table
+  (make-char-table nil #'reduce--find-ident-bounday)
+  "Assigned to `find-word-boundary-function-table' in
+‘reduce-identifier-mode’; defers to ‘reduce--find-ident-bounday’.")
 
 (define-minor-mode reduce-identifier-mode
   "Toggle treatment of REDUCE identifiers as words.
@@ -97,11 +107,6 @@ as one word."
        find-word-boundary-function-table
        reduce--ident-find-word-boundary-function-table)
     (kill-local-variable 'find-word-boundary-function-table)))
-
-(defconst reduce--ident-find-word-boundary-function-table
-  (make-char-table nil #'reduce--find-ident-bounday)
-  "Assigned to `find-word-boundary-function-table' in
-‘reduce-identifier-mode’; defers to ‘reduce--find-ident-bounday’.")
 
 (defun reduce--find-ident-bounday (pos limit)
   "Return the position of the other identifier boundary.
