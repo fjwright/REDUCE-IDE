@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1992
-;; Time-stamp: <2024-09-23 18:17:21 franc>
+;; Time-stamp: <2024-09-26 17:44:03 franc>
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.12.1
 ;; Package-Requires: (cl-lib)
@@ -464,10 +464,7 @@ updated when REDUCE Run is loaded."
     ["Kill Procedure" reduce-kill-procedure
      :help "Kill the current procedure"]
     "--"
-    ("Show / Find / Tag"
-     ["Show Current Proc" reduce-show-proc-mode
-      :style toggle :selected reduce-show-proc-mode
-      :help "Toggle display of the current procedure name"]
+    ("Find / Tag"
      ["Add “Index” Menu" (reduce--imenu-add-menubar-index t)
       :active (not reduce--imenu-added)
       :help "Show an imenu of procedures, operators and variables"]
@@ -511,7 +508,22 @@ updated when REDUCE Run is loaded."
     ;;  :help "Toggle outline minor mode"]
     ;; ["Update ChangeLog" add-change-log-entry-other-window
     ;;  :help "Add change log entry other window"]
-    ))
+    "--"
+    ("Minor Modes"
+     ["Auto Indent Mode" reduce-auto-indent-mode
+      :style toggle :selected reduce-auto-indent-mode
+      :help "Automatic indentation"]
+     ["Show Proc Mode" reduce-show-proc-mode
+      :style toggle :selected reduce-show-proc-mode
+      :help "Display the current procedure name"]
+     ["Show Delim Mode" reduce-show-delim-mode
+      :active (featurep 'reduce-delim)
+      :style toggle :selected reduce-show-delim-mode
+      :help "Display matching group or block delimiters"]
+     ["Identifier Mode" reduce-identifier-mode
+      :active (featurep 'reduce-ident)
+      :style toggle :selected reduce-identifier-mode
+      :help "Treat identifiers as words"])))
 
 (defun reduce-ide-version ()
   "Echo version information for REDUCE IDE."

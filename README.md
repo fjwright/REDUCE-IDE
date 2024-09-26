@@ -58,3 +58,4 @@ Main Updates since REDUCE IDE 1.12
 * Replace the REDUCE Mode Run menu stub with a version of the full REDUCE Mode Run menu that autoloads REDUCE Run.
 * Updates to accommodate Emacs 30.
 * Added `reduce-ident.el`, which adds optional identifier motion functionality to REDUCE mode and/or REDUCE run.  At present by default it is loaded and `reduce-identifier-mode` is turned on automatically, in REDUCE mode only, via `reduce-mode-load-hook`.
+* Add a `Minor Modes` submenu to the major mode menu and move `Show Current Proc` into it.
