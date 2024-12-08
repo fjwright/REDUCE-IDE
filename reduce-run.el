@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1998
-;; Time-stamp: <2024-09-24 18:24:56 franc>
+;; Time-stamp: <2024-12-08 18:14:23 franc>
 ;; Keywords: languages, processes
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 
@@ -61,8 +61,10 @@
 (define-obsolete-variable-alias
   'reduce-run-installation-directory 'reduce-root-dir-file-name "1.12"
   "But note that ‘reduce-root-dir-file-name’ has slightly different
-semantics.  It is a directory file name and so must *not* end
-with a directory separator.")
+semantics.  It is a directory file name and so should *not* end with a
+directory separator.")
+
+;; Rename ‘reduce-root-dir-file-name’ to ‘reduce-root-dir’ in version 2?
 
 (defcustom reduce-root-dir-file-name
   (if (eq system-type 'windows-nt)
@@ -72,37 +74,31 @@ with a directory separator.")
           (when (file-accessible-directory-p path)
             (cl-return path))))
     "/usr/share/reduce")
-  "Root directory of the REDUCE installation, or nil if not set.
-It must be an absolute file name and must *not* end with a
-directory separator.  It is the directory containing the
-“packages” directory and, on Microsoft Windows, the “bin”
-directory containing the user-executable batch files.  On
-Microsoft Windows, it defaults to “?:/Program Files/Reduce”,
-where ? is a letter C--Z that REDUCE Run mode attempts to
-determine automatically.  On other platforms, it defaults to
-“/usr/share/reduce”.  It the appropriate default value for the
-environment variable “reduce”.
+  "Default REDUCE installation root directory, or nil if not set.
+If set, it should be an absolute directory file name; any trailing
+directory separator will be automatically removed.  It should be the
+directory containing the “packages” directory and, on Microsoft Windows,
+the “bin” directory containing “redcsl.bat” and “redpsl.bat”.  On
+Microsoft Windows, it defaults to “?:/Program Files/Reduce”, where ? is
+a letter C\-Z that REDUCE Run mode attempts to determine automatically.
+On other platforms, it defaults to “/usr/share/reduce”.
 
 Note that you can complete the directory name using \
-\\<widget-field-keymap>‘\\[widget-complete]’.
-
-If the “env”, “program” or any argument component of a command in
-‘reduce-run-commands’, or the value of ‘reduce-packages-directory’,
-begins with the shorthand “$reduce” then it is replaced with the
-value of this option."
-  :type  '(choice (const :tag "None" nil) directory)
+\\<widget-field-keymap>‘\\[widget-complete]’."
+  :type '(choice (const :tag "None" nil) directory)
   :link '(custom-manual "(reduce-ide)REDUCE on Windows")
   :group 'reduce-run
-  :package-version '(reduce-ide . "1.12"))
+  :package-version '(reduce-ide . "1.13"))
 
 (defcustom reduce-run-commands
   (if (and (eq system-type 'windows-nt) reduce-root-dir-file-name)
+      ;; reduce-root-dir-file-name must be set to replace $reduce!
       '(("CSL"
-         "$reduce"
+         nil
          "$reduce/lib/csl/reduce.exe"
          "--nogui")
         ("PSL"
-         "$reduce"
+         nil
          "$reduce/lib/psl/psl/bpsl.exe"
          "-td" "1000" "-f" "$reduce/lib/psl/red/reduce.img")
         ("redcsl.bat"
@@ -114,38 +110,36 @@ value of this option."
     '(("CSL" nil "redcsl" "--nogui")
       ("PSL" nil "redpsl")))
   "Alist of commands to run different versions of REDUCE.
-By default, it should be appropriate for standard installations
-of CSL and PSL REDUCE.
+By default, it should be appropriate for standard installations of CSL
+and PSL REDUCE.
 
-Each element has the form “name.env.program.arguments”, where
-“name” and “program” are strings, “env” is nil or a string, and
-“arguments” is a possibly empty list of strings.  All strings may
-include spaces.  The “name” component is arbitrary but typically
-relates to the underlying Lisp system.  The string \" REDUCE\" is
-appended to it to provide the default name for the interaction
-buffer.
-
-If “env”, “program” or any argument begins with the shorthand
-“$reduce” then it is replaced with the value of
-‘reduce-root-dir-file-name’ before it is used.
-
-If the “env” component is non-nil then it will become the value
-of the environment variable “reduce” within the REDUCE process
-and should be the absolute pathname of the root of the REDUCE
-file tree.  This is used only by a few specialized REDUCE
-packages.  It is not useful if REDUCE is run via a shell script
-that sets the environment variable “reduce” itself.
-
-The “program” component should be an absolute pathname or a
-command on the search path, and the “arguments” component
-consists of optional command arguments.
-
-For *temporary* backward compatibility, each element may
-alternatively have the form “name.command”, where “name” and
-“command” are strings.  The command string should begin with an
-absolute pathname that *may* include spaces or a command on the
-search path, and it may be followed by arguments, which *may not*
+Each element has the form “name.$reduce.program.arguments”, where “name”
+and “program” are strings, “$reduce” is nil or a directory file name,
+and “arguments” is a possibly empty list of strings.  All strings may
 include spaces.
+
+The “name” component is arbitrary but typically relates to the
+underlying Lisp system.  The string \" REDUCE\" is appended to it to
+provide the default name for the interaction buffer.
+
+If “$reduce” is unset (nil) then it defaults to the value of
+‘reduce-root-dir-file-name’; if it is set then its value should be as
+described for ‘reduce-root-dir-file-name’.  If “$reduce” is non-nil and
+“program” or any argument _begins_ with the shorthand “$reduce” then
+“$reduce” will be replaced by the value specified.  Also, “$reduce” will
+become the value of the environment variable “reduce” within the REDUCE
+process.  (This is used only by a few specialized REDUCE packages and it
+will be overwritten if REDUCE is run via a shell script that sets the
+environment variable “reduce” itself.)
+
+The “program” component should be an absolute pathname or a command on
+the search path, and “arguments” consists of optional command arguments.
+
+For *temporary* backward compatibility, each element may alternatively
+have the form “name.command”, where “name” and “command” are strings.
+The command string should begin with an absolute pathname that *may*
+include spaces or a command on the search path, and it may be followed
+by arguments, which *may not* include spaces.
 
 The command (together with its arguments) must invoke a
 command-line version of REDUCE; a GUI version will not work!  A
@@ -153,13 +147,13 @@ binary program is run directly, whereas a shell script is run via
 the default shell.  On Microsoft Windows, it is best to run
 REDUCE directly and not via a “.bat” file."
   :type
-  `(alist :tag ,(format "Commands ($reduce => \"%s\")"
-                        reduce-root-dir-file-name)
+  `(alist :tag "Commands"
           :key-type (string :tag "Name")
           :value-type
-          (cons :tag "$reduce environment variable"
+          (cons :tag ,(format "$reduce (defaults to \"%s\")"
+                              (directory-file-name reduce-root-dir-file-name))
                 (choice (const :tag "Unset" nil)
-                        (string :tag "Value"))
+                        (directory :tag "Directory"))
                 (cons :tag "Command"
                       (string :tag "Program")
                       (repeat :tag "Arguments"
@@ -167,13 +161,12 @@ REDUCE directly and not via a “.bat” file."
   :set-after '(reduce-root-dir-file-name)
   :link '(custom-manual "(reduce-ide)Running")
   :group 'reduce-run
-  :package-version '(reduce-ide . "1.12"))
+  :package-version '(reduce-ide . "1.13"))
 
 (defcustom reduce-run-command-name-default
   (caar reduce-run-commands)
   "Default command name to run REDUCE, or nil.
 The default is the first command name in ‘reduce-run-commands’."
-  ;; :type 'string
   :type `(choice (const :tag "None" nil)
                  ,@(mapcar #'(lambda (x) (list 'const (car x)))
                            reduce-run-commands))
@@ -189,7 +182,7 @@ This sets ‘comint-terminfo-terminal’ to the value of
 ‘reduce-run-terminal’ and ‘system-uses-terminfo’ to t locally within
 ‘run-reduce’ so that CSL REDUCE responds appropriately to interrupts,
 which with a dumb terminal it does not.  A nil value means use the Emacs
-defaults.  Possible values to try are “Eterm”, “emacs”, “xterm”."
+defaults.  Possible values to try are “Eterm”, “\emacs”, “xterm”."
   :type '(choice (const :tag "Default" nil) string)
   :link '(custom-manual "(reduce-ide)Running")
   :group 'reduce-run
@@ -515,29 +508,30 @@ Return the process buffer if successful; nil otherwise."
         (reduce-run--run-reduce-3 cmd process-name))
     (reduce-run--run-reduce-3 cmd process-name)))
 
-(defun reduce-run--replace-$reduce (strng)
-  "Return STRNG with “$reduce” at the start replaced.
-If STRNG begins with “$reduce” then replace it with the value of
-‘reduce-root-dir-file-name’."
-  (and reduce-root-dir-file-name strng
-       (replace-regexp-in-string
-        "\\`\\$reduce" reduce-root-dir-file-name strng)))
+(defun reduce-run--replace-$reduce (string $reduce)
+  "Return STRING with \"$reduce\" at the start replaced by $REDUCE."
+  (replace-regexp-in-string "\\`\\$reduce" $reduce string))
 
 (defun reduce-run--run-reduce-3 (cmd process-name)
   "Run CMD as REDUCE process PROCESS-NAME.
-CMD has the form “env.program.arguments”, where “env” is nil or
-the value for the environment variable “reduce” within the REDUCE
-process; “program.arguments” is a list of strings representing a
-command and its arguments.  Return the process buffer if
-successful; nil otherwise."
+CMD has the form “$reduce.program.arguments”, where “$reduce” is nil or
+the value for both the shorthand “$reduce” and the environment variable
+“reduce” within the REDUCE process; “program.arguments” is a list of
+strings representing a command and its arguments.  Return the process
+buffer if successful; nil otherwise."
   (let ((process-environment process-environment)
-        (env (reduce-run--replace-$reduce (car cmd)))
-        (cmdlist (mapcar #'reduce-run--replace-$reduce (cdr cmd))))
-    (when env
-      (push (concat "reduce=" env) process-environment))
+        ($reduce (or (car cmd) reduce-root-dir-file-name)))
+    (setq cmd (cdr cmd))
+    (when $reduce
+      (setq $reduce (directory-file-name $reduce))
+      (setq cmd
+            (mapcar
+             #'(lambda (s) (replace-regexp-in-string "\\`\\$reduce" $reduce s))
+             cmd))
+      (push (concat "reduce=" $reduce) process-environment))
     ;; ‘apply’ used below because last arg is &rest!
     (apply #'make-comint-in-buffer
-           process-name nil (car cmdlist) nil (cdr cmdlist))))
+           process-name nil (car cmd) nil (cdr cmd))))
 
 (add-hook 'same-window-regexps "REDUCE") ; ??? Not sure about this! ???
 
@@ -844,7 +838,9 @@ the REDUCE packages directory.  Return DIR if successful; otherwise nil."
 ;; Note that ‘reduce-packages-directory’ must be defined after
 ;; ‘reduce-run--set-package-completion-alist’!
 
-(defcustom reduce-packages-directory
+(defvar reduce-packages-directory)      ; TEMPORARY!!!
+
+'(defcustom reduce-packages-directory
   (and reduce-root-dir-file-name
        (let ((dir "$reduce/packages/"))
          (and (file-accessible-directory-p
@@ -861,7 +857,7 @@ You can complete the directory name using \
 Alternatively, the shorthand “$reduce” at the start of the
 directory name is replaced with the value of
 ‘reduce-root-dir-file-name’ before this option is used, that is
-$reduce =>" reduce-root-dir-file-name)
+$reduce => " reduce-root-dir-file-name)
   :set #'(lambda (symbol value)
            (when value
              (let ((dir (reduce-run--replace-$reduce value)))
