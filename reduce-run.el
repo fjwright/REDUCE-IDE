@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1998
-;; Time-stamp: <2024-12-08 18:14:23 franc>
+;; Time-stamp: <2024-12-09 11:47:27 franc>
 ;; Keywords: languages, processes
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 
@@ -147,8 +147,7 @@ binary program is run directly, whereas a shell script is run via
 the default shell.  On Microsoft Windows, it is best to run
 REDUCE directly and not via a “.bat” file."
   :type
-  `(alist :tag "Commands"
-          :key-type (string :tag "Name")
+  `(alist :key-type (string :tag "Name")
           :value-type
           (cons :tag ,(format "$reduce (defaults to \"%s\")"
                               (directory-file-name reduce-root-dir-file-name))
@@ -508,9 +507,8 @@ Return the process buffer if successful; nil otherwise."
         (reduce-run--run-reduce-3 cmd process-name))
     (reduce-run--run-reduce-3 cmd process-name)))
 
-(defun reduce-run--replace-$reduce (string $reduce)
-  "Return STRING with \"$reduce\" at the start replaced by $REDUCE."
-  (replace-regexp-in-string "\\`\\$reduce" $reduce string))
+(defvar-local reduce-run--$reduce reduce-root-dir-file-name
+  "Buffer-local value of $reduce for a specific REDUCE process.")
 
 (defun reduce-run--run-reduce-3 (cmd process-name)
   "Run CMD as REDUCE process PROCESS-NAME.
@@ -524,6 +522,7 @@ buffer if successful; nil otherwise."
     (setq cmd (cdr cmd))
     (when $reduce
       (setq $reduce (directory-file-name $reduce))
+      (setq reduce-run--$reduce $reduce)
       (setq cmd
             (mapcar
              #'(lambda (s) (replace-regexp-in-string "\\`\\$reduce" $reduce s))
@@ -805,72 +804,36 @@ The user chooses whether to echo file input."
 ;;; Support for loading REDUCE packages
 ;;; ===================================
 
-(defvar reduce-run--package-completion-alist nil
+(defvar-local reduce-run--package-completion-alist nil
   "Alist of REDUCE packages used for completion by ‘reduce-load-package’.
-Not intended to be set directly but by customizing ‘reduce-packages-directory’.")
+It is buffer-local and specific to each version of REDUCE.")
 
-(defun reduce-run--set-package-completion-alist (dir)
-  "Assign ‘reduce-run--package-completion-alist’ using directory DIR.
-Process the “package.map” file in directory DIR, assuming it is
-the REDUCE packages directory.  Return DIR if successful; otherwise nil."
+(defun reduce-run--package-completion-alist ()
+  "Return ‘reduce-run--package-completion-alist’ or nil if not possible.
+Build it if necessary by processing \"$reduce/packages/package.map\"
+using the buffer-local value ‘reduce-run--$reduce’ for $reduce."
   ;; Errors are trapped by customization, so report problems using
   ;; message.
-  (if (not (file-accessible-directory-p dir))
-      (progn (message "Directory %s is not accessible" dir) nil)
-    (let ((package.map (concat dir "package.map")))
-      (if (not (file-readable-p package.map))
-          (progn (message "File %s is not readable" package.map) nil)
-        (with-temp-buffer
-          (insert-file-contents package.map)
-          (while (re-search-forward "%.*" nil t)
-            (replace-match ""))
-          (goto-char 1)
-          (let ((packages (read (current-buffer))))
-            (setq packages
-                  (mapcar
-                   #'(lambda (x) (symbol-name (car x)))
-                   packages)
-                  packages (sort packages #'string<)
-                  reduce-run--package-completion-alist
-                  (mapcar #'list packages))))
-        dir))))
-
-;; Note that ‘reduce-packages-directory’ must be defined after
-;; ‘reduce-run--set-package-completion-alist’!
-
-(defvar reduce-packages-directory)      ; TEMPORARY!!!
-
-'(defcustom reduce-packages-directory
-  (and reduce-root-dir-file-name
-       (let ((dir "$reduce/packages/"))
-         (and (file-accessible-directory-p
-               (reduce-run--replace-$reduce dir))
-              dir)))
-  (concat "Directory of REDUCE packages, or nil if not set.
-It should be an absolute pathname ending with “…/packages/” and
-should be set automatically.  The directory must exist.
-Customizing this variable sets up completion for
-‘reduce-load-package’; setting it directly has no effect.
-
-You can complete the directory name using \
-\\<widget-field-keymap>‘\\[widget-complete]’.
-Alternatively, the shorthand “$reduce” at the start of the
-directory name is replaced with the value of
-‘reduce-root-dir-file-name’ before this option is used, that is
-$reduce => " reduce-root-dir-file-name)
-  :set #'(lambda (symbol value)
-           (when value
-             (let ((dir (reduce-run--replace-$reduce value)))
-               (when (reduce-run--set-package-completion-alist dir)
-                 (set-default symbol value)))))
-  :set-after '(reduce-root-dir-file-name)
-  :type `(choice (const :tag "None" nil)
-                 (directory :help-echo
-                            ,(format "$reduce => %s"
-                                     reduce-root-dir-file-name)))
-  :link '(custom-manual "(reduce-ide)Processing REDUCE Files")
-  :group 'reduce-run
-  :package-version '(reduce-ide . "1.12"))
+  (or reduce-run--package-completion-alist
+      (let ((dir (concat reduce-run--$reduce "/packages/")))
+        (if (not (file-accessible-directory-p dir))
+            (progn (message "Directory %s is not accessible" dir) nil)
+          (let ((package.map (concat dir "package.map")))
+            (if (not (file-readable-p package.map))
+                (progn (message "File %s is not readable" package.map) nil)
+              (with-temp-buffer
+                (insert-file-contents package.map)
+                (while (re-search-forward "%.*" nil t)
+                  (replace-match ""))
+                (goto-char 1)
+                (let ((packages (read (current-buffer))))
+                  (setq packages
+                        (mapcar
+                         #'(lambda (x) (symbol-name (car x)))
+                         packages)
+                        packages (sort packages #'string<)
+                        reduce-run--package-completion-alist
+                        (mapcar #'list packages))))))))))
 
 (defvar reduce-run--load-package-history nil
      "A history list for ‘reduce-load-package’.")
@@ -897,7 +860,7 @@ $reduce => " reduce-root-dir-file-name)
      (list
       (completing-read
        prompt
-       reduce-run--package-completion-alist
+       (reduce-run--package-completion-alist)
        nil              ; predicate
        nil              ; require-match
        nil              ; initial
