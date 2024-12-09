@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1998
-;; Time-stamp: <2024-12-09 11:47:27 franc>
+;; Time-stamp: <2024-12-09 12:27:00 franc>
 ;; Keywords: languages, processes
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 
@@ -493,14 +493,13 @@ Return t if successful; otherwise return nil."
 (defun reduce-run--run-reduce-1 (cmd process-name buffer-name)
   "Run CMD as REDUCE process PROCESS-NAME in buffer BUFFER-NAME.
 Return the process buffer if successful; nil otherwise."
-  (set-buffer (reduce-run--run-reduce-2 cmd process-name))
+  (reduce-run--run-reduce-2 cmd process-name)
   (reduce-run-mode)
   (pop-to-buffer buffer-name))
 
 (defun reduce-run--run-reduce-2 (cmd process-name)
   "Run CMD as REDUCE process PROCESS-NAME.
-Use terminal type ‘reduce-run-terminal’ if non-nil.
-Return the process buffer if successful; nil otherwise."
+Use terminal type ‘reduce-run-terminal’ if non-nil."
   (if reduce-run-terminal
       (let ((comint-terminfo-terminal reduce-run-terminal)
             (system-uses-terminfo t))
@@ -515,22 +514,23 @@ Return the process buffer if successful; nil otherwise."
 CMD has the form “$reduce.program.arguments”, where “$reduce” is nil or
 the value for both the shorthand “$reduce” and the environment variable
 “reduce” within the REDUCE process; “program.arguments” is a list of
-strings representing a command and its arguments.  Return the process
-buffer if successful; nil otherwise."
+strings representing a command and its arguments.  Switch to the process
+buffer."
   (let ((process-environment process-environment)
         ($reduce (or (car cmd) reduce-root-dir-file-name)))
     (setq cmd (cdr cmd))
     (when $reduce
       (setq $reduce (directory-file-name $reduce))
-      (setq reduce-run--$reduce $reduce)
       (setq cmd
             (mapcar
              #'(lambda (s) (replace-regexp-in-string "\\`\\$reduce" $reduce s))
              cmd))
       (push (concat "reduce=" $reduce) process-environment))
     ;; ‘apply’ used below because last arg is &rest!
-    (apply #'make-comint-in-buffer
-           process-name nil (car cmd) nil (cdr cmd))))
+    (set-buffer (apply #'make-comint-in-buffer
+                       process-name nil (car cmd) nil (cdr cmd)))
+    ;; The following assignment must be done in the right buffer:
+    (setq reduce-run--$reduce $reduce)))
 
 (add-hook 'same-window-regexps "REDUCE") ; ??? Not sure about this! ???
 
