@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1998
-;; Time-stamp: <2024-12-11 09:07:38 franc>
+;; Time-stamp: <2024-12-11 09:15:30 franc>
 ;; Keywords: languages, processes
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 
@@ -164,9 +164,10 @@ binary program is run directly, whereas a shell script is run via
 the default shell.  On Microsoft Windows, it is best to run
 REDUCE directly and not via a “.bat” file."
   :type
-  `(alist :key-type (string :tag "Name")
+  `(alist :tag "Commands"
+          :key-type (string :tag "Name")
           :value-type
-          (cons :tag ,(format "Root => $reduce, defaults to \"%s\")"
+          (cons :tag ,(format "Root => $reduce (defaults to \"%s\")"
                               reduce-root-dir-file-name)
                 (choice (const :tag "Unset" nil)
                         (directory :validate reduce-run--validate-root-dir))
