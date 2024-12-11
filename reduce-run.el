@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1998
-;; Time-stamp: <2024-12-11 09:15:30 franc>
+;; Time-stamp: <2024-12-11 17:49:08 franc>
 ;; Keywords: languages, processes
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 
@@ -65,7 +65,7 @@ semantics.  It is a directory file name and so should *not* end with a
 directory separator.")
 
 (defun reduce-run--validate-root-dir (widget)
-  "Check that a REDUCE root directory is an absolute file name."
+  "Check that WIDGET is an absolute file name."
   ;; Modelled on ruler-mode.el.
   (let ((value (widget-value widget)))
     ;; If invalid return widget with error set, otherwise return nil
@@ -199,7 +199,7 @@ This sets ‘comint-terminfo-terminal’ to the value of
 ‘reduce-run-terminal’ and ‘system-uses-terminfo’ to t locally within
 ‘run-reduce’ so that CSL REDUCE responds appropriately to interrupts,
 which with a dumb terminal it does not.  A nil value means use the Emacs
-defaults.  Possible values to try are “Eterm”, “\emacs”, “xterm”."
+defaults.  Possible values to try are ‘Eterm’, ‘emacs’, ‘xterm’."
   :type '(choice (const :tag "Default" nil) string)
   :link '(custom-manual "(reduce-ide)Running")
   :group 'reduce-run
@@ -383,8 +383,8 @@ The customization group ‘reduce-run’ affects this mode.  REDUCE
 Run inherits from comint, so the customization group ‘comint’
 also affects this mode.  Entry to this mode runs the hooks on
 ‘comint-mode-hook’ and ‘reduce-run-mode-hook’ (in that order)."
-  :syntax-table reduce-mode-syntax-table
   :group 'reduce-run
+  :syntax-table reduce-mode-syntax-table
   ;; Optionally set up font-lock-mode:
   (and reduce-font-lock-mode-on
        (require 'reduce-font-lock "reduce-font-lock" t)
@@ -510,45 +510,42 @@ Return t if successful; otherwise return nil."
 
 (defun reduce-run--run-reduce-1 (cmd process-name buffer-name)
   "Run CMD as REDUCE process PROCESS-NAME in buffer BUFFER-NAME.
+Set the buffer-local value of ‘reduce-root-dir-file-name’ to “root”.
 Return the process buffer if successful; nil otherwise."
-  (reduce-run--run-reduce-2 cmd process-name)
-  (reduce-run-mode)
+  (let ((root (reduce-run--run-reduce-2 cmd process-name)))
+    (reduce-run-mode)
+    (setq-local reduce-root-dir-file-name root))
   (pop-to-buffer buffer-name))
 
 (defun reduce-run--run-reduce-2 (cmd process-name)
   "Run CMD as REDUCE process PROCESS-NAME.
-Use terminal type ‘reduce-run-terminal’ if non-nil."
+Use terminal type ‘reduce-run-terminal’ if non-nil.  Return “root”."
   (if reduce-run-terminal
       (let ((comint-terminfo-terminal reduce-run-terminal)
             (system-uses-terminfo t))
         (reduce-run--run-reduce-3 cmd process-name))
     (reduce-run--run-reduce-3 cmd process-name)))
 
-(defvar-local reduce-run--$reduce reduce-root-dir-file-name
-  "Buffer-local value of $reduce for a specific REDUCE process.")
-
 (defun reduce-run--run-reduce-3 (cmd process-name)
   "Run CMD as REDUCE process PROCESS-NAME.
-CMD has the form “$reduce.program.arguments”, where “$reduce” is nil or
-the value for both the shorthand “$reduce” and the environment variable
+CMD has the form “root.program.arguments”, where “root” is nil or the
+value for both the shorthand “$reduce” and the environment variable
 “reduce” within the REDUCE process; “program.arguments” is a list of
 strings representing a command and its arguments.  Switch to the process
-buffer."
+buffer and return “root”."
   (let ((process-environment process-environment)
-        ($reduce (or (car cmd) reduce-root-dir-file-name)))
+        (root (or (car cmd) reduce-root-dir-file-name)))
     (setq cmd (cdr cmd))
-    (when $reduce
-      (setq $reduce (directory-file-name $reduce))
+    (when root
       (setq cmd
             (mapcar
-             #'(lambda (s) (replace-regexp-in-string "\\`\\$reduce" $reduce s))
+             #'(lambda (s) (replace-regexp-in-string "\\`\\$reduce" root s))
              cmd))
-      (push (concat "reduce=" $reduce) process-environment))
+      (push (concat "reduce=" root) process-environment))
     ;; ‘apply’ used below because last arg is &rest!
     (set-buffer (apply #'make-comint-in-buffer
                        process-name nil (car cmd) nil (cdr cmd)))
-    ;; The following assignment must be done in the right buffer:
-    (setq reduce-run--$reduce $reduce)))
+    root))
 
 (add-hook 'same-window-regexps "REDUCE") ; ??? Not sure about this! ???
 
@@ -827,13 +824,13 @@ The user chooses whether to echo file input."
 It is buffer-local and specific to each version of REDUCE.")
 
 (defun reduce-run--package-completion-alist ()
-  "Return ‘reduce-run--package-completion-alist’ or nil if not possible.
+  "Return the value of variable ‘reduce-run--package-completion-alist’.
 Build it if necessary by processing \"$reduce/packages/package.map\"
-using the buffer-local value ‘reduce-run--$reduce’ for $reduce."
+using the (buffer-local) value of ‘reduce-root-dir-file-name’."
   ;; Errors are trapped by customization, so report problems using
   ;; message.
   (or reduce-run--package-completion-alist
-      (let ((dir (concat reduce-run--$reduce "/packages/")))
+      (let ((dir (concat reduce-root-dir-file-name "/packages/")))
         (if (not (file-accessible-directory-p dir))
             (progn (message "Directory %s is not accessible" dir) nil)
           (let ((package.map (concat dir "package.map")))
