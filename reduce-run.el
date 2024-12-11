@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1998
-;; Time-stamp: <2024-12-09 12:27:00 franc>
+;; Time-stamp: <2024-12-11 09:07:38 franc>
 ;; Keywords: languages, processes
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 
@@ -64,7 +64,22 @@
 semantics.  It is a directory file name and so should *not* end with a
 directory separator.")
 
-;; Rename ‘reduce-root-dir-file-name’ to ‘reduce-root-dir’ in version 2?
+(defun reduce-run--validate-root-dir (widget)
+  "Check that a REDUCE root directory is an absolute file name."
+  ;; Modelled on ruler-mode.el.
+  (let ((value (widget-value widget)))
+    ;; If invalid return widget with error set, otherwise return nil
+    (cond
+     ((directory-name-p value)
+      (widget-put
+       widget :error
+       (format "Error: directory %S ends with a separator" value))
+      widget)
+     ((not (file-name-absolute-p value))
+      (widget-put
+       widget :error
+       (format "Error: directory %S is relative" value))
+      widget))))
 
 (defcustom reduce-root-dir-file-name
   (if (eq system-type 'windows-nt)
@@ -75,17 +90,19 @@ directory separator.")
             (cl-return path))))
     "/usr/share/reduce")
   "Default REDUCE installation root directory, or nil if not set.
-If set, it should be an absolute directory file name; any trailing
-directory separator will be automatically removed.  It should be the
-directory containing the “packages” directory and, on Microsoft Windows,
-the “bin” directory containing “redcsl.bat” and “redpsl.bat”.  On
-Microsoft Windows, it defaults to “?:/Program Files/Reduce”, where ? is
-a letter C\-Z that REDUCE Run mode attempts to determine automatically.
-On other platforms, it defaults to “/usr/share/reduce”.
+If set, it must be an absolute directory file name (without any trailing
+directory separator).  It should be the directory containing the
+“packages” directory and, on Microsoft Windows, the “bin” directory
+containing “redcsl.bat” and “redpsl.bat”.  On Microsoft Windows, it
+defaults to “?:/Program Files/Reduce”, where ? is a letter C\-Z that
+REDUCE Run mode attempts to determine automatically.  On other
+platforms, it defaults to “/usr/share/reduce”.
 
 Note that you can complete the directory name using \
 \\<widget-field-keymap>‘\\[widget-complete]’."
-  :type '(choice (const :tag "None" nil) directory)
+  :type '(choice
+          (const :tag "None" nil)
+          (directory :validate reduce-run--validate-root-dir))
   :link '(custom-manual "(reduce-ide)REDUCE on Windows")
   :group 'reduce-run
   :package-version '(reduce-ide . "1.13"))
@@ -113,21 +130,21 @@ Note that you can complete the directory name using \
 By default, it should be appropriate for standard installations of CSL
 and PSL REDUCE.
 
-Each element has the form “name.$reduce.program.arguments”, where “name”
-and “program” are strings, “$reduce” is nil or a directory file name,
-and “arguments” is a possibly empty list of strings.  All strings may
+Each element has the form “name.root.program.arguments”, where “name”
+and “program” are strings, “root” is nil or a directory file name, and
+“arguments” is a possibly empty list of strings.  All strings may
 include spaces.
 
 The “name” component is arbitrary but typically relates to the
 underlying Lisp system.  The string \" REDUCE\" is appended to it to
 provide the default name for the interaction buffer.
 
-If “$reduce” is unset (nil) then it defaults to the value of
+If “root” is unset (nil) then it defaults to the value of
 ‘reduce-root-dir-file-name’; if it is set then its value should be as
-described for ‘reduce-root-dir-file-name’.  If “$reduce” is non-nil and
+described for ‘reduce-root-dir-file-name’.  If “root” is non-nil and
 “program” or any argument _begins_ with the shorthand “$reduce” then
-“$reduce” will be replaced by the value specified.  Also, “$reduce” will
-become the value of the environment variable “reduce” within the REDUCE
+“$reduce” will be replaced by “root”.  Also, “root” will become the
+value of the environment variable “reduce” within the REDUCE
 process.  (This is used only by a few specialized REDUCE packages and it
 will be overwritten if REDUCE is run via a shell script that sets the
 environment variable “reduce” itself.)
@@ -149,10 +166,10 @@ REDUCE directly and not via a “.bat” file."
   :type
   `(alist :key-type (string :tag "Name")
           :value-type
-          (cons :tag ,(format "$reduce (defaults to \"%s\")"
-                              (directory-file-name reduce-root-dir-file-name))
+          (cons :tag ,(format "Root => $reduce, defaults to \"%s\")"
+                              reduce-root-dir-file-name)
                 (choice (const :tag "Unset" nil)
-                        (directory :tag "Directory"))
+                        (directory :validate reduce-run--validate-root-dir))
                 (cons :tag "Command"
                       (string :tag "Program")
                       (repeat :tag "Arguments"
