@@ -1,3 +1,4 @@
+<!-- -*- eval: (auto-fill-mode -1) eval: (visual-line-mode 1) eval: (visual-wrap-prefix-mode 1) -*- -->
 GNU Emacs REDUCE Integrated Development Environment
 ===================================================
 Major modes for editing and running REDUCE source code
@@ -5,11 +6,11 @@ Major modes for editing and running REDUCE source code
 
 **[Francis Wright](https://sites.google.com/site/fjwcentaur)**
 
-Version 1.12.1, September 2024
+Version 1.13, December 2024
 
 REDUCE IDE is a package that provides an Integrated Development Environment for the [REDUCE computer algebra system](https://reduce-algebra.sourceforge.io/) within the GNU Emacs editor.  Its two major components are Emacs Lisp libraries that provide major modes for editing REDUCE source code and running a *command-line version* of REDUCE in an Emacs window.  It assumes that Emacs is running under a GUI such as Microsoft Windows or the X Window System under some flavour of UNIX or Linux, and displays Unicode character sets correctly.  REDUCE IDE does not include REDUCE, which is available separately from [SourceForge](https://sourceforge.net/projects/reduce-algebra/).  You don't need to install REDUCE in order to edit REDUCE source code using REDUCE IDE, but if you want to run REDUCE in REDUCE IDE then you do need to install REDUCE.
 
-REDUCE IDE now formally requires GNU Emacs version 27 at least although I support only GNU Emacs 29 on Microsoft Windows and Linux.
+REDUCE IDE now formally requires GNU Emacs version 27 at least although I support only GNU Emacs 29 or later on Microsoft Windows and Linux.
 
 Installation
 ------------
@@ -59,3 +60,5 @@ Main Updates since REDUCE IDE 1.12
 * Updates to accommodate Emacs 30.
 * Added `reduce-ident.el`, which adds optional identifier motion functionality to REDUCE mode and/or REDUCE run.  At present by default it is loaded and `reduce-identifier-mode` is turned on automatically, in REDUCE mode only, via `reduce-mode-load-hook`.
 * Add a `Minor Modes` submenu to the major mode menu and move `Show Current Proc` into it.
+
+* Better support for multiple REDUCE installations.  Allow a root directory to be specified separately for each REDUCE command so that configuring multiple installations is easier and more consistent.  Use this local root as the value for both the shortcut `$reduce` and the `reduce` environment variable.  Also use it to find the `packages` directory.  This requires small changes to the details of the options `reduce-root-dir-file-name` and `reduce-run-commands`.  The option `reduce-packages-directory` is now obsolete.  Validate that REDUCE root directories are absolute directory file names.
