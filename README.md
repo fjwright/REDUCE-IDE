@@ -60,9 +60,10 @@ Main Updates since REDUCE IDE 1.12
 * Added `reduce-ident.el`, which adds optional identifier motion functionality to REDUCE mode and/or REDUCE run.  At present by default it is loaded and `reduce-identifier-mode` is turned on automatically, in REDUCE mode only, via `reduce-mode-load-hook`.
 * Add a `Minor Modes` submenu to the major mode menu and move `Show Current Proc` into it.
 
-* Better support for multiple REDUCE installations.  Allow a root directory to be specified separately for each REDUCE command so that configuring multiple installations is easier and more consistent.  Use this local root as the value for both the shortcut `$reduce` and the `reduce` environment variable.  Also use it to find the `packages` directory.  This requires small changes to the details of the options `reduce-root-dir-file-name` and `reduce-run-commands`.  The option `reduce-packages-directory` is now obsolete.  Validate that REDUCE root directories are absolute directory file names.
+* Better support for multiple REDUCE installations.  Allow a root directory to be specified separately for each REDUCE command so that configuring multiple installations is easier and more consistent.  Use this local root as the value for both the shortcut `$reduce` and the `reduce` environment variable.  Also use it to find the `packages` directory.  This requires small changes to the details of the options `reduce-root-dir-file-name` and `reduce-run-commands`.  The option `reduce-packages-directory` is now obsolete.  Validate that REDUCE root directories are accessible and automatically convert them to absolute directory file names.
 
 <!-- Local Variables: -->
 <!-- eval: (auto-fill-mode -1) -->
 <!-- eval: (visual-line-mode 1) -->
 <!-- eval: (visual-wrap-prefix-mode 1) -->
+<!-- End: -->

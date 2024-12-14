@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1998
-;; Time-stamp: <2024-12-11 17:49:08 franc>
+;; Time-stamp: <2024-12-14 15:32:01 franc>
 ;; Keywords: languages, processes
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 
@@ -65,21 +65,22 @@ semantics.  It is a directory file name and so should *not* end with a
 directory separator.")
 
 (defun reduce-run--validate-root-dir (widget)
-  "Check that WIDGET is an absolute file name."
-  ;; Modelled on ruler-mode.el.
-  (let ((value (widget-value widget)))
-    ;; If invalid return widget with error set, otherwise return nil
-    (cond
-     ((directory-name-p value)
-      (widget-put
-       widget :error
-       (format "Error: directory %S ends with a separator" value))
-      widget)
-     ((not (file-name-absolute-p value))
-      (widget-put
-       widget :error
-       (format "Error: directory %S is relative" value))
-      widget))))
+  "Ensure that WIDGET is an accessible absolute directory file name.
+If so, return nil.  Otherwise, return WIDGET with error set."
+  (let* ((value (widget-value widget)) (old-value value))
+    (if (not (file-accessible-directory-p value))
+        (progn
+          (widget-put
+           widget :error
+           (format "Directory not accessible: %S" value))
+          widget)
+      (if (directory-name-p value)
+          (setq value (directory-file-name value)))
+      (if (not (file-name-absolute-p value))
+          (setq value (expand-file-name value)))
+      (if (not (string-equal value old-value))
+          (widget-value-set widget value))
+      nil)))
 
 (defcustom reduce-root-dir-file-name
   (if (eq system-type 'windows-nt)
@@ -90,12 +91,12 @@ directory separator.")
             (cl-return path))))
     "/usr/share/reduce")
   "Default REDUCE installation root directory, or nil if not set.
-If set, it must be an absolute directory file name (without any trailing
-directory separator).  It should be the directory containing the
-“packages” directory and, on Microsoft Windows, the “bin” directory
-containing “redcsl.bat” and “redpsl.bat”.  On Microsoft Windows, it
-defaults to “?:/Program Files/Reduce”, where ? is a letter C\-Z that
-REDUCE Run mode attempts to determine automatically.  On other
+If set, it must be an accessible absolute directory file name (without
+any trailing directory separator).  It should be the directory
+containing the “packages” directory and, on Microsoft Windows, the “bin”
+directory containing “redcsl.bat” and “redpsl.bat”.  On Microsoft
+Windows, it defaults to “?:/Program Files/Reduce”, where ? is a letter
+C\-Z that REDUCE Run mode attempts to determine automatically.  On other
 platforms, it defaults to “/usr/share/reduce”.
 
 Note that you can complete the directory name using \
