@@ -4,9 +4,9 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1992
-;; Time-stamp: <2024-09-26 17:44:03 franc>
+;; Time-stamp: <2024-12-14 17:24:26 franc>
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
-;; Package-Version: 1.12.1
+;; Package-Version: 1.13
 ;; Package-Requires: (cl-lib)
 
 ;; This file is part of REDUCE IDE.
@@ -116,18 +116,18 @@ Note that REDUCE Run inherits from comint."
   :load "reduce-run")
 
 (defcustom reduce-mode-load-hook
-  '((lambda () (require 'reduce-ident)))
+  '((lambda () (require 'reduce-extra)))
   "List of functions to be called when REDUCE mode is loaded.
 It can be used to customize buffer-independent features of REDUCE mode
-such as keybindings.  By default it loads ‘reduce-ident’."
+such as keybindings.  By default it loads ‘reduce-extra’."
   :type 'hook
   :link '(custom-manual "(reduce-ide)Hooks")
   :group 'reduce)
 
 (defcustom reduce-mode-hook '(reduce-identifier-mode)
   "List of functions to be called when REDUCE mode is entered.
-It can be used to customize buffer-local features of REDUCE mode.
-By default it turns on ‘reduce-identifier-mode’."
+It can be used to customize buffer-local features of REDUCE mode.  By
+default it turns on ‘reduce-identifier-mode’, defined in ‘reduce-extra’."
   :type 'hook
   :link '(custom-manual "(reduce-ide)Hooks")
   :group 'reduce)

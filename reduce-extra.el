@@ -1,10 +1,10 @@
-;;; reduce-ident.el --- Treat REDUCE identifiers as words  -*- lexical-binding:t -*-
+;;; reduce-extra.el --- Experimental optional extra REDUCE functionality -*- lexical-binding:t -*-
 
 ;; Copyright (C) 2024 Francis J. Wright
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: September 2024
-;; Time-stamp: <2024-09-23 18:06:56 franc>
+;; Time-stamp: <2024-12-14 17:21:01 franc>
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 
 ;; This file is part of REDUCE IDE.
@@ -24,16 +24,26 @@
 
 ;;; Commentary:
 
-;; This file adds optional identifier motion functionality to REDUCE
-;; mode and/or REDUCE run; see ‘Word Motion’ in the ELisp manual.  At
-;; present by default it is loaded and ‘reduce-identifier-mode’ is
-;; turned on automatically, in REDUCE mode only, via
-;; ‘reduce-mode-load-hook’.  This could, alternatively, simply be done
-;; by hand when required.
+;; This file is loaded and ‘reduce-identifier-mode’ is turned on
+;; automatically, in REDUCE mode only, via ‘reduce-mode-load-hook’.
+;; This could, alternatively, simply be done by hand when required.
+
+;; This code is experimental and may be subject to possibly
+;; incompatible changes.  It may not be documented in the REDUCE IDE
+;; manual.
 
 (defvar reduce-mode-map)                ; defined in "reduce-mode.el"
-(define-key reduce-mode-map [(control shift right)] 'reduce-forward-identifier)
-(define-key reduce-mode-map [(control shift left)] 'reduce-backward-identifier)
+
+;; ***** Requires Emacs 29.1 for keymap-set. *****
+
+
+;; Add optional identifier motion functionality to REDUCE mode and/or
+;; REDUCE run; see ‘Word Motion’ in the ELisp manual.
+
+(keymap-set reduce-mode-map [(control shift right)]
+            'reduce-forward-identifier)
+(keymap-set reduce-mode-map [(control shift left)]
+            'reduce-backward-identifier)
 
 (defun reduce-forward-identifier (arg)
   "Move forwards until encountering the end of an identifier.
@@ -123,6 +133,42 @@ character."
         (reduce-backward-identifier 1))
       (point))))
 
-(provide 'reduce-ident)
+
+;; Quickly select a block or group using the mouse.
 
-;;; reduce-ident.el ends here
+(keymap-set reduce-mode-map "C-S-<mouse-1>" ; [(control shift mouse-1)]
+            'reduce-mark-block-or-group)
+(keymap-set reduce-mode-map "C-c C-M-<space>"
+            'reduce-mark-block-or-group)
+
+(defun reduce-mark-block-or-group (arg event)
+  "Select the block or group immediately after or before EVENT or point.
+If EVENT is a mouse click then first move point to EVENT.  If a block or
+group does not begin immediately after or end immediately before point
+then select the smallest block or group enclosing point.  Place mark at
+the beginning of the block or group and point at the end.  With a prefix
+argument ARG, or if ‘mouse-select-region-move-to-beginning’ is non-nil,
+exchange mark and point, i.e. place mark at the end of the block or
+group and point at the beginning.  Cf. ‘double-mouse-1’."
+  (interactive "P\ne" reduce-mode reduce-run-mode)
+  (when (listp event)                   ; mouse event
+    (mouse-set-point event))
+  (let ((case-fold-search t))
+    (cond ((looking-at-p "\\_<begin\\_>\\|<<"))
+                                        ; immediately before block or group
+          ((and (eq (char-after) ?<) (eq (char-before) ?<))
+                                        ; within <<
+           (left-char))
+          ((and (looking-at-p "\\sw")
+                (skip-syntax-backward "w")
+                (looking-at-p "\\_<begin\\_>")))
+          ((looking-back "\\_<end\\_>\\|>>"))
+          (t (reduce-up-block-or-group nil)))
+    (push-mark nil nil t)
+    (reduce-forward-sexp)
+    (when (or arg mouse-select-region-move-to-beginning)
+      (exchange-point-and-mark))))
+
+(provide 'reduce-extra)
+
+;;; reduce-extra.el ends here

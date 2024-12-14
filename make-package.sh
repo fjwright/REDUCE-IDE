@@ -1,7 +1,7 @@
 #! /bin/bash
 
 # Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
-# Time-stamp: <2024-02-07 17:10:32 franc>
+# Time-stamp: <2024-12-14 17:28:42 franc>
 
 # Construct a REDUCE IDE package archive.
 # Must be run from the REDUCE IDE directory.
@@ -29,7 +29,7 @@ if [ reduce-ide.info -ot reduce-ide.texinfo ]; then
 fi
 
 pkg1='(define-package "reduce-ide" "'
-pkg2="\" \"REDUCE Integrated Development Environment\" '((emacs \"27\")))"
+pkg2="\" \"REDUCE Integrated Development Environment\" '((emacs \"29\")))"
 
 # Construct the reduce-ide-<version> directory:
 mkdir $dir
