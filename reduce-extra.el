@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: September 2024
-;; Time-stamp: <2024-12-14 18:20:37 franc>
+;; Time-stamp: <2024-12-15 18:01:36 franc>
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 
 ;; This file is part of REDUCE IDE.
@@ -27,6 +27,8 @@
 ;; Currently, this file is loaded via ‘reduce-mode-load-hook’.  It is
 ;; experimental, may be subject to possibly incompatible changes, and
 ;; may not be documented in the REDUCE IDE manual.
+
+;;; Code:
 
 (defvar reduce-mode-map)                ; defined in "reduce-mode.el"
 
@@ -97,8 +99,9 @@ or move forwards ARG times if negative."
 
 (defconst reduce--ident-find-word-boundary-function-table
   (make-char-table nil #'reduce--find-ident-bounday)
-  "Assigned to `find-word-boundary-function-table' in
-‘reduce-identifier-mode’; defers to ‘reduce--find-ident-bounday’.")
+  "Assigned to `find-word-boundary-function-table'.
+Done as its buffer-local value in ‘reduce-identifier-mode’; defers to
+‘reduce--find-ident-bounday’.")
 
 (define-minor-mode reduce-identifier-mode
   "Toggle treatment of REDUCE identifiers as words.
@@ -133,34 +136,37 @@ character."
 
 (keymap-set reduce-mode-map "C-S-<mouse-1>"
             'reduce-mark-block-or-group)
-(keymap-set reduce-mode-map "C-c C-M-<space>"
+(keymap-set reduce-mode-map "C-c <space>"
             'reduce-mark-block-or-group)
 
 (defun reduce-mark-block-or-group (arg event)
-  "Select the block or group immediately after or before EVENT or point.
+  "Select the block or group beginning or ending at EVENT or point.
 If EVENT is a mouse click then first move point to EVENT.  If a block or
-group does not begin immediately after or end immediately before point
-then select the smallest block or group enclosing point.  Place mark at
-the beginning of the block or group and point at the end.  With a prefix
-argument ARG, or if ‘mouse-select-region-move-to-beginning’ is non-nil,
-exchange mark and point, i.e. place mark at the end of the block or
-group and point at the beginning.  Cf. ‘double-mouse-1’."
+group does not begin or end at point then select the smallest block or
+group enclosing point.  Place mark at the beginning of the block or
+group and point at the end.  With a prefix argument ARG, or if
+‘mouse-select-region-move-to-beginning’ is non-nil, exchange mark and
+point, i.e. place mark at the end of the block or group and point at the
+beginning.  Cf. <double-mouse-1>."
   (interactive "P\ne" reduce-mode reduce-run-mode)
   (when (listp event)                   ; mouse event
     (mouse-set-point event))
   (let ((case-fold-search t))
-    (cond ((looking-at-p "\\_<begin\\_>\\|<<"))
-                                        ; immediately before block or group
-          ((and (eq (char-after) ?<) (eq (char-before) ?<))
-                                        ; within <<
-           (left-char))
-          ((and (looking-at-p "\\sw")
-                (skip-syntax-backward "w")
-                (looking-at-p "\\_<begin\\_>")))
-          ((looking-back "\\_<end\\_>\\|>>" (point-min))) ; CHECK LIMIT!!!!!
-          (t (reduce-up-block-or-group nil)))
+    (cond ;; At beginning of block or group?
+     ((looking-at-p "\\_<begin\\_>\\|<<"))
+     ;; Within <<?
+     ((and (eq (char-before) ?<) (eq (char-after) ?<))
+      (left-char))
+     ;; Within begin?
+     ((and (looking-at-p "\\sw")
+           (skip-syntax-backward "w")
+           (looking-at-p "\\_<begin\\_>")))
+     ;; Default -- assume within or at end of block or group.
+     (t (reduce-up-block-or-group nil)))
+    ;; Now at beginning of block or group.
     (push-mark nil nil t)
     (reduce-forward-sexp)
+    ;; Now immediately after block or group.
     (when (or arg mouse-select-region-move-to-beginning)
       (exchange-point-and-mark))))
 
