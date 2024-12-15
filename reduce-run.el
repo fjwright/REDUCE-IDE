@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1998
-;; Time-stamp: <2024-12-14 15:32:01 franc>
+;; Time-stamp: <2024-12-14 18:00:52 franc>
 ;; Keywords: languages, processes
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 
@@ -52,6 +52,7 @@
 
 (require 'reduce-mode)
 (require 'comint)
+(require 'wid-edit)
 
 (eval-when-compile (require 'cl-lib))
 

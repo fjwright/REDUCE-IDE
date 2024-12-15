@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: September 2024
-;; Time-stamp: <2024-12-14 17:21:01 franc>
+;; Time-stamp: <2024-12-14 18:20:37 franc>
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 
 ;; This file is part of REDUCE IDE.
@@ -24,26 +24,21 @@
 
 ;;; Commentary:
 
-;; This file is loaded and ‘reduce-identifier-mode’ is turned on
-;; automatically, in REDUCE mode only, via ‘reduce-mode-load-hook’.
-;; This could, alternatively, simply be done by hand when required.
-
-;; This code is experimental and may be subject to possibly
-;; incompatible changes.  It may not be documented in the REDUCE IDE
-;; manual.
+;; Currently, this file is loaded via ‘reduce-mode-load-hook’.  It is
+;; experimental, may be subject to possibly incompatible changes, and
+;; may not be documented in the REDUCE IDE manual.
 
 (defvar reduce-mode-map)                ; defined in "reduce-mode.el"
 
 ;; ***** Requires Emacs 29.1 for keymap-set. *****
 
 
-;; Add optional identifier motion functionality to REDUCE mode and/or
-;; REDUCE run; see ‘Word Motion’ in the ELisp manual.
+;; Add optional identifier motion functionality; see ‘Word Motion’ in
+;; the ELisp manual.  Currently, ‘reduce-identifier-mode’ is turned on
+;; automatically via ‘reduce-mode-hook’.
 
-(keymap-set reduce-mode-map [(control shift right)]
-            'reduce-forward-identifier)
-(keymap-set reduce-mode-map [(control shift left)]
-            'reduce-backward-identifier)
+(keymap-set reduce-mode-map "C-S-<right>" 'reduce-forward-identifier)
+(keymap-set reduce-mode-map "C-S-<left>" 'reduce-backward-identifier)
 
 (defun reduce-forward-identifier (arg)
   "Move forwards until encountering the end of an identifier.
@@ -134,9 +129,9 @@ character."
       (point))))
 
 
-;; Quickly select a block or group using the mouse.
+;; Quickly select a block or group.
 
-(keymap-set reduce-mode-map "C-S-<mouse-1>" ; [(control shift mouse-1)]
+(keymap-set reduce-mode-map "C-S-<mouse-1>"
             'reduce-mark-block-or-group)
 (keymap-set reduce-mode-map "C-c C-M-<space>"
             'reduce-mark-block-or-group)
@@ -162,7 +157,7 @@ group and point at the beginning.  Cf. ‘double-mouse-1’."
           ((and (looking-at-p "\\sw")
                 (skip-syntax-backward "w")
                 (looking-at-p "\\_<begin\\_>")))
-          ((looking-back "\\_<end\\_>\\|>>"))
+          ((looking-back "\\_<end\\_>\\|>>" (point-min))) ; CHECK LIMIT!!!!!
           (t (reduce-up-block-or-group nil)))
     (push-mark nil nil t)
     (reduce-forward-sexp)

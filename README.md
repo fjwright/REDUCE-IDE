@@ -40,6 +40,7 @@ Optional:
 * `reduce-font-lock.el`  &ndash;  support syntactic highlighting
 * `reduce-delim.el`  &ndash;  highlight matching group or block delimiters
 * `reduce-run.el`  &ndash;  run REDUCE in an Emacs buffer
+* `reduce-extra.el`  &ndash;  experimental optional extra functionality
 * `reduce-ide.texinfo`  &ndash;  texinfo manual
 
 To Do
@@ -54,15 +55,15 @@ To Do
 Main Updates since REDUCE IDE 1.12
 ----------------------------------
 
+* Add `reduce-extra.el`, which currently is loaded via `reduce-mode-load-hook` and provides experimental optional extra functionality.  It is experimental, may be subject to possibly incompatible changes, and may not be documented in the REDUCE IDE manual.  `reduce-extra.el` adds optional identifier motion functionality via the minor mode `reduce-identifier-mode`, which is turned on automatically via `reduce-mode-hook`, and functionality to quickly select a block or group.  Please see `reduce-extra.el` for details.
+* Updates to accommodate Emacs 30.  Require Emacs 29 or later.
 * If no input, send a newline to REDUCE to support `on demo`.
 * Replace the REDUCE Mode Run menu stub with a version of the full REDUCE Mode Run menu that autoloads REDUCE Run.
-* Require Emacs 29 or later.  Updates to accommodate Emacs 30.
-* Added `reduce-ident.el`, which adds optional identifier motion functionality to REDUCE mode and/or REDUCE run.  At present by default it is loaded and `reduce-identifier-mode` is turned on automatically, in REDUCE mode only, via `reduce-mode-load-hook`.
 * Add a `Minor Modes` submenu to the major mode menu and move `Show Current Proc` into it.
-
 * Better support for multiple REDUCE installations.  Allow a root directory to be specified separately for each REDUCE command so that configuring multiple installations is easier and more consistent.  Use this local root as the value for both the shortcut `$reduce` and the `reduce` environment variable.  Also use it to find the `packages` directory.  This requires small changes to the details of the options `reduce-root-dir-file-name` and `reduce-run-commands`.  The option `reduce-packages-directory` is now obsolete.  Validate that REDUCE root directories are accessible and automatically convert them to absolute directory file names.
 
 <!-- Local Variables: -->
+<!-- fill-column: 1000 -->
 <!-- eval: (auto-fill-mode -1) -->
 <!-- eval: (visual-line-mode 1) -->
 <!-- eval: (visual-wrap-prefix-mode 1) -->
