@@ -1,7 +1,7 @@
 #! /bin/bash
 
 # Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
-# Time-stamp: <2024-12-14 17:28:42 franc>
+# Time-stamp: <2024-12-16 15:26:10 franc>
 
 # Construct a REDUCE IDE package archive.
 # Must be run from the REDUCE IDE directory.
@@ -39,6 +39,7 @@ Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ' > README
 cat ../packages/reduce-ide-readme.txt >> README
 ln -s ../reduce-delim.el
+ln -s ../reduce-extra.el
 ln -s ../reduce-font-lock.el
 ln -s ../reduce-mode.el
 ln -s ../reduce-run.el
