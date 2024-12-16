@@ -55,8 +55,8 @@ To Do
 Main Updates since REDUCE IDE 1.12
 ----------------------------------
 
-* Add `reduce-extra.el`, which currently is loaded via `reduce-mode-load-hook` and provides experimental optional extra functionality.  It is experimental, may be subject to possibly incompatible changes, and may not be documented in the REDUCE IDE manual.  `reduce-extra.el` adds optional identifier motion functionality via the minor mode `reduce-identifier-mode`, which is turned on automatically via `reduce-mode-hook`, and functionality to quickly select a block or group.  Please see `reduce-extra.el` for details.
-* Updates to accommodate Emacs 30.  Require Emacs 29 or later.
+* Add `reduce-extra.el`, which currently is loaded via `reduce-mode-load-hook` and provides experimental optional extra functionality.  Since it is experimental it may be subject to incompatible changes and may not be documented in the REDUCE IDE manual.  Currently, `reduce-extra.el` adds optional identifier motion functionality via the minor mode `reduce-identifier-mode`, which is turned on automatically via `reduce-mode-hook`, and functionality to quickly select a block or group.  Please see `reduce-extra.el` for details.
+* Require Emacs 29 or later.  Updates to accommodate Emacs 30.
 * If no input, send a newline to REDUCE to support `on demo`.
 * Replace the REDUCE Mode Run menu stub with a version of the full REDUCE Mode Run menu that autoloads REDUCE Run.
 * Add a `Minor Modes` submenu to the major mode menu and move `Show Current Proc` into it.
