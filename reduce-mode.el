@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1992
-;; Time-stamp: <2024-12-14 17:24:26 franc>
+;; Time-stamp: <2025-03-12 16:07:01 franc>
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.13
 ;; Package-Requires: (cl-lib)
@@ -521,7 +521,7 @@ updated when REDUCE Run is loaded."
       :style toggle :selected reduce-show-delim-mode
       :help "Display matching group or block delimiters"]
      ["Identifier Mode" reduce-identifier-mode
-      :active (featurep 'reduce-ident)
+      :active (featurep 'reduce-extra)
       :style toggle :selected reduce-identifier-mode
       :help "Treat identifiers as words"])))
 
