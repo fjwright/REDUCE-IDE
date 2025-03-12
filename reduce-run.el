@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1998
-;; Time-stamp: <2024-12-14 18:00:52 franc>
+;; Time-stamp: <2025-03-12 12:42:00 franc>
 ;; Keywords: languages, processes
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 
@@ -738,13 +738,14 @@ buffer."
       (comint-send-input)
       (sit-for 1))
     (insert ?\n)
-    (let* ((buf-name (buffer-name (current-buffer)))
-           (proc-name (substring buf-name 1 -1))
-           (cmd (when (> (length proc-name) 7) ; strip off " REDUCE"
-                  (cdr (assoc (substring proc-name 0 -7)
-                              reduce-run-commands)))))
-      (reduce-run--run-reduce-1
-       (or cmd (car reduce-run--history)) proc-name buf-name))))
+    (let* ((buf-name (buffer-name (current-buffer))) ; "*CMD REDUCE LABEL*"
+           (proc-name (substring buf-name 1 -1)) ; "CMD REDUCE LABEL"
+           (cmd (string-search " REDUCE" proc-name))
+                                        ; strip off " REDUCE..."
+           (cmd (or (and cmd (substring proc-name 0 cmd))
+                    (car reduce-run--history)))
+           (cmd (cdr (assoc cmd reduce-run-commands))))
+      (reduce-run--run-reduce-1 cmd proc-name buf-name))))
 
 (define-obsolete-function-alias 're-run-reduce 'rerun-reduce "REDUCE IDE 1.10.1")
 
@@ -905,6 +906,7 @@ process named from FILENAME and input FILENAME."
    (file-name-nondirectory filename)
    (format "in \"%s\"%c" filename (if echo ?\; ?$))))
 
+;;;###autoload
 (defun reduce-run-buffer ()
   "Run current buffer as a REDUCE program in a new process buffer.
 Start a new REDUCE process named from the current buffer and
