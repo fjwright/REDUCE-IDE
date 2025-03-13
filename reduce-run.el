@@ -1,10 +1,10 @@
 ;;; reduce-run.el --- Run the REDUCE computer-algebra system in a buffer  -*- lexical-binding:t -*-
 
-;; Copyright (C) 1998-2001, 2012, 2017-2019, 2022-2024 Francis J. Wright
+;; Copyright (C) 1998-2001, 2012, 2017-2019, 2022-2025 Francis J. Wright
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1998
-;; Time-stamp: <2025-03-12 12:42:00 franc>
+;; Time-stamp: <2025-03-13 17:13:07 franc>
 ;; Keywords: languages, processes
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 

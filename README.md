@@ -58,6 +58,8 @@ Main Updates since REDUCE IDE 1.13
 * Repair the `rerun-reduce` command.
 * Declare the `reduce-run-buffer` command to autoload.
 * Repair the _Minor Modes / Identifier Mode_ menu option.
+* Implement `reduce-forward-word` and `reduce-backward-word` to replace `reduce-forward-identifier` and `reduce-backward-identifier`.  The aim is to move by a number or identifier, more like `forward-word` etc., which should improve mouse double-click selection.
+* Rename `reduce-identifier-mode` to `reduce-word-mode` and the _Minor Modes / Identifier Mode_ menu option to _Minor Modes / Word Mode_.
 
 <!-- Local Variables: -->
 <!-- fill-column: 1000 -->

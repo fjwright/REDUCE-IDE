@@ -1,10 +1,10 @@
 ;;; reduce-mode.el --- Major mode to edit REDUCE computer-algebra code  -*- lexical-binding:t -*-
 
-;; Copyright (C) 1998-2001, 2012, 2017-2019, 2022-2024 Francis J. Wright
+;; Copyright (C) 1998-2001, 2012, 2017-2019, 2022-2025 Francis J. Wright
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1992
-;; Time-stamp: <2025-03-12 17:04:11 franc>
+;; Time-stamp: <2025-03-13 17:10:40 franc>
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.13.1
 ;; Package-Requires: (cl-lib)
@@ -124,10 +124,10 @@ such as keybindings.  By default it loads ‘reduce-extra’."
   :link '(custom-manual "(reduce-ide)Hooks")
   :group 'reduce)
 
-(defcustom reduce-mode-hook '(reduce-identifier-mode)
+(defcustom reduce-mode-hook '(reduce-word-mode)
   "List of functions to be called when REDUCE mode is entered.
 It can be used to customize buffer-local features of REDUCE mode.  By
-default it turns on ‘reduce-identifier-mode’, defined in ‘reduce-extra’."
+default it turns on ‘reduce-word-mode’, defined in ‘reduce-extra’."
   :type 'hook
   :link '(custom-manual "(reduce-ide)Hooks")
   :group 'reduce)
@@ -520,10 +520,10 @@ updated when REDUCE Run is loaded."
       :active (featurep 'reduce-delim)
       :style toggle :selected reduce-show-delim-mode
       :help "Display matching group or block delimiters"]
-     ["Identifier Mode" reduce-identifier-mode
+     ["Word Mode" reduce-word-mode
       :active (featurep 'reduce-extra)
-      :style toggle :selected reduce-identifier-mode
-      :help "Treat identifiers as words"])))
+      :style toggle :selected reduce-word-mode
+      :help "Treat identifiers and numbers as words"])))
 
 (defun reduce-ide-version ()
   "Echo version information for REDUCE IDE."
