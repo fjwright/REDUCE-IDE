@@ -123,6 +123,9 @@ multi-line comment statement (which it appears to be!);
 
 x := a + b;
 
+123; 123.456; 123e456; 123.456E789; 123.456e-78; 123.456e+78;
+123xzy; 123.456xyz; 123e456xyz; 123.456E789xyz; 123.456e-78xyz;
+
 %%% Recommended end-of-file marker...
 
 ;end;

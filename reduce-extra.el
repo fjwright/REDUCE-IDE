@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: September 2024
-;; Time-stamp: <2024-12-15 18:01:36 franc>
+;; Time-stamp: <2025-03-13 16:14:51 franc>
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 
 ;; This file is part of REDUCE IDE.
@@ -39,8 +39,74 @@
 ;; the ELisp manual.  Currently, ‘reduce-identifier-mode’ is turned on
 ;; automatically via ‘reduce-mode-hook’.
 
-(keymap-set reduce-mode-map "C-S-<right>" 'reduce-forward-identifier)
-(keymap-set reduce-mode-map "C-S-<left>" 'reduce-backward-identifier)
+(keymap-set reduce-mode-map "C-S-<right>" 'reduce-forward-word)
+(keymap-set reduce-mode-map "C-S-<left>" 'reduce-backward-word)
+
+(defun reduce-forward-word (arg)
+  "Move forwards to the next end of an identifier or number.
+This applies within comments.  An identifier is a letter or escape
+sequence followed by one or more alphanumeric characters or underscores
+or escape sequences; an escape sequence is ‘!’ followed by any
+character.  A number is an integer or a float, which may include a
+positive or negative exponent.  With prefix argument ARG, do it ARG
+times if positive, or move backwards ARG times if negative."
+  ;; cf. ‘forward-symbol’, ‘forward-word’, ‘backward-word’
+  (interactive "p")
+  (if (< arg 0)
+      (reduce-backward-word (- arg))
+    (while (> arg 0)
+      (when (eq (char-before) ?!) (backward-char))
+      (re-search-forward "\\(?:\\sw\\|\\s_\\|!.\\)+" nil t)
+      ;; If this has found an integer then it may be part of a
+      ;; float, in which case move to the end of the float:
+      (when (string-match "\\`[[:digit:]]*\\'"
+                          (match-string-no-properties 0))
+        (re-search-forward "\\=\\(?:\\.[[:digit:]]*\\)?\
+\\(?:[eE][+-]?[[:digit:]]+\\)?" nil t))
+      (setq arg (1- arg)))))
+
+(defun reduce-backward-word (arg)
+  "Move backwards to the next beginning of an identifier or number.
+This applies within comments.  An identifier is a letter or escape
+sequence followed by one or more alphanumeric characters or underscores
+or escape sequences; an escape sequence is ‘!’ followed by any
+character.  A number is an integer or a float, which may include a
+positive or negative exponent.  With prefix argument ARG, do it ARG
+times if positive, or move forwards ARG times if negative."
+  ;; cf. ‘forward-symbol’, ‘forward-word’, ‘backward-word’
+  (interactive "p")
+  (if (< arg 0)
+      (reduce-forward-word (- arg))
+    (while (> arg 0)
+      (when (re-search-backward "\\(?:\\sw\\|\\s_\\|!.\\)+" nil t)
+        ;; ‘re-search-backward’ finds the match whose beginning
+        ;; is as close as possible to the starting point,
+        ;; i.e. the shortest, so...
+	(while (or (< (skip-syntax-backward "w_") 0)
+                   (cond ((eq (char-before (1- (point))) ?!)
+                          (backward-char 2) t)
+                         ((eq (char-before) ?!)
+                          (backward-char) t))))
+        ;; Point may be in a number, in which case move to the
+        ;; beginning of the number:
+        (if (string-match "\\`[[:digit:]]*\\(?:[eE][[:digit:]]+\\)?\\'"
+                          (buffer-substring-no-properties
+                           (point) (match-end 0)))
+            (cond ((eq (char-before) ?.)
+                   ;; In a float, e.g. 123.456
+                   (skip-chars-backward "[:digit:]."))
+                  ((memq (char-after) '(?e ?E))
+                   ;; In a float, e.g. 123.456e78
+                   (skip-chars-backward "[:digit:]."))
+                  ((and (memq (char-before) '(?+ ?-))
+                        (memq (char-before (1- (point))) '(?e ?E)))
+                   ;; In a float, e.g. 123.456e+78, 123.456e-78
+                   (skip-chars-backward "[:digit:].+-eE")))
+          ;; Otherwise, a number preceding an identifier implies a
+          ;; product, so...
+          (if (looking-at "[eE]?[[:digit:]]+[^[:digit:]]")
+              (skip-chars-forward "eE[:digit:]"))))
+      (setq arg (1- arg)))))
 
 (defun reduce-forward-identifier (arg)
   "Move forwards until encountering the end of an identifier.
