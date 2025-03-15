@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: 6 June 2022 as a separate file (was part of reduce-mode.el)
-;; Time-stamp: <2025-03-13 17:12:30 franc>
+;; Time-stamp: <2025-03-15 15:17:34 franc>
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 
 ;; This file is part of REDUCE IDE.
@@ -528,8 +528,8 @@ which must be done in ‘reduce-mode’."
 
 (defvar reduce-mode-map)                ; defined in reduce-mode.el
 
-(define-key-after (lookup-key reduce-mode-map [menu-bar REDUCE])
-  [Fontification] (cons "Syntax Highlighting" reduce-fontification-submenu)
+(keymap-set-after (keymap-lookup reduce-mode-map "<menu-bar> <REDUCE>")
+  "<Fontification>" (cons "Syntax Highlighting" reduce-fontification-submenu)
   t)
 
 (defun reduce-font-lock--change (level)
@@ -580,8 +580,9 @@ their names should not be taken too literally!")
   (add-to-list 'font-lock-extend-region-functions
                #'reduce-font-lock--extend-region-for-comment-statement)
   (reduce-font-lock--level)             ; for font-lock menu
-  (define-key-after (lookup-key reduce-run-mode-map [menu-bar Run\ REDUCE])
-    [Fontification] (cons "Syntax Highlighting" reduce-fontification-submenu)
+  (keymap-set-after
+    (keymap-lookup reduce-run-mode-map "<menu-bar> <Run\ REDUCE>")
+    "<Fontification>" (cons "Syntax Highlighting" reduce-fontification-submenu)
     t))
 
 (defconst reduce-font-lock--run-keywords-0

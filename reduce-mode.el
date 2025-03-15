@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1992
-;; Time-stamp: <2025-03-13 17:10:40 franc>
+;; Time-stamp: <2025-03-15 16:53:10 franc>
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.13.1
 ;; Package-Requires: (cl-lib)
@@ -340,38 +340,38 @@ Run mode when used; if it is nil then do nothing."
 
 (defvar reduce-mode-map
   (let ((map (make-sparse-keymap)))
-    ;; (define-key map ">" 'reduce-self-insert-and-blink-matching-group-open)
-    (define-key map "\C-j" 'reindent-then-newline-and-indent)
-    (define-key map "\M-i" 'reduce-indent-line)
-    (define-key map [(control tab)] 'reduce-indent-line-always)
-    (define-key map [backtab] 'reduce-unindent-line) ; [(shift tab)]
-    ;; (define-key map [del] 'backward-delete-char-untabify)
-    (define-key map "\C-c\C-n" 'reduce-forward-statement)
-    (define-key map "\C-c\C-p" 'reduce-backward-statement)
-    (define-key map "\C-c\C-d" 'reduce-down-block-or-group)
-    (define-key map "\C-c\C-u" 'reduce-up-block-or-group)
-    (define-key map "\C-c\C-k" 'reduce-kill-statement)
-    (define-key map "\C-\M-f" 'reduce-forward-sexp)
-    (define-key map "\C-\M-b" 'reduce-backward-sexp)
-    (define-key map "\C-\M-k" 'reduce-kill-sexp)
-    (define-key map "\C-\M-e" 'reduce-forward-procedure)
-    (define-key map "\C-\M-a" 'reduce-backward-procedure)
-    (define-key map "\C-\M-h" 'reduce-mark-procedure)
-    (define-key map "\C-xnd" 'reduce-narrow-to-procedure)
-    (define-key map "\C-ck" 'reduce-kill-procedure)
-    ;; (define-key map "\C-\M-\\" 'reduce-indent-region)
-    (define-key map "\C-\M-q" 'reduce-indent-procedure)
-    (define-key map "\C-c;" 'reduce-comment-region)
-    (define-key map "\C-c:" 'reduce-comment-procedure)
-    (define-key map "\M-q" 'reduce-fill-comment)
-    (define-key map "\C-ci" 'reduce-insert-if-then)
-    (define-key map "\C-cb" 'reduce-insert-block)
-    (define-key map "\C-c<" 'reduce-insert-group)
-    (define-key map "\C-\M-l" 'reduce-reposition-window)
-    (define-key map "\C-\M-i" 'reduce-complete-symbol)
-    (define-key map [?\C-c (tab)] 'reduce-complete-symbol)
+    ;; (keymap-set map ">" 'reduce-self-insert-and-blink-matching-group-open)
+    (keymap-set map "C-j" 'reindent-then-newline-and-indent)
+    (keymap-set map "M-i" 'reduce-indent-line)
+    (keymap-set map "C-TAB" 'reduce-indent-line-always)
+    (keymap-set map "S-TAB" 'reduce-unindent-line)
+    ;; (keymap-set map "DEL" 'backward-delete-char-untabify)
+    (keymap-set map "C-c C-n" 'reduce-forward-statement)
+    (keymap-set map "C-c C-p" 'reduce-backward-statement)
+    (keymap-set map "C-c C-d" 'reduce-down-block-or-group)
+    (keymap-set map "C-c C-u" 'reduce-up-block-or-group)
+    (keymap-set map "C-c C-k" 'reduce-kill-statement)
+    (keymap-set map "C-M-f" 'reduce-forward-sexp)
+    (keymap-set map "C-M-b" 'reduce-backward-sexp)
+    (keymap-set map "C-M-k" 'reduce-kill-sexp)
+    (keymap-set map "C-M-e" 'reduce-forward-procedure)
+    (keymap-set map "C-M-a" 'reduce-backward-procedure)
+    (keymap-set map "C-M-h" 'reduce-mark-procedure)
+    (keymap-set map "C-x n d" 'reduce-narrow-to-procedure)
+    (keymap-set map "C-c k" 'reduce-kill-procedure)
+    ;; (keymap-set map "C-M-\\" 'reduce-indent-region) ; via indent-region
+    (keymap-set map "C-M-q" 'reduce-indent-procedure)
+    (keymap-set map "C-c ;" 'reduce-comment-region)
+    (keymap-set map "C-c :" 'reduce-comment-procedure)
+    (keymap-set map "M-q" 'reduce-fill-comment)
+    (keymap-set map "C-c i" 'reduce-insert-if-then)
+    (keymap-set map "C-c b" 'reduce-insert-block)
+    (keymap-set map "C-c <" 'reduce-insert-group)
+    (keymap-set map "C-M-l" 'reduce-reposition-window)
+    (keymap-set map "C-M-i" 'reduce-complete-symbol)
+    (keymap-set map "C-c TAB" 'reduce-complete-symbol)
                                         ; since C-M-i used by flyspell
-    (define-key map [(meta R)] 'run-reduce)
+    (keymap-set map "M-S-R" 'run-reduce)
     map)
   "Keymap for REDUCE mode.")
 
@@ -466,7 +466,7 @@ updated when REDUCE Run is loaded."
     "--"
     ("Find / Tag"
      ["Add “Index” Menu" (reduce--imenu-add-menubar-index t)
-      :active (not reduce--imenu-added)
+      :visible (not reduce--imenu-added)
       :help "Show an imenu of procedures, operators and variables"]
      "--"
      ["Find Tag…" xref-find-definitions
@@ -489,9 +489,10 @@ updated when REDUCE Run is loaded."
      :help "Insert a ‘group’ template"]
     "--"
     ["Indent Region" reduce-indent-region :active mark-active
+     :keys "C-M-\\"
      :help "Re-indent the current region"]
     ["Indent Buffer" (reduce-indent-region (point-min) (point-max))
-     :keys "C-u M-C-\\"
+     :keys "C-u C-M-\\"
      :help "Re-indent the current buffer"]
     "--"
     ["Read the Manual" (info "reduce-ide" "*REDUCE IDE*")
@@ -2346,9 +2347,9 @@ But don't jump out of the current procedure!"
 
 (defconst reduce--show-proc-keymap
   (let ((map (make-sparse-keymap)))
-    (define-key map [mode-line mouse-1] #'reduce--show-proc-beginning)
-    (define-key map [mode-line mouse-2] #'reduce--show-proc-toggle-alone)
-    (define-key map [mode-line mouse-3] #'reduce--show-proc-end)
+    (keymap-set map "<mode-line> <mouse-1>" #'reduce--show-proc-beginning)
+    (keymap-set map "<mode-line> <mouse-2>" #'reduce--show-proc-toggle-alone)
+    (keymap-set map "<mode-line> <mouse-3>" #'reduce--show-proc-end)
     map)
   "Mouse menu keymap for the procedure name in the mode line.")
 

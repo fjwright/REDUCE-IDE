@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1998
-;; Time-stamp: <2025-03-13 17:13:07 franc>
+;; Time-stamp: <2025-03-15 16:31:03 franc>
 ;; Keywords: languages, processes
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 
@@ -271,31 +271,31 @@ It is a good place to put keybindings."
 (defun reduce-run--add-common-keys-to-map (map)
   "Add common key bindings to keymap MAP.
 Bindings are common to REDUCE mode and REDUCE Run mode."
-  (define-key map "\C-x\C-e" 'reduce-eval-last-statement) ; Emacs convention
-  (define-key map "\C-c\C-\M-e" 'reduce-eval-line)
-  (define-key map "\C-c\C-f" 'reduce-input-file)
-  (define-key map "\C-c\C-\M-l" 'reduce-load-package)
-  (define-key map "\C-c\C-\M-c" 'reduce-compile-file)
-  (define-key map "\C-c\C-\M-f" 'reduce-run-file))
+  (keymap-set map "C-x C-e" 'reduce-eval-last-statement) ; Emacs convention
+  (keymap-set map "C-c C-M-e" 'reduce-eval-line)
+  (keymap-set map "C-c C-f" 'reduce-input-file)
+  (keymap-set map "C-c C-M-l" 'reduce-load-package)
+  (keymap-set map "C-c C-M-c" 'reduce-compile-file)
+  (keymap-set map "C-c C-M-f" 'reduce-run-file))
 
 (defvar reduce-run-mode-map
   (let ((map (make-sparse-keymap)))
-    (define-key map "\r" 'reduce-run-send-input)
-    (define-key map [(shift return)] 'comint-send-input)
+    (keymap-set map "RET" 'reduce-run-send-input)
+    (keymap-set map "S-RET" 'comint-send-input)
     (reduce-run--add-common-keys-to-map map)
-    (define-key map "\M-\t" 'reduce-complete-symbol)
-    (define-key map "\C-c\t" 'reduce-complete-symbol)
+    (keymap-set map "M-TAB" 'reduce-complete-symbol)
+    (keymap-set map "C-c TAB" 'reduce-complete-symbol)
                                         ; since C-M-i used by flyspell
     map))
 
 ;; These commands augment REDUCE mode, so you can process REDUCE
 ;; code in file editing buffers.
-(define-key reduce-mode-map "\C-\M-x"  'reduce-eval-proc) ; Emacs convention
-(define-key reduce-mode-map "\C-c\C-r" 'reduce-eval-region)
-(define-key reduce-mode-map "\C-c\C-\M-b" 'reduce-run-buffer)
+(keymap-set reduce-mode-map "C-M-x"  'reduce-eval-proc) ; Emacs convention
+(keymap-set reduce-mode-map "C-c C-r" 'reduce-eval-region)
+(keymap-set reduce-mode-map "C-c C-M-b" 'reduce-run-buffer)
 (reduce-run--add-common-keys-to-map reduce-mode-map)
-(define-key reduce-mode-map "\C-c\C-z" 'switch-to-reduce)
-(define-key reduce-mode-map "\M-R" 'run-reduce)
+(keymap-set reduce-mode-map "C-c C-z" 'switch-to-reduce)
+(keymap-set reduce-mode-map "M-S-R" 'run-reduce)
 
 (easy-menu-define                       ; (symbol maps doc menu)
   nil
@@ -318,17 +318,17 @@ Bindings are common to REDUCE mode and REDUCE Run mode."
 updates autoload version when this file is loaded."
   reduce-mode--run-menu1)
 
-(let ((keymap (lookup-key reduce-mode-map [menu-bar]))
+(let ((keymap (keymap-lookup reduce-mode-map "<menu-bar>"))
       (definition (cons "Run REDUCE" reduce-mode--run-menu)))
   ;; Redefine the REDUCE Mode Run menu autoload version if it exists:
-  (if (lookup-key keymap [run\ reduce])
-      (define-key keymap
-        [run\ reduce]                   ; MUST be lower case!
-        definition)
+  (if (keymap-lookup keymap "<run\ reduce>")
+      (keymap-set keymap
+                  "<run\ reduce>"       ; MUST be lower case!
+                  definition)
     ;; Otherwise, put the REDUCE Mode Run menu on the menu bar AFTER
     ;; the REDUCE menu:
-    (define-key-after keymap
-      [Run\ REDUCE]
+    (keymap-set-after keymap
+      "<Run\ REDUCE>"
       definition 'REDUCE)))
 
 
