@@ -4,9 +4,9 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1992
-;; Time-stamp: <2025-03-15 16:53:10 franc>
+;; Time-stamp: <2025-03-15 18:22:09 franc>
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
-;; Package-Version: 1.13.1
+;; Package-Version: 1.13.2
 ;; Package-Requires: (cl-lib)
 
 ;; This file is part of REDUCE IDE.
@@ -465,7 +465,9 @@ updated when REDUCE Run is loaded."
      :help "Kill the current procedure"]
     "--"
     ("Find / Tag"
-     ["Add “Index” Menu" (reduce--imenu-add-menubar-index t)
+     ;; ["Add “Index” Menu" (reduce--imenu-add-menubar-index t)
+     ;; The line above leads to a mangled reduce-mode-map!
+     ["Add Index Menu" (reduce--imenu-add-menubar-index t)
       :visible (not reduce--imenu-added)
       :help "Show an imenu of procedures, operators and variables"]
      "--"
@@ -477,8 +479,7 @@ updated when REDUCE Run is loaded."
      ["Tag Directory…" reduce-tagify-dir
       :help "Tag REDUCE files in selected directory"]
      ["Tag Dir & Subdirs…" reduce-tagify-dir-recursively
-      :help "Tag REDUCE files under selected directory"]
-     )
+      :help "Tag REDUCE files under selected directory"])
     "--"
     "Templates:"
     ["Insert If-Then" reduce-insert-if-then
