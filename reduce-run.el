@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1998
-;; Time-stamp: <2025-03-15 16:31:03 franc>
+;; Time-stamp: <2025-03-16 17:23:29 franc>
 ;; Keywords: languages, processes
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 
@@ -321,14 +321,24 @@ updates autoload version when this file is loaded."
 (let ((keymap (keymap-lookup reduce-mode-map "<menu-bar>"))
       (definition (cons "Run REDUCE" reduce-mode--run-menu)))
   ;; Redefine the REDUCE Mode Run menu autoload version if it exists:
-  (if (keymap-lookup keymap "<run\ reduce>")
-      (keymap-set keymap
-                  "<run\ reduce>"       ; MUST be lower case!
-                  definition)
+  ;; This code using new keymap functions fails!
+  ;; (if (keymap-lookup keymap "<run\ reduce>")
+  ;;     (keymap-set keymap
+  ;;                 "<run\ reduce>"       ; MUST be lower case!
+  ;;                 definition)
+  ;;   ;; Otherwise, put the REDUCE Mode Run menu on the menu bar AFTER
+  ;;   ;; the REDUCE menu:
+  ;;   (keymap-set-after keymap
+  ;;     "<Run\ REDUCE>"
+  ;;     definition 'REDUCE)))
+  (if (lookup-key keymap [run\ reduce])
+      (define-key keymap
+        [run\ reduce]                   ; MUST be lower case!
+        definition)
     ;; Otherwise, put the REDUCE Mode Run menu on the menu bar AFTER
     ;; the REDUCE menu:
-    (keymap-set-after keymap
-      "<Run\ REDUCE>"
+    (define-key-after keymap
+      [Run\ REDUCE]
       definition 'REDUCE)))
 
 
