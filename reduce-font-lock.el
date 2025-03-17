@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: 6 June 2022 as a separate file (was part of reduce-mode.el)
-;; Time-stamp: <2025-03-17 12:11:25 franc>
+;; Time-stamp: <2025-03-17 16:04:55 franc>
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 
 ;; This file is part of REDUCE IDE.
@@ -66,6 +66,10 @@ literally!")
 
 (defconst reduce-font-lock--keywords-0 nil
   "Highlight strings and syntactic comments only – no keywords.")
+
+(defvar font-lock-defaults)             ; defined in ‘font-core.el’
+(defvar font-lock-multiline)            ; defined in ‘font-lock.el’
+(defvar font-lock-maximum-decoration)   ; defined in ‘font-lock.el’
 
 (defun reduce-font-lock-mode ()
   "Set up font-lock mode.  Called in ‘reduce-mode’."

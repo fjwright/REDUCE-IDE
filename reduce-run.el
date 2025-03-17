@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1998
-;; Time-stamp: <2025-03-17 15:42:14 franc>
+;; Time-stamp: <2025-03-17 16:57:31 franc>
 ;; Keywords: languages, processes
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 
@@ -845,7 +845,9 @@ using the (buffer-local) value of ‘reduce-root-dir-file-name’."
                         (mapcar
                          #'(lambda (x) (symbol-name (car x)))
                          packages)
-                        packages (sort packages #'string<)
+                        packages
+                        (sort packages :lessp #'string< :in-place t)
+                        ;; was (sort packages #'string<) => in place
                         reduce-run--package-completion-alist
                         (mapcar #'list packages))))))))))
 

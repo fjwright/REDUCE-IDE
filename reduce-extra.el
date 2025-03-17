@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: September 2024
-;; Time-stamp: <2025-03-13 17:30:02 franc>
+;; Time-stamp: <2025-03-17 16:00:51 franc>
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 
 ;; This file is part of REDUCE IDE.
@@ -204,6 +204,10 @@ character of the identifier or number."
             'reduce-mark-block-or-group)
 (keymap-set reduce-mode-map "C-c <space>"
             'reduce-mark-block-or-group)
+
+(defvar reduce-mode)                    ; defined in ‘reduce-mode.el’
+(defvar reduce-run-mode)                ; defined in ‘reduce-run.el’
+(defvar mouse-select-region-move-to-beginning) ; defined in ‘mouse.el’
 
 (defun reduce-mark-block-or-group (arg event)
   "Select the block or group beginning or ending at EVENT or point.

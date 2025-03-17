@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1992
-;; Time-stamp: <2025-03-17 11:54:43 franc>
+;; Time-stamp: <2025-03-17 16:45:56 franc>
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.13.2
 ;; Package-Requires: (cl-lib)
@@ -271,6 +271,8 @@ controlled by the standard Emacs Font Lock facilities."
   :link '(custom-manual "(reduce-ide)Font-Lock")
   :group 'reduce-display)
 
+(defvar show-paren-mode)                ; defined in ‘paren.el’
+
 (defcustom reduce-show-delim-mode-on show-paren-mode
   "If non-nil then turn on REDUCE Show Delim mode automatically.
 REDUCE Show Delim mode displays highlighting on whatever group or
@@ -407,6 +409,7 @@ Run mode when used; if it is nil then do nothing."
 ;; REDUCE-run menu bar and pop-up menu autoload version
 ;; Must be defined before reduce-mode-menu so as to be displayed after!
 (when (eq reduce-run-autoload 'menu)
+  ;; Lint complains about unbound symbol ‘menu-item’ below!
   (defun reduce-mode--run-menu-item-autoload (menu-item)
     "Load Run mode and then run MENU-ITEM."
     (and (require 'reduce-run) (call-interactively menu-item)))
@@ -562,6 +565,8 @@ updated when REDUCE Run is loaded."
 
 (declare-function reduce-font-lock-mode "reduce-font-lock" ())
 (declare-function reduce-show-delim-mode "reduce-delim" ())
+(defvar imenu-create-index-function)    ; defined in ‘imenu.el’
+(defvar comment-column)                 ; defined in ‘newcomment.el’
 
 ;;;###autoload
 (define-derived-mode reduce-mode prog-mode "REDUCE"
@@ -968,7 +973,7 @@ header onto subsequent lines, in which case return
                ;; Check start not within procedure body:
                (reduce-forward-statement 2)
                (when (> start (point)) 0)))))
-      (t nil))))
+      (t nil))))                 ; Lint complains about use of t here!
 
 (defconst reduce--label-or-end-regexp
   ;; "[^:\n]+:[^=]\\|\\_<end\\_>"
@@ -1836,7 +1841,8 @@ return ‘point’; otherwise throw a user error."
            ((and (looking-at "\\s\(\\|\"") (reduce--unescaped-p))
             (forward-sexp))
            ((looking-at "'?\\_<\\|'\\s\(") (forward-sexp))
-           (t (user-error ""))))
+           (t (user-error "End of sexp not found"))))
+      ;; Lint complains about use of t below!
       (t (reduce--move-error start "next"))))
   (point))
 
@@ -1867,7 +1873,8 @@ return ‘point’; otherwise throw a user error."
            ((and (looking-back "\\s\)\\|\"" nil) (reduce--unescaped-p (1- (point))))
             (backward-sexp))
            ((looking-back "\\_>" nil) (backward-sexp))
-           (t (user-error ""))))
+           (t (user-error "Start of sexp not found"))))
+      ;; Lint complains about use of t below!
       (t (reduce--move-error start "previous"))))
   (point))
 
@@ -2108,6 +2115,9 @@ If NOSPLIT is non-nil then put OPEN and CLOSE on the same line."
 ;;;; *************************************
 ;;;; Support for matching group delimiters
 ;;;; *************************************
+
+(defvar blink-matching-paren)           ; defined in ‘simple.el’
+(defvar blink-matching-paren-distance)  ; defined in ‘simple.el’
 
 (defun reduce-self-insert-and-blink-matching-group-open ()
   "Insert character and then blink matching group opening construct."
@@ -2564,6 +2574,8 @@ file goes in DIR, which by default is the current directory."
     (reduce--tagify
      dir (reduce--directory-files-recursively dir depth)
      (message "Tagging files ‘%s/…*.red’ to depth %s…" dir depth))))
+
+(defvar directory-files-no-dot-files-regexp) ; defined in ‘files.el’
 
 (defun reduce--directory-files-recursively (dir depth)
   "Return a list of ‘*.red’ files under directory DIR to specified DEPTH.

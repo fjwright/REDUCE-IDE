@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: 22 March 2018
-;; Time-stamp: <2025-03-13 17:12:04 franc>
+;; Time-stamp: <2025-03-17 15:55:39 franc>
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 
 ;; This file is part of REDUCE IDE.
@@ -250,6 +250,8 @@ Return t if successful; otherwise move as far as possible and return nil."
 Return t if successful; otherwise move as far as possible and return nil."
   (goto-char (- pos 3))
   (reduce--backward-block))
+
+(defvar blink-matching-paren-distance)  ; defined in ‘simple.el’
 
 (defun reduce-show-delim--data-function ()
   "Find the opening/closing delimiter “near” point and its match.
