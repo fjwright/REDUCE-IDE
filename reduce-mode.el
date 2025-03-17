@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1992
-;; Time-stamp: <2025-03-17 11:14:04 franc>
+;; Time-stamp: <2025-03-17 11:54:43 franc>
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.13.2
 ;; Package-Requires: (cl-lib)
@@ -338,42 +338,38 @@ Run mode when used; if it is nil then do nothing."
 ;; reserved for major modes, but do not bind C-c C-g (cancel) or C-c
 ;; C-h (help).
 
-(defvar reduce-mode-map
-  (let ((map (make-sparse-keymap)))
-    ;; (keymap-set map ">" 'reduce-self-insert-and-blink-matching-group-open)
-    (keymap-set map "C-j" 'reindent-then-newline-and-indent)
-    (keymap-set map "M-i" 'reduce-indent-line)
-    (keymap-set map "C-TAB" 'reduce-indent-line-always)
-    (keymap-set map "S-TAB" 'reduce-unindent-line)
-    ;; (keymap-set map "DEL" 'backward-delete-char-untabify)
-    (keymap-set map "C-c C-n" 'reduce-forward-statement)
-    (keymap-set map "C-c C-p" 'reduce-backward-statement)
-    (keymap-set map "C-c C-d" 'reduce-down-block-or-group)
-    (keymap-set map "C-c C-u" 'reduce-up-block-or-group)
-    (keymap-set map "C-c C-k" 'reduce-kill-statement)
-    (keymap-set map "C-M-f" 'reduce-forward-sexp)
-    (keymap-set map "C-M-b" 'reduce-backward-sexp)
-    (keymap-set map "C-M-k" 'reduce-kill-sexp)
-    (keymap-set map "C-M-e" 'reduce-forward-procedure)
-    (keymap-set map "C-M-a" 'reduce-backward-procedure)
-    (keymap-set map "C-M-h" 'reduce-mark-procedure)
-    (keymap-set map "C-x n d" 'reduce-narrow-to-procedure)
-    (keymap-set map "C-c k" 'reduce-kill-procedure)
-    ;; (keymap-set map "C-M-\\" 'reduce-indent-region) ; via indent-region
-    (keymap-set map "C-M-q" 'reduce-indent-procedure)
-    (keymap-set map "C-c ;" 'reduce-comment-region)
-    (keymap-set map "C-c :" 'reduce-comment-procedure)
-    (keymap-set map "M-q" 'reduce-fill-comment)
-    (keymap-set map "C-c i" 'reduce-insert-if-then)
-    (keymap-set map "C-c b" 'reduce-insert-block)
-    (keymap-set map "C-c <" 'reduce-insert-group)
-    (keymap-set map "C-M-l" 'reduce-reposition-window)
-    (keymap-set map "C-M-i" 'reduce-complete-symbol)
-    (keymap-set map "C-c TAB" 'reduce-complete-symbol)
-                                        ; since C-M-i used by flyspell
-    (keymap-set map "M-R" 'run-reduce)
-    map)
-  "Keymap for REDUCE mode.")
+(defvar-keymap reduce-mode-map
+  :doc "Keymap for REDUCE mode."
+  ;; ">" #'reduce-self-insert-and-blink-matching-group-open
+  "C-j" #'reindent-then-newline-and-indent
+  "M-i" #'reduce-indent-line
+  "C-TAB" #'reduce-indent-line-always
+  "S-TAB" #'reduce-unindent-line
+  "C-c C-n" #'reduce-forward-statement
+  "C-c C-p" #'reduce-backward-statement
+  "C-c C-d" #'reduce-down-block-or-group
+  "C-c C-u" #'reduce-up-block-or-group
+  "C-c C-k" #'reduce-kill-statement
+  "C-M-f" #'reduce-forward-sexp
+  "C-M-b" #'reduce-backward-sexp
+  "C-M-k" #'reduce-kill-sexp
+  "C-M-e" #'reduce-forward-procedure
+  "C-M-a" #'reduce-backward-procedure
+  "C-M-h" #'reduce-mark-procedure
+  "C-x n d" #'reduce-narrow-to-procedure
+  "C-c k" #'reduce-kill-procedure
+  ;; "C-M-\\" #'reduce-indent-region       ; via indent-region
+  "C-M-q" #'reduce-indent-procedure
+  "C-c ;" #'reduce-comment-region
+  "C-c :" #'reduce-comment-procedure
+  "M-q" #'reduce-fill-comment
+  "C-c i" #'reduce-insert-if-then
+  "C-c b" #'reduce-insert-block
+  "C-c <" #'reduce-insert-group
+  "C-M-l" #'reduce-reposition-window
+  "C-M-i" #'reduce-complete-symbol
+  "C-c TAB" #'reduce-complete-symbol    ; since C-M-i used by flyspell
+  "M-R" #'run-reduce)
 
 (defconst reduce-mode--run-menu2
   '(["Run File…" reduce-run-file

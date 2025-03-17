@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: 6 June 2022 as a separate file (was part of reduce-mode.el)
-;; Time-stamp: <2025-03-17 11:04:52 franc>
+;; Time-stamp: <2025-03-17 12:11:25 franc>
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 
 ;; This file is part of REDUCE IDE.
@@ -500,7 +500,10 @@ which must be done in ‘reduce-mode’."
            ((eq level t) reduce-font-lock--level-max) ; t means max
            (t 0)))))                ; nil means 0
 
-(defconst reduce-font-lock--submenu
+(easy-menu-define                       ; (symbol maps doc menu)
+  reduce--fontification-submenu
+  nil
+  "REDUCE Fontification Submenu."
   '("Syntax Highlighting"
     ["In Current Buffer" font-lock-mode
      :style toggle :selected font-lock-mode :active t]
@@ -520,15 +523,9 @@ which must be done in ‘reduce-mode’."
      :style radio :selected (eq reduce-font-lock--level 0) :active t
      :help "Strings, syntactic comments, warnings, errors and trace output only"]))
 
-(easy-menu-define                       ; (symbol maps doc menu)
-  reduce--fontification-submenu
-  nil
-  "REDUCE Fontification Submenu."
-  reduce-font-lock--submenu)
-
 (defvar reduce-mode-map)                ; defined in reduce-mode.el
 
-(keymap-set-after (keymap-lookup reduce-mode-map "<menu-bar> <REDUCE>")
+(keymap-set-after (keymap-lookup reduce-mode-map "<menu-bar> <reduce>")
   "<Fontification>" (cons "Syntax Highlighting" reduce--fontification-submenu)
   t)
 
@@ -580,12 +577,9 @@ their names should not be taken too literally!")
   (add-to-list 'font-lock-extend-region-functions
                #'reduce-font-lock--extend-region-for-comment-statement)
   (reduce-font-lock--level)             ; for font-lock menu
-  ;; The following code using new keymap functions fails:
-  ;; (keymap-set-after
-  ;;   (keymap-lookup reduce-run-mode-map "<menu-bar> <Run\ REDUCE>")
-  ;;   "<Fontification>" (cons "Syntax Highlighting" reduce--fontification-submenu)
-  (define-key-after (lookup-key reduce-run-mode-map [menu-bar reduce])
-    [Fontification] (cons "Syntax Highlighting" reduce--fontification-submenu)
+  (keymap-set-after
+    (keymap-lookup reduce-run-mode-map "<menu-bar> <reduce>")
+    "<Fontification>" (cons "Syntax Highlighting" reduce--fontification-submenu)
     t))
 
 (defconst reduce-font-lock--run-keywords-0
