@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1998
-;; Time-stamp: <2025-03-16 17:23:29 franc>
+;; Time-stamp: <2025-03-17 10:54:21 franc>
 ;; Keywords: languages, processes
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 
@@ -301,7 +301,7 @@ Bindings are common to REDUCE mode and REDUCE Run mode."
   nil
   reduce-run-mode-map
   "REDUCE Run Menu."
-  `("Run REDUCE"
+  `("REDUCE"
     ["(Re)Run REDUCE" rerun-reduce
      :help "Stop REDUCE if running in this buffer, then (re)start it"]
     ,@reduce-mode--run-menu2
@@ -318,9 +318,10 @@ Bindings are common to REDUCE mode and REDUCE Run mode."
 updates autoload version when this file is loaded."
   reduce-mode--run-menu1)
 
+;; Update or add the REDUCE mode Run menu.
 (let ((keymap (keymap-lookup reduce-mode-map "<menu-bar>"))
-      (definition (cons "Run REDUCE" reduce-mode--run-menu)))
-  ;; Redefine the REDUCE Mode Run menu autoload version if it exists:
+      (definition (cons "Run-REDUCE" reduce-mode--run-menu)))
+  ;; Redefine the REDUCE mode Run menu autoload version if it exists:
   ;; This code using new keymap functions fails!
   ;; (if (keymap-lookup keymap "<run\ reduce>")
   ;;     (keymap-set keymap
@@ -331,14 +332,14 @@ updates autoload version when this file is loaded."
   ;;   (keymap-set-after keymap
   ;;     "<Run\ REDUCE>"
   ;;     definition 'REDUCE)))
-  (if (lookup-key keymap [run\ reduce])
+  (if (lookup-key keymap [run-reduce])
       (define-key keymap
-        [run\ reduce]                   ; MUST be lower case!
+        [run-reduce]                   ; MUST be lower case!
         definition)
     ;; Otherwise, put the REDUCE Mode Run menu on the menu bar AFTER
     ;; the REDUCE menu:
     (define-key-after keymap
-      [Run\ REDUCE]
+      [Run-REDUCE]
       definition 'REDUCE)))
 
 

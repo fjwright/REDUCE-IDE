@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1992
-;; Time-stamp: <2025-03-17 09:16:13 franc>
+;; Time-stamp: <2025-03-17 11:14:04 franc>
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.13.2
 ;; Package-Requires: (cl-lib)
@@ -371,7 +371,7 @@ Run mode when used; if it is nil then do nothing."
     (keymap-set map "C-M-i" 'reduce-complete-symbol)
     (keymap-set map "C-c TAB" 'reduce-complete-symbol)
                                         ; since C-M-i used by flyspell
-    (keymap-set map "M-S-R" 'run-reduce)
+    (keymap-set map "M-R" 'run-reduce)
     map)
   "Keymap for REDUCE mode.")
 
@@ -388,7 +388,7 @@ Run mode when used; if it is nil then do nothing."
     "--"))
 
 (defconst reduce-mode--run-menu1
-  `("Run REDUCE"
+  `("Run-REDUCE"
     ["Run REDUCE" run-reduce
      :help "Start a new REDUCE process if necessary"]
     ["Run Buffer" reduce-run-buffer
@@ -417,7 +417,7 @@ Run mode when used; if it is nil then do nothing."
   (easy-menu-define                     ; (symbol maps doc menu)
     nil
     reduce-mode-map
-    "REDUCE Mode Run Menu autoload version -- \
+    "REDUCE mode Run Menu autoload version -- \
 updated when REDUCE Run is loaded."
     (cons (car reduce-mode--run-menu1)
           (mapcar (lambda (v) ; make menu item autoload run mode
