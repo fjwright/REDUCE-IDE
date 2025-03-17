@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1998
-;; Time-stamp: <2025-03-17 16:57:31 franc>
+;; Time-stamp: <2025-03-17 17:23:00 franc>
 ;; Keywords: languages, processes
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 
@@ -319,7 +319,7 @@ updates autoload version when this file is loaded."
 
 ;; Update or add the REDUCE mode Run menu:
 (let ((keymap (keymap-lookup reduce-mode-map "<menu-bar>"))
-      (definition (cons "Run-REDUCE" reduce-mode--run-menu))) ; ???
+      (definition (cons "Run-REDUCE" reduce-mode--run-menu)))
   ;; Redefine the REDUCE mode Run menu autoload version if it exists:
   (if (keymap-lookup keymap "<run-reduce>")
       (keymap-set keymap "<run-reduce>" definition)

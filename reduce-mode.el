@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1992
-;; Time-stamp: <2025-03-17 16:45:56 franc>
+;; Time-stamp: <2025-03-17 17:32:58 franc>
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.13.2
 ;; Package-Requires: (cl-lib)
@@ -419,14 +419,16 @@ Run mode when used; if it is nil then do nothing."
     "REDUCE mode Run Menu autoload version -- \
 updated when REDUCE Run is loaded."
     (cons (car reduce-mode--run-menu1)
-          (mapcar (lambda (v) ; make menu item autoload run mode
-                    (if (and (vectorp v) (symbolp (aref v 1)))
-                        (let ((vv (copy-sequence v)))
-                          (aset vv 1 `(reduce-mode--run-menu-item-autoload
-                                       #',(aref vv 1)))
-                          vv)
-                      v))
-                  (cdr reduce-mode--run-menu1)))))
+          (mapcar
+           (lambda (v)              ; make menu item autoload run mode
+             (if (and (vectorp v) (symbolp (aref v 1))
+                      (not (functionp (aref v 1)))) ; not already defined
+                 (let ((vv (copy-sequence v)))
+                   (aset vv 1 `(reduce-mode--run-menu-item-autoload
+                                #',(aref vv 1)))
+                   vv)
+               v))
+           (cdr reduce-mode--run-menu1)))))
 
 ;; REDUCE-mode menu bar and pop-up menu
 (easy-menu-define                       ; (symbol maps doc menu)

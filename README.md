@@ -59,7 +59,7 @@ Optional:
 ### Version 1.13.2 ###
 
 * Hide the `Add "Index" Menu` menu item if it has already been added, and rename it to `Add Index Menu`.
-* Fix REDUCE mode Run REDUCE menu, and hence _Run Buffer_ etc.
+* Fix REDUCE mode Run REDUCE menu, and hence _Run Buffer_ etc.  Only autoload functions not already autoloaded.
 * Improve some keyboard shortcuts in the _REDUCE_ menu.
 * Fix _Command Mini Help_ menu item to show only commands intended for user access.
 * Rename REDUCE Run mode menu from _Run REDUCE_ to _REDUCE_, and REDUCE mode Run menu from _Run REDUCE_ to _Run-REDUCE_.
