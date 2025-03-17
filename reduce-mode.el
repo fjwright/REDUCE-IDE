@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1992
-;; Time-stamp: <2025-03-16 12:34:02 franc>
+;; Time-stamp: <2025-03-17 09:16:13 franc>
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.13.2
 ;; Package-Requires: (cl-lib)
@@ -498,7 +498,8 @@ updated when REDUCE Run is loaded."
     "--"
     ["Read the Manual" (info "reduce-ide" "*REDUCE IDE*")
      :help "Read the REDUCE IDE manual in Info format"]
-    ["Command Mini Help" (apropos-command "\\`reduce\\|reduce\\'")
+    ["Command Mini Help"
+     (apropos-command "\\`reduce\\(?:-[^-]+\\)*\\'\\|reduce\\'")
      :help "Show a REDUCE IDE active command summary"]
     ["Customize…" (customize-group 'reduce)
      :help "Customize REDUCE IDE"]

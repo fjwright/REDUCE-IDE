@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: 6 June 2022 as a separate file (was part of reduce-mode.el)
-;; Time-stamp: <2025-03-16 17:44:21 franc>
+;; Time-stamp: <2025-03-16 18:16:54 franc>
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 
 ;; This file is part of REDUCE IDE.
@@ -521,7 +521,7 @@ which must be done in ‘reduce-mode’."
      :help "Strings, syntactic comments, warnings, errors and trace output only"]))
 
 (easy-menu-define                       ; (symbol maps doc menu)
-  reduce-fontification-submenu
+  reduce--fontification-submenu
   nil
   "REDUCE Fontification Submenu."
   reduce-font-lock--submenu)
@@ -529,7 +529,7 @@ which must be done in ‘reduce-mode’."
 (defvar reduce-mode-map)                ; defined in reduce-mode.el
 
 (keymap-set-after (keymap-lookup reduce-mode-map "<menu-bar> <REDUCE>")
-  "<Fontification>" (cons "Syntax Highlighting" reduce-fontification-submenu)
+  "<Fontification>" (cons "Syntax Highlighting" reduce--fontification-submenu)
   t)
 
 (defun reduce-font-lock--change (level)
@@ -583,9 +583,9 @@ their names should not be taken too literally!")
   ;; The following code using new keymap functions fails:
   ;; (keymap-set-after
   ;;   (keymap-lookup reduce-run-mode-map "<menu-bar> <Run\ REDUCE>")
-  ;;   "<Fontification>" (cons "Syntax Highlighting" reduce-fontification-submenu)
+  ;;   "<Fontification>" (cons "Syntax Highlighting" reduce--fontification-submenu)
   (define-key-after (lookup-key reduce-run-mode-map [menu-bar Run\ REDUCE])
-    [Fontification] (cons "Syntax Highlighting" reduce-fontification-submenu)
+    [Fontification] (cons "Syntax Highlighting" reduce--fontification-submenu)
     t))
 
 (defconst reduce-font-lock--run-keywords-0
