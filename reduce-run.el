@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1998
-;; Time-stamp: <2025-03-17 17:23:00 franc>
+;; Time-stamp: <2025-03-20 12:38:17 franc>
 ;; Keywords: languages, processes
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 
@@ -732,7 +732,10 @@ buffer."
     (when (get-buffer-process (current-buffer))
       (insert "bye\;")                  ; show termination explicitly!
       (comint-send-input)
-      (sit-for 1))
+      (while (progn
+               (sit-for 1)
+               (get-buffer-process (current-buffer))))
+      (goto-char (point-max)))
     (insert ?\n)
     (let* ((buf-name (buffer-name (current-buffer))) ; "*CMD REDUCE LABEL*"
            (proc-name (substring buf-name 1 -1)) ; "CMD REDUCE LABEL"
