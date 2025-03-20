@@ -68,6 +68,8 @@ Optional:
 ### Version 1.13.3 ###
 
 * Repair the `rerun-reduce` command (again).
+* Fix `reduce-run--wait-for-prompt`.  Sending code to REDUCE before it is running should now work better.
+* Do not treat `!'` as a quote for syntax highlighting.
 
 <!-- Local Variables: -->
 <!-- fill-column: 1000 -->

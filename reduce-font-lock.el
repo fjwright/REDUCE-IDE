@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: 6 June 2022 as a separate file (was part of reduce-mode.el)
-;; Time-stamp: <2025-03-17 16:04:55 franc>
+;; Time-stamp: <2025-03-20 15:57:51 franc>
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 
 ;; This file is part of REDUCE IDE.
@@ -334,11 +334,11 @@ constants (e.g. “pi”).")
       (1 font-lock-variable-name-face)))
 
     ;; Quoted identifiers:
-    (,(concat "'\\(" reduce-identifier-regexp "\\)")
+    (,(concat "\\(?:^\\|[^!]\\)'\\(" reduce-identifier-regexp "\\)")
      (1 font-lock-constant-face))
 
     (;; Quoted lists (arbitrarily nested and multi-line):
-     "'\\(\(\\)"
+     "\\(?:^\\|[^!]\\)'\\(\(\\)"
      (1 font-lock-constant-face)
      ("\\(?:.\\|\n\\)"     ; match anything including \n
       ;; This may be a hack but it seems to work!
