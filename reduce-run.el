@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1998
-;; Time-stamp: <2025-03-20 15:11:18 franc>
+;; Time-stamp: <2025-03-20 15:49:15 franc>
 ;; Keywords: languages, processes
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 
@@ -711,9 +711,7 @@ buffer."
      (reduce-run-autostart
       (unless switch (split-window nil nil t)) ; new window on the right
       (run-reduce)
-      ;; (reduce-run--wait-for-prompt) ; this seems to hang -- why?
-      ;; *** function modified -- may work now! ***
-      ))
+      (reduce-run--wait-for-prompt)))
     ;; Go to the end of the buffer if required:
     (when (and to-eob (not (eobp)))
       (or no-mark (push-mark))
@@ -789,16 +787,20 @@ The user always chooses interactively whether to echo file input."
            (if (y-or-n-p "Echo file input? ") ?\; ?$))))
 
 (defun reduce-run--wait-for-prompt ()
-  "Wait for REDUCE prompt in the current buffer.
-Leave point after the prompt, i.e. at end of buffer.
+  "Wait for a REDUCE prompt in the current buffer.
+After waiting for 10 seconds, throw an error.
+Otherwise, leave point after the prompt, i.e. at end of buffer.
 Assume the current buffer is a REDUCE process buffer!"
-  (while (progn
-           (goto-char (point-max))
-           ;; Unlike ‘beginning-of-line’, forward-line ignores field
-           ;; boundaries (cf. ‘comint-bol’)
-           (forward-line 0)
-           (not (looking-at reduce-run-prompt)))
-    (sit-for 1))
+  (let ((count 10))
+    (while (progn
+             (when (<= (setq count (1- count)) 0)
+               (error "Timeout waiting for REDUCE prompt"))
+             (goto-char (point-max))
+             ;; Unlike ‘beginning-of-line’, forward-line ignores field
+             ;; boundaries (cf. ‘comint-bol’)
+             (forward-line 0)
+             (not (looking-at reduce-run-prompt)))
+      (sit-for 1)))
   (goto-char (point-max)))
 
 (defalias 'reduce-fasl-file 'reduce-compile-file)
