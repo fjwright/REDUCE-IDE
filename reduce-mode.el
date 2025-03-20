@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1992
-;; Time-stamp: <2025-03-20 12:36:15 franc>
+;; Time-stamp: <2025-03-20 15:11:02 franc>
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.13.3
 ;; Package-Requires: (cl-lib)
@@ -373,7 +373,7 @@ Run mode when used; if it is nil then do nothing."
   "C-c TAB" #'reduce-complete-symbol    ; since C-M-i used by flyspell
   "M-R" #'run-reduce)
 
-(defconst reduce-mode--run-menu2
+(defconst reduce--common-run-menu-items
   '(["Run File…" reduce-run-file
      :help "Run selected REDUCE source file in a new REDUCE process"]
     "--"
@@ -383,15 +383,16 @@ Run mode when used; if it is nil then do nothing."
      :help "Load selected REDUCE package into selected REDUCE process"]
     ["Compile File…" reduce-compile-file
      :help "Compile selected REDUCE source file to selected FASL file"]
-    "--"))
+    "--")
+  "List of menu items common to REDUCE mode and REDUCE Run mode.")
 
-(defconst reduce-mode--run-menu1
+(defconst reduce-mode--run-menu-source
   `("Run-REDUCE"
     ["Run REDUCE" run-reduce
      :help "Start a new REDUCE process if necessary"]
     ["Run Buffer" reduce-run-buffer
      :help "Run the current buffer in a new REDUCE process"]
-    ,@reduce-mode--run-menu2
+    ,@reduce--common-run-menu-items
     ["Input Last Statement" reduce-eval-last-statement
      :help "Input the statement before point to a REDUCE process"]
     ["Input Line" reduce-eval-line
@@ -404,9 +405,10 @@ Run mode when used; if it is nil then do nothing."
     ["Switch To REDUCE" switch-to-reduce
      :help "Select and switch to a REDUCE process"]
     ["Customize…" (customize-group 'reduce-run)
-     :help "Customize REDUCE Run mode"]))
+     :help "Customize REDUCE Run mode"])
+  "REDUCE mode Run-REDUCE menu.")
 
-;; REDUCE-run menu bar and pop-up menu autoload version
+;; REDUCE-run menu autoload version
 ;; Must be defined before reduce-mode-menu so as to be displayed after!
 (when (eq reduce-run-autoload 'menu)
   ;; Lint complains about unbound symbol ‘menu-item’ below!
@@ -418,7 +420,7 @@ Run mode when used; if it is nil then do nothing."
     reduce-mode-map
     "REDUCE mode Run Menu autoload version -- \
 updated when REDUCE Run is loaded."
-    (cons (car reduce-mode--run-menu1)
+    (cons (car reduce-mode--run-menu-source)
           (mapcar
            (lambda (v)              ; make menu item autoload run mode
              (if (and (vectorp v) (symbolp (aref v 1))
@@ -428,13 +430,12 @@ updated when REDUCE Run is loaded."
                                 #',(aref vv 1)))
                    vv)
                v))
-           (cdr reduce-mode--run-menu1)))))
+           (cdr reduce-mode--run-menu-source)))))
 
-;; REDUCE-mode menu bar and pop-up menu
 (easy-menu-define                       ; (symbol maps doc menu)
   nil
   reduce-mode-map
-  "REDUCE Mode Menu."
+  "REDUCE mode menu."
   '("REDUCE"
     ["Indent Line" indent-for-tab-command
      :help "Re-indent the current line"]

@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1998
-;; Time-stamp: <2025-03-20 12:38:17 franc>
+;; Time-stamp: <2025-03-20 15:11:18 franc>
 ;; Keywords: languages, processes
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 
@@ -278,7 +278,7 @@ It is a good place to put keybindings."
   `("REDUCE"
     ["(Re)Run REDUCE" rerun-reduce
      :help "Stop REDUCE if running in this buffer, then (re)start it"]
-    ,@reduce-mode--run-menu2            ; defined in reduce-mode.el
+    ,@reduce--common-run-menu-items     ; defined in reduce-mode.el
     ["Customize…" (customize-group 'reduce-run)
      :help "Customize REDUCE Run mode"]
     ["Show Version" reduce-ide-version
@@ -313,9 +313,9 @@ Bindings are common to REDUCE mode and REDUCE Run mode."
 (easy-menu-define                       ; (symbol maps doc menu)
   reduce-mode--run-menu
   nil
-  "REDUCE Mode Run Menu -- \
+  "REDUCE mode Run menu -- \
 updates autoload version when this file is loaded."
-  reduce-mode--run-menu1)               ; defined in reduce-mode.el
+  reduce-mode--run-menu-source)         ; defined in reduce-mode.el
 
 ;; Update or add the REDUCE mode Run menu:
 (let ((keymap (keymap-lookup reduce-mode-map "<menu-bar>"))
