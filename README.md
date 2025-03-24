@@ -70,6 +70,7 @@ Optional:
 * Repair the `rerun-reduce` command (again).
 * Fix `reduce-run--wait-for-prompt`.  Sending code to REDUCE before it is running should now work better.
 * Do not treat `!'` as a quote for syntax highlighting.
+* Introduce new option `reduce-etags-regexps` to allow customization of tagging.  Include `put(‘name, ‘psopfn, …)` and `put(‘name, ‘simpfn, …)`  when searching for procedure names, making it easier to track algebraic-mode functions.  **TO BE ADDED TO THE MANUAL.**
 
 <!-- Local Variables: -->
 <!-- fill-column: 1000 -->

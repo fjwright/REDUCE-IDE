@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1992
-;; Time-stamp: <2025-03-20 15:11:02 franc>
+;; Time-stamp: <2025-03-24 16:21:46 franc>
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.13.3
 ;; Package-Requires: (cl-lib)
@@ -2512,6 +2512,17 @@ If non-nil the string must end with /."
   :link '(custom-manual "(reduce-ide)Tags")
   :group 'reduce-interface)
 
+(defcustom reduce-etags-regexps
+  '("--regex=/[^%]*procedure[ \\t]+\\([^ \\t\(;$]+\\)/\\1/i"
+    "--regex=/[^%]*put[ \\t]*('\
+\\([^,]+\\)[ \\t]*,[ \\t]*'\\(psopfn\\|simpfn\\)/\\1/i")
+  "List of etags regular expressions to find procedure definitions.
+Each item should have the form “--regex=…” and match “procedure name” or
+“put(‘name, ‘psopfn, …)”, “put(‘name, ‘simpfn, …)”."
+  :type '(repeat string)
+  :link '(custom-manual "(emacs)Etags Regexps")
+  :group 'reduce-interface)
+
 (defun reduce-tagify-dir (dir)
   "Generate a REDUCE TAGS file for ‘*.red’ files in directory DIR.
 TAGS goes in DIR, which by default is the current directory."
@@ -2542,8 +2553,9 @@ MSG is the message displayed when the tagging process started."
                  "*rtags-log*"                           ; destination
                  nil                                     ; display
                  "--lang=none"                           ; args …
-                 "--regex=/[^%]*procedure[ \\t]+\\([^ \\t\(;$]+\\)/\\1/i"
-                 files)))             ; LIST of filenames
+                 (append
+                  reduce-etags-regexps
+                  files))))             ; LIST of filenames
           (if (eq value 0)
               (message "%sdone" msg)
             (message "Etags failed with status: %s" value)))
