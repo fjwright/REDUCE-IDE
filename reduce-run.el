@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1998
-;; Time-stamp: <2025-03-20 15:49:15 franc>
+;; Time-stamp: <2025-03-25 17:11:10 franc>
 ;; Keywords: languages, processes
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 
@@ -506,13 +506,18 @@ Return t if successful; otherwise return nil."
 ;;      (kill-buffer buffer-name)
 ;;      nil)))
 
+(defvar-local reduce--package-root-dir-file-name nil
+  "Buffer-local REDUCE root directory file name.
+Used by ‘reduce-run--package-completion-alist’ to locate the “packages”
+directory for the version of REDUCE running in the current buffer.")
+
 (defun reduce-run--run-reduce-1 (cmd process-name buffer-name)
   "Run CMD as REDUCE process PROCESS-NAME in buffer BUFFER-NAME.
-Set the buffer-local value of ‘reduce-root-dir-file-name’ to “root”.
-Return the process buffer if successful; nil otherwise."
+Set the (buffer-local) value of ‘reduce--package-root-dir-file-name’ to
+“root”.  Return the process buffer if successful; nil otherwise."
   (let ((root (reduce-run--run-reduce-2 cmd process-name)))
     (reduce-run-mode)
-    (setq-local reduce-root-dir-file-name root))
+    (setq reduce--package-root-dir-file-name root))
   (pop-to-buffer buffer-name))
 
 (defun reduce-run--run-reduce-2 (cmd process-name)
@@ -830,11 +835,11 @@ It is buffer-local and specific to each version of REDUCE.")
 (defun reduce-run--package-completion-alist ()
   "Return the value of variable ‘reduce-run--package-completion-alist’.
 Build it if necessary by processing \"$reduce/packages/package.map\"
-using the (buffer-local) value of ‘reduce-root-dir-file-name’."
+using the (buffer-local) value of ‘reduce--package-root-dir-file-name’."
   ;; Errors are trapped by customization, so report problems using
   ;; message.
   (or reduce-run--package-completion-alist
-      (let ((dir (concat reduce-root-dir-file-name "/packages/")))
+      (let ((dir (concat reduce--package-root-dir-file-name "/packages/")))
         (if (not (file-accessible-directory-p dir))
             (progn (message "Directory %s is not accessible" dir) nil)
           (let ((package.map (concat dir "package.map")))
