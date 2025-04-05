@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1992
-;; Time-stamp: <2025-03-24 16:21:46 franc>
+;; Time-stamp: <2025-04-05 18:03:53 franc>
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.13.3
 ;; Package-Requires: (cl-lib)
@@ -2046,7 +2046,7 @@ With argument include a correctly indented ‘else’ on a second line."
 Position point inside.
 With argument put ‘begin’ and ‘end’ on the same line
 \(see ‘reduce-insert-block-or-group’)."
-  (interactive "*P")            ; error if buffer read-only
+  (interactive "*P")                    ; error if buffer read-only
   (reduce-insert-block-or-group "begin" "end" t nosplit))
 
 (defun reduce-insert-group (&optional nosplit)
@@ -2054,7 +2054,7 @@ With argument put ‘begin’ and ‘end’ on the same line
 Position point inside.
 With argument put ‘<<’ and ‘>>’ on the same line
 \(see ‘reduce-insert-block-or-group’)."
-  (interactive "*P")            ; error if buffer read-only
+  (interactive "*P")                    ; error if buffer read-only
   (reduce-insert-block-or-group "<<" ">>" nil nosplit))
 
 (defun reduce-insert-block-or-group (open close block nosplit)
@@ -2064,43 +2064,46 @@ if point is not at the end of the line then enclose the rest of the line.
 Leave the mark at the insertion point in the body of a BLOCK.
 If NOSPLIT is non-nil then put OPEN and CLOSE on the same line."
   (let ((region-beginning (and transient-mark-mode mark-active
-                   (region-beginning)))
-    (region-end (and transient-mark-mode mark-active
-             (copy-marker (region-end))))
-    finish-marker)
-    (if region-beginning (goto-char region-beginning))
+                               (region-beginning)))
+        (region-end (and transient-mark-mode mark-active
+                         (copy-marker (region-end))))
+        finish-marker)
+    (when region-beginning (goto-char region-beginning))
+    ;; Indent or space OPEN appropriately:
+    (if (looking-back "^[ \t]*" (pos-bol))
+        (reduce-indent-line)            ; first text on line
+      (delete-horizontal-space)
+      (insert ?\s))
     (insert open)
-    (if block (progn
-        (insert " scalar ")
-        (setq finish-marker (point-marker))
-        (insert ";")))
-    (if (looking-at "[ \t]*$") ()
+    (when block
+      (insert " scalar ")
+      (setq finish-marker (point-marker))
+      (insert ";"))
+    (unless (looking-at "[ \t]*$")
       (if nosplit (insert " ") (newline-and-indent)))
     (if region-end
-    (progn              ; better to indent rigidly?
-      (reduce-indent-region (point) region-end)
-      (goto-char region-end)
-      (if (bolp) (backward-char))
-      (set-marker region-end nil) )
-      (if (looking-at "[ \t]*$") ()
-    ;; (reduce-forward-statement 1)
-    (end-of-line)
-    (setq region-end t)) )
-    (if region-end ()
-      (reduce-indent-line)
-      (if nosplit (insert " ") (newline-and-indent)) )
+        (progn                          ; better to indent rigidly?
+          (reduce-indent-region (point) region-end)
+          (goto-char region-end)
+          (if (bolp) (backward-char))
+          (set-marker region-end nil))
+      (unless (looking-at "[ \t]*$")
+        ;; (reduce-forward-statement 1)
+        (end-of-line)
+        (setq region-end t)))
+    (unless region-end
+      ;; (reduce-indent-line)              ; moved up
+      (if nosplit (insert " ") (newline-and-indent)))
     (if block (push-mark) (setq finish-marker (point-marker)))
     (if nosplit (insert " ") (newline))
     (insert close)
     (if (looking-at "[ \t]*else")
-    (just-one-space)
+        (just-one-space)
       (insert ";")
-      (if (looking-at "[ \t]*$") ()
-    (insert "  ")) )
-    (reduce-indent-line)        ; necessary AFTER inserting close
+      (unless (looking-at "[ \t]*$") (insert "  ")))
+    (reduce-indent-line)             ; necessary AFTER inserting close
     (goto-char finish-marker)
-    (set-marker finish-marker nil)
-    ))
+    (set-marker finish-marker nil)))
 
 ;; If an expansion function interprets an argument then it means that
 ;; the expansion should be kept on one line.  The following are

@@ -72,6 +72,7 @@ Optional:
 * Do not treat `!'` as a quote for syntax highlighting.
 * Introduce new option `reduce-etags-regexps` to allow customization of tagging.  Include `put(‘name, ‘psopfn, …)` and `put(‘name, ‘simpfn, …)`  when searching for procedure names, making it easier to track algebraic-mode functions.  **TO BE ADDED TO THE MANUAL.**
 * Allow REDUCE to be run from a buffer running or having run a different version of REDUCE (with a different root directory).
+* Improve indentation and spacing for insert block and group commands.
 
 <!-- Local Variables: -->
 <!-- fill-column: 1000 -->
