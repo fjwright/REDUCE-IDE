@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1992
-;; Time-stamp: <2025-04-08 16:49:00 franc>
+;; Time-stamp: <2025-04-08 17:14:26 franc>
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.13.3
 ;; Package-Requires: (cl-lib)
@@ -2552,7 +2552,7 @@ reference like ‘\\1’ to a parenthesized grouping ‘\\(…\\)’."
 
 (defun reduce-tagify-dir (dir)
   "Generate a REDUCE TAGS file for ‘*.red’ files in directory DIR.
-TAGS goes in DIR, which by default is the current directory."
+The TAGS file goes in DIR, which by default is the current directory."
   (interactive
    (list (read-directory-name
           "Tag files in dir: "          ; PROMPT
@@ -2596,18 +2596,17 @@ a smaller recursion depth and tagging sub-directories separately")))))
 
 (defun reduce-tagify-dir-recursively (dir depth)
   "Generate a REDUCE TAGS file for ‘*.red’ files under directory DIR.
-Recursion DEPTH <= 0 means the search depth is unlimited.  The TAGS
-file goes in DIR, which by default is the current directory."
+Recursion DEPTH <= 0 means the search depth is unlimited.  The TAGS file
+goes in DIR, which by default is the parent of the current directory."
   (interactive
    (list (read-directory-name
           "Tag files under directory: " ; PROMPT
-          nil                           ; DIR (default cwd)
+          ".."                          ; DIR (parent of cwd)
           nil                           ; DEFAULT-DIRNAME
           t)                            ; MUSTMATCH
          (read-number
           "Search directories to depth (unlimited if <= 0): "
-          2                             ; DEFAULT
-          nil)))                        ; HIST
+          2)))                          ; DEFAULT
   (setq dir (directory-file-name (expand-file-name dir)))
   (let (;; Required by ‘reduce--directory-files-recursively’...
         (reduce--tagify-root dir)

@@ -73,7 +73,8 @@ Optional:
 * Introduce new option `reduce-etags-regexps` to allow customization of tagging.  Tag `put(‘name, ‘psopfn, …)` and `put(‘name, ‘simpfn, …)` as declarations of operator names, making it easier to track algebraic-mode functions.  **TO BE ADDED TO THE MANUAL.**
 * Allow REDUCE to be run from a buffer running or having run a different version of REDUCE (with a different root directory).
 * Improve indentation and spacing for insert block and group commands.
-* Also tag `operator` declarations with up to 5 names.
+* Also tag `operator` declarations with up to 5 names.  **TO BE ADDED TO THE MANUAL.**
+* Change the default directory for `reduce-tagify-dir-recursively` to the _parent_ of the current working directory.  **TO BE ADDED TO THE MANUAL.**
 
 <!-- Local Variables: -->
 <!-- fill-column: 1000 -->
