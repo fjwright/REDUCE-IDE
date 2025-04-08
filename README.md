@@ -4,7 +4,7 @@
 
 ### [Francis Wright](https://sites.google.com/site/fjwcentaur) ###
 
-Version 1.13.3, March 2025
+Version 1.13.3, April 2025
 
 REDUCE IDE is a package that provides an Integrated Development Environment for the [REDUCE computer algebra system](https://reduce-algebra.sourceforge.io/) within the GNU Emacs editor.  Its two major components are Emacs Lisp libraries that provide major modes for editing REDUCE source code and running a *command-line version* of REDUCE in an Emacs window.  It assumes that Emacs is running under a GUI such as Microsoft Windows or the X Window System under some flavour of UNIX or Linux, and displays Unicode character sets correctly.  REDUCE IDE does not include REDUCE, which is available separately from [SourceForge](https://sourceforge.net/projects/reduce-algebra/).  You don't need to install REDUCE in order to edit REDUCE source code using REDUCE IDE, but if you want to run REDUCE in REDUCE IDE then you do need to install REDUCE.
 
@@ -70,9 +70,10 @@ Optional:
 * Repair the `rerun-reduce` command (again).
 * Fix `reduce-run--wait-for-prompt`.  Sending code to REDUCE before it is running should now work better.
 * Do not treat `!'` as a quote for syntax highlighting.
-* Introduce new option `reduce-etags-regexps` to allow customization of tagging.  Include `put(‘name, ‘psopfn, …)` and `put(‘name, ‘simpfn, …)`  when searching for procedure names, making it easier to track algebraic-mode functions.  **TO BE ADDED TO THE MANUAL.**
+* Introduce new option `reduce-etags-regexps` to allow customization of tagging.  Tag `put(‘name, ‘psopfn, …)` and `put(‘name, ‘simpfn, …)` as declarations of operator names, making it easier to track algebraic-mode functions.  **TO BE ADDED TO THE MANUAL.**
 * Allow REDUCE to be run from a buffer running or having run a different version of REDUCE (with a different root directory).
 * Improve indentation and spacing for insert block and group commands.
+* Also tag `operator` declarations with up to 5 names.
 
 <!-- Local Variables: -->
 <!-- fill-column: 1000 -->

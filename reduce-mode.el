@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1992
-;; Time-stamp: <2025-04-07 14:53:00 franc>
+;; Time-stamp: <2025-04-08 16:49:00 franc>
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.13.3
 ;; Package-Requires: (cl-lib)
@@ -2516,16 +2516,36 @@ If non-nil the string must end with /."
   :group 'reduce-interface)
 
 (defcustom reduce-etags-regexps
-  '("/[^%]*procedure[ \\t]+\\([^ \\t\(;$]+\\)/\\1/i"
-    "/[^%]*put[ \\t]*('\
-\\([^,]+\\)[ \\t]*,[ \\t]*'\\(psopfn\\|simpfn\\)/\\1/i"
-    "/[^%]*operator[ \\t]+\\([^ \\t,;$]+\\)[ \\t]*[,;$]/\\1/i" ; first name
-    "/[^%]*operator[ \\t]+.*,[ \\t]*\\([^ \\t,;$]+\\)[ \\t]*[,;$]/\\1/i" ; subsequent names
-    )
+  '("/[^%\\n]*procedure[ \\t]+[^ \\t(;$\\n]+/i"
+    "/[^%\\n]*put[ \\t]*('\
+\\([^,\\n]+\\)[ \\t]*,[ \\t]*'\\(psop\\|simp\\)fn/\\1/i"
+    "/[^%\\n]*operator[ \\t]+\
+[^ \\t,;$\\n]+/i"                       ; first name
+    "/[^%\\n]*operator[ \\t]+[^,\\n]+,\
+[ \\t]*[^ \\t,;$\\n]+/i"                ; second name
+    "/[^%\\n]*operator[ \\t]+[^,\\n]+,[^,\\n]+,\
+[ \\t]*[^ \\t,;$\\n]+/i"                ; third name
+    "/[^%\\n]*operator[ \\t]+[^,\\n]+,[^,\\n]+,[^,\\n]+,\
+[ \\t]*[^ \\t,;$\\n]+/i"                ; fourth name
+    "/[^%\\n]*operator[ \\t]+[^,\\n]+,[^,\\n]+,[^,\\n]+,[^,\\n]+,\
+[ \\t]*[^ \\t,;$\\n]+/i")               ; fifth name
   "List of etags regular expressions to find definitions of “name”.
 Each item will have “--regex=” prepended and should match
 “procedure name”, “put(‘name, ‘psopfn, …)”, “put(‘name, ‘simpfn, …)”,
-“operator …, name, …”, etc."
+“operator …, name, …”, etc.
+
+The syntax is
+
+     /TAGREGEXP/[NAMEREGEXP/]MODIFIERS
+
+where TAGREGEXP is always used anchored to the beginning of a line.  All
+C character escapes are supported.  Otherwise, the regular expression
+syntax is mostly the same as Emacs except that backslash escapes are the
+same as GNU grep.  But {} doesn't seem to be useful!
+
+Ideally, TAGREGEXP should match up to the end of “name”; otherwise
+NAMEREGEXP is needed to match “name”, typically by using a back
+reference like ‘\\1’ to a parenthesized grouping ‘\\(…\\)’."
   :type '(repeat string)
   :link '(custom-manual "(emacs)Etags Regexps")
   :group 'reduce-interface)
