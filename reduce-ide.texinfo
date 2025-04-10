@@ -2,7 +2,7 @@
 @c %**start of header
 @settitle GNU Emacs REDUCE Integrated Development Environment
 @c Manual last updated:
-@set UPDATED Time-stamp: <2025-04-10 17:15:04 franc>
+@set UPDATED Time-stamp: <2025-04-10 17:31:27 franc>
 @c Software version:
 @set VERSION 1.14
 @afourpaper
@@ -1579,7 +1579,7 @@ defaults to @code{nil} to disable this facility.
 The main command to start REDUCE is @command{run-reduce}, which is
 bound to the key @kbd{M-R} (that's a capital @code{R}, so use
 @kbd{@key{META}-@key{SHIFT}-r}) in REDUCE mode.  It is also available
-in the REDUCE mode @emph{Run REDUCE} menu.
+in the REDUCE mode @emph{Run-REDUCE} menu.
 
 If the option @code{reduce-run-multiple} is non-nil (which by default
 it is) then @command{run-reduce} starts a new REDUCE process every
@@ -1938,10 +1938,10 @@ REDUCE mode adds a major-mode menu called ``REDUCE'' to the menu bar,
 which is also available as a pop-up menu activated by the command
 @code{mouse-major-mode-menu} on the standard key @kbd{C-down-mouse-3}.
 
-REDUCE Run mode adds a second major-mode menu called ``Run REDUCE'',
+REDUCE Run mode adds a second major-mode menu called ``Run-REDUCE'',
 which appears immediately to the right of the ``REDUCE'' menu on the
 menu bar and immediately below the ``REDUCE'' menu on the pop-up menu.
-It is possible to have the ``Run REDUCE'' menu displayed even when
+It is possible to have the ``Run-REDUCE'' menu displayed even when
 REDUCE Run mode is not loaded, which is controlled by the option
 @code{reduce-run-autoload}.  @xref{Run Customization}.
 
