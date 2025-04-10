@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1992
-;; Time-stamp: <2025-04-08 17:14:26 franc>
+;; Time-stamp: <2025-04-10 16:05:46 franc>
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.13.3
 ;; Package-Requires: (cl-lib)
@@ -2516,19 +2516,19 @@ If non-nil the string must end with /."
   :group 'reduce-interface)
 
 (defcustom reduce-etags-regexps
-  '("/[^%\\n]*procedure[ \\t]+[^ \\t(;$\\n]+/i"
+  '("/[^%\\n]*procedure[ \\t]+\\([^ \\t(;$\\n]+\\)/\\1/i"
     "/[^%\\n]*put[ \\t]*('\
 \\([^,\\n]+\\)[ \\t]*,[ \\t]*'\\(psop\\|simp\\)fn/\\1/i"
     "/[^%\\n]*operator[ \\t]+\
-[^ \\t,;$\\n]+/i"                       ; first name
+\\([^ \\t,;$\\n]+\\)/\\1/i"             ; first name
     "/[^%\\n]*operator[ \\t]+[^,\\n]+,\
-[ \\t]*[^ \\t,;$\\n]+/i"                ; second name
+[ \\t]*\\([^ \\t,;$\\n]+\\)/\\1/i"      ; second name
     "/[^%\\n]*operator[ \\t]+[^,\\n]+,[^,\\n]+,\
-[ \\t]*[^ \\t,;$\\n]+/i"                ; third name
+[ \\t]*\\([^ \\t,;$\\n]+\\)/\\1/i"      ; third name
     "/[^%\\n]*operator[ \\t]+[^,\\n]+,[^,\\n]+,[^,\\n]+,\
-[ \\t]*[^ \\t,;$\\n]+/i"                ; fourth name
+[ \\t]*\\([^ \\t,;$\\n]+\\)/\\1/i"      ; fourth name
     "/[^%\\n]*operator[ \\t]+[^,\\n]+,[^,\\n]+,[^,\\n]+,[^,\\n]+,\
-[ \\t]*[^ \\t,;$\\n]+/i")               ; fifth name
+[ \\t]*\\([^ \\t,;$\\n]+\\)/\\1/i")     ; fifth name
   "List of etags regular expressions to find definitions of “name”.
 Each item will have “--regex=” prepended and should match
 “procedure name”, “put(‘name, ‘psopfn, …)”, “put(‘name, ‘simpfn, …)”,
@@ -2543,9 +2543,9 @@ C character escapes are supported.  Otherwise, the regular expression
 syntax is mostly the same as Emacs except that backslash escapes are the
 same as GNU grep.  But {} doesn't seem to be useful!
 
-Ideally, TAGREGEXP should match up to the end of “name”; otherwise
-NAMEREGEXP is needed to match “name”, typically by using a back
-reference like ‘\\1’ to a parenthesized grouping ‘\\(…\\)’."
+Because REDUCE identifier syntax is unusual, NAMEREGEXP is always needed
+to match “name” reliably, typically by using a back reference like ‘\\1’
+to a parenthesized grouping ‘\\(…\\)’."
   :type '(repeat string)
   :link '(custom-manual "(emacs)Etags Regexps")
   :group 'reduce-interface)

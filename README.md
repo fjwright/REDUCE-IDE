@@ -45,6 +45,7 @@ Optional:
 * Resolve REDUCE Run mode fontification clash with Comint mode.
 * On Microsoft Windows, make REDUCE interruptible.
 * Version 2 (maybe): use treesitter for parsing.
+* Make double-click select a group or block, as for brackets.
 
 ## Main Updates since REDUCE IDE 1.13 ##
 
@@ -75,6 +76,7 @@ Optional:
 * Improve indentation and spacing for insert block and group commands.
 * Also tag `operator` declarations with up to 5 names.  **TO BE ADDED TO THE MANUAL.**
 * Change the default directory for `reduce-tagify-dir-recursively` to the _parent_ of the current working directory.  **TO BE ADDED TO THE MANUAL.**
+* Revert to always using NAMEREGEXP in tag regexps to accommodate REDUCE identifier syntax reliably.
 
 <!-- Local Variables: -->
 <!-- fill-column: 1000 -->
