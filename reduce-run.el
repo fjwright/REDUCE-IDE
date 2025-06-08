@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1998
-;; Time-stamp: <2025-03-25 17:11:10 franc>
+;; Time-stamp: <2025-06-08 18:10:10 franc>
 ;; Keywords: languages, processes
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 
@@ -270,8 +270,12 @@ It is a good place to put keybindings."
 
 (defvar-keymap reduce-run-mode-map
   :doc "Keymap for REDUCE Run mode."
-  "RET" #'reduce-run-send-input
+  "<return>" #'reduce-run-send-input    ; can be bound separately on
+  "RET" #'reduce-run-send-input         ; some systems
+  "S-<return>" #'comint-send-input
   "S-RET" #'comint-send-input
+  "C-<return>" #'newline
+  "C-RET" #'newline
   "M-TAB" #'reduce-complete-symbol
   "C-c TAB" #'reduce-complete-symbol
   :menu
@@ -556,8 +560,8 @@ buffer and return “root”."
   "Send input to REDUCE.
 Provided REDUCE is running, the cursor is at the end of the
 buffer, there is non-blank input (to support “on demo”) and there
-is no final terminator or ’?’ in the current line then add a
-final ’;’.  Then call ‘comint-send-input’.
+is no final terminator or ‘?’ in the current line then add a
+final ‘;’.  Then call ‘comint-send-input’.
 \\<reduce-run-mode-map>Note that ‘\\[comint-send-input]’ calls ‘comint-send-input’ directly."
   (interactive)
   (end-of-line)

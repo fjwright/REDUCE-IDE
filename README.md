@@ -4,7 +4,7 @@
 
 ### [Francis Wright](https://sites.google.com/site/fjwcentaur) ###
 
-Version 1.14, April 2025
+Version 1.14.1, June 2025
 
 REDUCE IDE is a package that provides an Integrated Development Environment for the [REDUCE computer algebra system](https://reduce-algebra.sourceforge.io/) within the GNU Emacs editor.  Its two major components are Emacs Lisp libraries that provide major modes for editing REDUCE source code and running a *command-line version* of REDUCE in an Emacs window.  It assumes that Emacs is running under a GUI such as Microsoft Windows or the X Window System under some flavour of UNIX or Linux, and displays Unicode character sets correctly.  REDUCE IDE does not include REDUCE, which is available separately from [SourceForge](https://sourceforge.net/projects/reduce-algebra/).  You don't need to install REDUCE in order to edit REDUCE source code using REDUCE IDE, but if you want to run REDUCE in REDUCE IDE then you do need to install REDUCE.
 
@@ -47,24 +47,10 @@ Optional:
 * Version 2 (maybe): use treesitter for parsing.
 * Make double-click select a group or block, as for brackets.
 
-## Main Updates since REDUCE IDE 1.13 ##
+## Main Updates since REDUCE IDE 1.14 ##
 
-* Repair the `rerun-reduce` command.
-* Declare the `reduce-run-buffer` command to autoload.
-* Implement `reduce-forward-word` and `reduce-backward-word` to replace `reduce-forward-identifier` and `reduce-backward-identifier`.  The aim is to move by a number or identifier, more like `forward-word` etc., which should improve mouse double-click selection.
-* Rename `reduce-identifier-mode` to `reduce-word-mode` and the _Minor Modes / Identifier Mode_ menu option to _Minor Modes / Word Mode_.
-* Hide the `Add "Index" Menu` menu item if it has already been added, and rename it to `Add Index Menu`.
-* Fix REDUCE mode _Run REDUCE_ menu, and hence _Run Buffer_ etc.: only autoload functions not already autoloaded.
-* Improve some keyboard shortcuts in the _REDUCE_ menu.
-* Fix _Command Mini Help_ menu item to show only commands intended for user access.
-* Rename REDUCE Run mode menu from _Run REDUCE_ to _REDUCE_, and REDUCE mode Run menu from _Run REDUCE_ to _Run-REDUCE_.
-* Fix key mapping for `run-reduce`.
-* Fix `reduce-run--wait-for-prompt`.  Sending code to REDUCE before it is running should now work better.
-* Do not treat `!'` as a quote for syntax highlighting.
-* Introduce new option `reduce-etags-regexps` to allow customization of tagging.  Tag `put(‘name, ‘psopfn, …)` and `put(‘name, ‘simpfn, …)` as declarations of operator names, and `operator` declarations with up to 5 names, making it easier to track algebraic-mode operators.
-* Allow REDUCE to be run from a buffer running or having run a different version of REDUCE (with a different root directory).
-* Improve indentation and spacing for insert block and group commands.
-* Change the default directory for `reduce-tagify-dir-recursively` to the _parent_ of the current directory.
+* Revise `reduce-etags-regexps` to avoid spurious tags.  [See customization.]
+* Bind `<return>` as well as `RET` in `reduce-run-mode-map`, and bind `C-<return>` and `C-RET` to plain `newline` to produce multi-line input without sending intermediate lines to REDUCE.
 
 <!-- Local Variables: -->
 <!-- fill-column: 1000 -->
