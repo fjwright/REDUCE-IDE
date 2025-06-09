@@ -49,7 +49,7 @@ Optional:
 
 ## Main Updates since REDUCE IDE 1.14 ##
 
-* Revise `reduce-etags-regexps` to avoid spurious tags.  [See customization.]
+* Revise `reduce-etags-regexps` default value to avoid spurious tags.
 * Bind `<return>` as well as `RET` in `reduce-run-mode-map`, and bind `C-<return>` and `C-RET` to plain `newline` to produce multi-line input without sending intermediate lines to REDUCE.
 
 <!-- Local Variables: -->

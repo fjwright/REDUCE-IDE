@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1992
-;; Time-stamp: <2025-06-08 18:22:17 franc>
+;; Time-stamp: <2025-06-09 09:23:20 franc>
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.14.1
 ;; Package-Requires: (cl-lib)
@@ -2516,22 +2516,22 @@ If non-nil the string must end with /."
   :group 'reduce-interface)
 
 (defcustom reduce-etags-regexps
-  '("/[^%\\n]*procedure[ \\t]+\\([^ \\t(;$\\n]+\\)/\\1/i"
-    "/[^%\\n]*put[ \\t]*('\
+  '("/[a-z \\t]*procedure[ \\t]+\\([^ \\t(;$\\n]+\\)/\\1/i"
+    "/[a-z \\t]*put[ \\t]*('\
 \\([^,\\n]+\\)[ \\t]*,[ \\t]*'\\(psop\\|simp\\)fn/\\1/i"
-    "/[^%\\n]*operator[ \\t]+\
+    "/[a-z \\t]*operator[ \\t]+\
 \\([^ \\t,;$\\n]+\\)/\\1/i"             ; first name
-    "/[^%\\n]*operator[ \\t]+[^,\\n]+,\
-[ \\t]*\\([^ \\t,;$\\n]+\\)/\\1/i"      ; second name
-    "/[^%\\n]*operator[ \\t]+[^,\\n]+,[^,\\n]+,\
-[ \\t]*\\([^ \\t,;$\\n]+\\)/\\1/i"      ; third name
-    "/[^%\\n]*operator[ \\t]+[^,\\n]+,[^,\\n]+,[^,\\n]+,\
-[ \\t]*\\([^ \\t,;$\\n]+\\)/\\1/i"      ; fourth name
-    "/[^%\\n]*operator[ \\t]+[^,\\n]+,[^,\\n]+,[^,\\n]+,[^,\\n]+,\
-[ \\t]*\\([^ \\t,;$\\n]+\\)/\\1/i")     ; fifth name
+    "/[a-z \\t]*operator[ \\t]+[^,\\n]+,[ \\t]*\
+\\([^ \\t,;$\\n]+\\)/\\1/i"             ; second name
+    "/[a-z \\t]*operator[ \\t]+[^,\\n]+,[^,\\n]+,[ \\t]*\
+\\([^ \\t,;$\\n]+\\)/\\1/i"             ; third name
+    "/[a-z \\t]*operator[ \\t]+[^,\\n]+,[^,\\n]+,[^,\\n]+,[ \\t]*\
+\\([^ \\t,;$\\n]+\\)/\\1/i"             ; fourth name
+    "/[a-z \\t]*operator[ \\t]+[^,\\n]+,[^,\\n]+,[^,\\n]+,[^,\\n]+,[ \\t]*\
+\\([^ \\t,;$\\n]+\\)/\\1/i")            ; fifth name
   "List of etags regular expressions to find definitions of “name”.
-Each item will have “--regex=” prepended and should match
-“procedure name”, “put(‘name, ‘psopfn, …)”, “put(‘name, ‘simpfn, …)”,
+Each item will have \"--regex=\" prepended and should match
+“procedure name”, “put('name, 'psopfn, …)”, “put('name, 'simpfn, …)”,
 “operator …, name, …”, etc.
 
 The syntax is
