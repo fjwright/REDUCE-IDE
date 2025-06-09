@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: 6 June 2022 as a separate file (was part of reduce-mode.el)
-;; Time-stamp: <2025-03-20 15:57:51 franc>
+;; Time-stamp: <2025-06-09 18:03:34 franc>
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 
 ;; This file is part of REDUCE IDE.
@@ -550,6 +550,31 @@ which must be done in ‘reduce-mode’."
 ;;;;; REDUCE Run mode fontification
 ;;;;; *****************************
 
+;; Note that the following faces are not also defined as variables, as
+;; is the case for standard font-lock faces.  Hence the need for
+;; quotes when these faces are used below.
+
+(defface reduce-error
+  '((t :inherit error))
+  "Face used by Font Lock mode to highlight REDUCE errors."
+  :group 'reduce-run
+  :group 'font-lock-faces
+  :package-version '(reduce-ide . "1.14.1"))
+
+(defface reduce-warning
+  '((t :inherit error :foreground "orange"))
+  "Face used by Font Lock mode to highlight REDUCE warnings."
+  :group 'reduce-run
+  :group 'font-lock-faces
+  :package-version '(reduce-ide . "1.14.1"))
+
+(defface reduce-trace
+  '((t :inherit error :foreground "green"))
+  "Face used by Font Lock mode to highlight REDUCE tracing."
+  :group 'reduce-run
+  :group 'font-lock-faces
+  :package-version '(reduce-ide . "1.14.1"))
+
 (defconst reduce-font-lock--run-keywords
   '(
     reduce-font-lock--run-keywords-0    ; Minimal = nil
@@ -587,13 +612,17 @@ their names should not be taken too literally!")
     t))
 
 (defconst reduce-font-lock--run-keywords-0
-  '(;; REDUCE and CSL warning and error messages:
-    ("\\(?:\\*\\*\\*\\|\\+\\+\\+\\).*" . font-lock-warning-face)
+  '(;; REDUCE and CSL error messages:
+    ("\\(?:\\*\\{5\\}\\|\\+\\{3\\}\\).*" . 'reduce-error)
+    ;; REDUCE warning messages:
+    ("\\(?:\\*\\{3\\}\\).*" . 'reduce-warning)
     ;; Rtrace output:
-    ("^\\(?:Enter\\|Leave\\) ([0-9]+) [^ \n]+\\(?: =\\)?" . font-lock-warning-face)
-    ("^Rule.*:" . font-lock-warning-face)
+    ("^\\(?:Enter\\|Leave\\) ([0-9]+) [^ \n]+\\(?: =\\)?" . 'reduce-trace)
+    ("^Rule.*:" . 'reduce-trace)
     ;; CSL trace output:
-    ("^\\(?:Entering .*\\| *Arg[0-9]+:\\|Value = \\)" . font-lock-warning-face))
+    ("^\\(?:Calling .*\\| *Arg[0-9]+:\\)" . 'reduce-trace)
+    ;; PSL trace output:
+    (".* being entered$\\|^ +a[0-9]+:" . 'reduce-trace))
   "Syntax highlighting rules for REDUCE output.")
 
 (defconst reduce-font-lock--run-keywords-1
