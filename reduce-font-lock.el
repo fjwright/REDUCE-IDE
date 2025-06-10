@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: 6 June 2022 as a separate file (was part of reduce-mode.el)
-;; Time-stamp: <2025-06-09 18:03:34 franc>
+;; Time-stamp: <2025-06-10 17:31:40 franc>
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 
 ;; This file is part of REDUCE IDE.
@@ -562,14 +562,14 @@ which must be done in ‘reduce-mode’."
   :package-version '(reduce-ide . "1.14.1"))
 
 (defface reduce-warning
-  '((t :inherit error :foreground "orange"))
+  '((t :inherit warning))
   "Face used by Font Lock mode to highlight REDUCE warnings."
   :group 'reduce-run
   :group 'font-lock-faces
   :package-version '(reduce-ide . "1.14.1"))
 
 (defface reduce-trace
-  '((t :inherit error :foreground "green"))
+  '((t :inherit success))
   "Face used by Font Lock mode to highlight REDUCE tracing."
   :group 'reduce-run
   :group 'font-lock-faces
