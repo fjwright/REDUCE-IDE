@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1998
-;; Time-stamp: <2025-06-08 18:10:10 franc>
+;; Time-stamp: <2025-06-10 17:19:33 franc>
 ;; Keywords: languages, processes
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 
@@ -246,15 +246,18 @@ these commands to determine defaults."
   :link '(custom-manual "(reduce-ide)Run Customization")
   :group 'reduce-run)
 
-(defcustom reduce-run-mode-hook nil
-  "Hook for customising REDUCE Run mode."
+(defcustom reduce-run-load-hook nil
+  "List of functions to be called after REDUCE Run mode is loaded.
+It can be used to customize buffer-independent features of REDUCE Run
+mode such as keybindings, or load extensions."
   :type 'hook
   :link '(custom-manual "(reduce-ide)Hooks")
   :group 'reduce-run)
+(make-obsolete-variable 'reduce-run-load-hook
+                        "use `with-eval-after-load' instead." "28.1")
 
-(defcustom reduce-run-load-hook nil
-  "Hook run when REDUCE Run mode is loaded.
-It is a good place to put keybindings."
+(defcustom reduce-run-mode-hook nil
+  "Hook for customising REDUCE Run mode."
   :type 'hook
   :link '(custom-manual "(reduce-ide)Hooks")
   :group 'reduce-run)

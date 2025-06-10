@@ -52,6 +52,7 @@ Optional:
 * Revise `reduce-etags-regexps` default value to avoid spurious tags.
 * Bind `<return>` as well as `RET` in `reduce-run-mode-map`, and bind `C-<return>` and `C-RET` to plain `newline` to produce multi-line input without sending intermediate lines to REDUCE.
 * Define new faces `reduce-error`, `reduce-warning` and `reduce-trace` to highlight errors, warnings and tracing in REDUCE Run mode.  Correct highlighting of tracing in CSL REDUCE and add support for tracing in PSL REDUCE.  This probably needs further revision.
+* Declare `reduce-mode-load-hook` and `reduce-run-load-hook` obsolete; use `with-eval-after-load` instead.
 
 <!-- Local Variables: -->
 <!-- fill-column: 1000 -->
