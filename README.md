@@ -36,6 +36,7 @@ Optional:
 * `reduce-delim.el`  &ndash;  highlight matching group or block delimiters
 * `reduce-run.el`  &ndash;  run REDUCE in an Emacs buffer
 * `reduce-extra.el`  &ndash;  experimental optional extra functionality
+* `reduce-dired.el`  &ndash;  run a file in REDUCE from a dired buffer
 * `reduce-ide.texinfo`  &ndash;  texinfo manual
 
 ## To Do ##
@@ -54,6 +55,7 @@ Optional:
 * Define new faces `reduce-error`, `reduce-warning` and `reduce-trace` to highlight errors, warnings and tracing in REDUCE Run mode.  Correct highlighting of tracing in CSL REDUCE and add support for tracing in PSL REDUCE.  This probably needs further revision.
 * Declare `reduce-mode-load-hook` and `reduce-run-load-hook` obsolete; use `with-eval-after-load` instead.
 * Revise new faces so that `reduce-warning` and `reduce-trace` inherit from `warning` and `success` respectively.
+* New file `reduce-dired.el`; load it to provide commands in a Dired buffer to run the current file as a REDUCE program.  This is best automated by including `(with-eval-after-load 'dired (require 'reduce-dired))` in your .emacs file.
 
 <!-- Local Variables: -->
 <!-- fill-column: 1000 -->
