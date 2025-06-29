@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1992
-;; Time-stamp: <2025-06-10 17:19:27 franc>
+;; Time-stamp: <2025-06-29 12:49:06 franc>
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.14.1
 ;; Package-Requires: (cl-lib)
@@ -2534,7 +2534,7 @@ If non-nil the string must end with /."
 \\([^ \\t,;$\\n]+\\)/\\1/i")            ; fifth name
   "List of etags regular expressions to find definitions of “name”.
 Each item will have \"--regex=\" prepended and should match
-“procedure name”, “put('name, 'psopfn, …)”, “put('name, 'simpfn, …)”,
+“procedure name”, “put(\\='name, \\='psopfn, …)”, “put(\\='name, \\='simpfn, …)”,
 “operator …, name, …”, etc.
 
 The syntax is
@@ -2547,8 +2547,8 @@ syntax is mostly the same as Emacs except that backslash escapes are the
 same as GNU grep.  But {} doesn't seem to be useful!
 
 Because REDUCE identifier syntax is unusual, NAMEREGEXP is always needed
-to match “name” reliably, typically by using a back reference like ‘\\1’
-to a parenthesized grouping ‘\\(…\\)’."
+to match “name” reliably, typically by using a back reference like “\\1”
+to a parenthesized grouping “\\(…\\)”."
   :type '(repeat string)
   :link '(custom-manual "(emacs)Etags Regexps")
   :group 'reduce-interface)
