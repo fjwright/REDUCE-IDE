@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: 6 June 2022 as a separate file (was part of reduce-mode.el)
-;; Time-stamp: <2025-06-10 17:31:40 franc>
+;; Time-stamp: <2025-06-29 11:39:00 franc>
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 
 ;; This file is part of REDUCE IDE.
@@ -45,6 +45,9 @@
 ;; commented-out REDUCE code may be mis-highlighted.
 
 ;;; Code:
+
+;; The two constants ‘reduce-identifier-regexp’ and
+;; ‘reduce-whitespace-regexp’ are defined in reduce-mode.el.
 
 (eval-when-compile (require 'reduce-mode))
 
@@ -330,7 +333,7 @@ constants (e.g. “pi”).")
      (,(concat "\\=" reduce-whitespace-regexp "*"
                "\\(" reduce-identifier-regexp "\\)")
       ;; Pre-form -- return position of terminator to limit search:
-      (save-excursion (re-search-forward "[\;$]")) nil
+      (save-excursion (re-search-forward "\)\\s-*[\;$]")) nil
       (1 font-lock-variable-name-face)))
 
     ;; Quoted identifiers:
