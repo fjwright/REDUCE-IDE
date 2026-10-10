@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: 6 June 2022 as a separate file (was part of reduce-mode.el)
-;; Time-stamp: <2025-06-29 11:39:00 franc>
+;; Time-stamp: <2025-06-30 14:49:00 franc>
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 
 ;; This file is part of REDUCE IDE.
@@ -236,9 +236,9 @@ symbolic\\|lisp\\|inline\\|s?macro\\)\\_>"
     ;; Allow 5pi to match pi, etc.  Digits have word syntax.
     ;; Must also match within i*pi/2, etc.
     ;; But nil and t should not be used as variables.
-    ("\\(?:\\(?:[^[:alpha:]_]\\(e\\|i\\|infinity\\|pi\\|\
+    ("\\(?:\\(?:[^[:alpha:]_!]\\(e\\|i\\|infinity\\|pi\\|\
 Catalan\\|Euler_Gamma\\|Golden_Ratio\\|Khinchin\\)\\)\\|\
-\\(?:\\_<\\(nil\\|t\\)\\)\\)\\_>"
+\\(?:[^!]\\_<\\(nil\\|t\\)\\)\\)\\_>"
      ;; Lax match since only one group can match:
      (1 font-lock-constant-face nil t)
      (2 font-lock-constant-face nil t)))
@@ -267,7 +267,7 @@ constants (e.g. “pi”).")
 
 (defconst reduce-font-lock--preprocessor-rules
   `((,(concat
-       "\\(#define\\_>\\)"
+       "^\\(#define\\_>\\)"
        reduce-whitespace-regexp "+"
        "\\(" reduce-identifier-regexp "\\)"
        reduce-whitespace-regexp "+"
@@ -276,14 +276,15 @@ constants (e.g. “pi”).")
      (2 font-lock-variable-name-face)
      (3 font-lock-variable-name-face))
 
-    (,(concat "\\(#\\(?:el\\)?if\\_>\\)"
+    (,(concat "^\\(#\\(?:el\\)?if\\_>\\)"
               reduce-whitespace-regexp "+" "\\(.*\\)")
      (1 font-lock-preprocessor-face)
      (2 'default))
 
-    ("\\(#\\(?:else\\|endif\\)\\_>\\)"
+    ("^\\(#\\(?:else\\|endif\\)\\_>\\)"
      (1 font-lock-preprocessor-face)))
-  "Rules to highlight preprocessor #-directives as in C, C++, etc.")
+  "Rules to highlight preprocessor #-directives as in C, C++, etc.
+\(but only at the beginning of a line and unescaped).")
 
 (defconst reduce-font-lock--asserted-type-rule
   `("\\_<procedure\\_>"
@@ -417,7 +418,10 @@ the match; otherwise return nil."
   ;; until it fails.  On failure, there is no need to reset point in
   ;; any particular way.
   (when
-      (re-search-forward "\\(\\_<comment\\_>[^;$]*[;$]\\)" limit t)
+      (re-search-forward "\\(\\_<comment\\_>[^!][^;$]*[;$]\\)" limit t)
+    ;; Must match multiple lines, but avoid matching "comment!.",
+    ;; which is the beginning of different identifiers, e.g. in
+    ;; "rlisp/tok.red"!
     (let* ((start-of-comment (match-beginning 0)) (end-of-comment (point))
            (parse-state (syntax-ppss start-of-comment)))
       ;; NB: syntax-ppss call leaves point at start-of-comment.

@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1998
-;; Time-stamp: <2025-06-10 17:19:33 franc>
+;; Time-stamp: <2026-01-14 16:48:55 franc>
 ;; Keywords: languages, processes
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 
@@ -559,6 +559,17 @@ buffer and return “root”."
 
 (add-hook 'same-window-regexps "REDUCE") ; ??? Not sure about this! ???
 
+(defconst reduce-run-send-raw-input-regexp
+  (concat
+   "\\(?:[[:digit:]][:*]\\|[;$]\\)\\s-*" ; no input or already terminated
+   "\\|"
+   "\\?.*"                              ; user query
+   "\\|"
+   "[[:digit:]]\\(?:\]\\|[\] ]>\\) .*"  ; CL  break loop
+   )
+  "If this regexp matches looking back from EOL then send raw input.
+That is, do not add a terminator.")
+
 (defun reduce-run-send-input ()
   "Send input to REDUCE.
 Provided REDUCE is running, the cursor is at the end of the
@@ -570,7 +581,7 @@ final ‘;’.  Then call ‘comint-send-input’.
   (end-of-line)
   (if (and (get-buffer-process (current-buffer))
            (eobp)
-           (not (looking-back "\\([[:digit:]][:*]\\|[;$]\\)\\s-*\\|\\?.*" nil)))
+           (not (looking-back reduce-run-send-raw-input-regexp nil)))
       (insert ?\;))
   (comint-send-input))
 
