@@ -1,10 +1,10 @@
 ;;; reduce-run.el --- Run the REDUCE computer-algebra system in a buffer  -*- lexical-binding:t -*-
 
-;; Copyright (C) 1998-2001, 2012, 2017-2019, 2022-2025 Francis J. Wright
+;; Copyright (C) 1998-2001, 2012, 2017-2019, 2022-2026 Francis J. Wright
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1998
-;; Time-stamp: <2026-01-14 16:48:55 franc>
+;; Time-stamp: <2026-10-11 17:56:58 franc>
 ;; Keywords: languages, processes
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 
@@ -47,7 +47,9 @@
 ;;; To do:
 
 ;; control echoing from input of statement, proc or region?
+
 
+
 ;;; Code:
 
 (require 'reduce-mode)
@@ -263,6 +265,7 @@ mode such as keybindings, or load extensions."
   :group 'reduce-run)
 
 
+
 ;;;; Keyboard and menu maps
 ;;;; ======================
 
@@ -335,6 +338,7 @@ updates autoload version when this file is loaded."
     (keymap-set-after keymap "<run-reduce>" definition 'REDUCE)))
 
 
+
 ;;; Functions to run REDUCE in a buffer
 ;;; ===================================
 
@@ -555,7 +559,17 @@ buffer and return “root”."
     ;; ‘apply’ used below because last arg is &rest!
     (set-buffer (apply #'make-comint-in-buffer
                        process-name nil (car cmd) nil (cdr cmd)))
+    (reduce-run--make-header-read-only)
     root))
+
+(defun reduce-run--make-header-read-only ()
+  "Make REDUCE header text read-only."
+  (reduce-run--wait-for-prompt)
+  ;; Leaves point after the first prompt (at EOB).
+  (save-excursion
+    (let ((case-fold-search t) (inhibit-read-only t))
+      (add-text-properties (re-search-backward "^REDUCE") (point-max)
+                           '(read-only t front-sticky (read-only))))))
 
 (add-hook 'same-window-regexps "REDUCE") ; ??? Not sure about this! ???
 
@@ -586,6 +600,7 @@ final ‘;’.  Then call ‘comint-send-input’.
   (comint-send-input))
 
 
+
 ;;; Functions to send code to REDUCE running in a buffer
 ;;; ====================================================
 
@@ -770,6 +785,7 @@ buffer."
 (define-obsolete-function-alias 're-run-reduce 'rerun-reduce "REDUCE IDE 1.10.1")
 
 
+
 (defvar reduce-run--prev-dir/file nil
   "Record last directory and file used in inputting or compiling.
 This holds a cons cell of the form “(DIRECTORY . FILE)” describing
@@ -843,6 +859,7 @@ The user chooses whether to echo file input."
     (reduce-run--send-string "faslend;")))
 
 
+
 ;;; Support for loading REDUCE packages
 ;;; ===================================
 
@@ -916,6 +933,7 @@ using the (buffer-local) value of ‘reduce--package-root-dir-file-name’."
   (reduce-run--send-string (format "load_package %s;" package)))
 
 
+
 ;;; Functions to run a REDUCE file or buffer in a new process buffer
 ;;; ================================================================
 ;;; (essentially as requested by Raffaele Vitolo)
@@ -953,6 +971,7 @@ input INPUT."
     (comint-send-input)))
 
 
+
 ;;; Ancillary functions
 ;;; ===================
 
