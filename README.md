@@ -4,7 +4,7 @@
 
 ### [Francis Wright](https://sites.google.com/site/fjwcentaur) ###
 
-Version 1.14.1, June 2025
+Version 1.14.2, October 2026
 
 REDUCE IDE is a package that provides an Integrated Development Environment for the [REDUCE computer algebra system](https://reduce-algebra.sourceforge.io/) within the GNU Emacs editor.  Its two major components are Emacs Lisp libraries that provide major modes for editing REDUCE source code and running a *command-line version* of REDUCE in an Emacs window.  It assumes that Emacs is running under a GUI such as Microsoft Windows or the X Window System under some flavour of UNIX or Linux, and displays Unicode character sets correctly.  REDUCE IDE does not include REDUCE, which is available separately from [SourceForge](https://sourceforge.net/projects/reduce-algebra/).  You don't need to install REDUCE in order to edit REDUCE source code using REDUCE IDE, but if you want to run REDUCE in REDUCE IDE then you do need to install REDUCE.
 
@@ -56,6 +56,7 @@ Optional:
 * Declare `reduce-mode-load-hook` and `reduce-run-load-hook` obsolete; use `with-eval-after-load` instead.
 * Revise new faces so that `reduce-warning` and `reduce-trace` inherit from `warning` and `success` respectively.
 * New file `reduce-dired.el`; load it to provide commands in a Dired buffer to run the current file as a REDUCE program.  This is best automated by including `(with-eval-after-load 'dired (require 'reduce-dired))` in your .emacs file.
+* Make the REDUCE header test read-only and wait for a REDUCE prompt in increments of 0.1s instead of 1s.
 
 <!-- Local Variables: -->
 <!-- fill-column: 1000 -->

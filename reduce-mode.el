@@ -1,12 +1,12 @@
 ;;; reduce-mode.el --- Major mode to edit REDUCE computer-algebra code  -*- lexical-binding:t -*-
 
-;; Copyright (C) 1998-2001, 2012, 2017-2019, 2022-2025 Francis J. Wright
+;; Copyright (C) 1998-2001, 2012, 2017-2019, 2022-2026 Francis J. Wright
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1992
-;; Time-stamp: <2025-06-29 12:49:06 franc>
+;; Time-stamp: <2026-10-12 16:32:27 franc>
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
-;; Package-Version: 1.14.1
+;; Package-Version: 1.14.2
 ;; Package-Requires: (cl-lib)
 
 ;; This file is part of REDUCE IDE.
@@ -49,7 +49,9 @@
 ;;  make skipping comment statements configurable (?)
 ;;  add RLisp88 support (?)
 ;;  more structure templates (?) – while, repeat
+
 
+
 ;;; Code:
 (eval-when-compile (require 'cl-lib))
 
@@ -335,6 +337,7 @@ Run mode when used; if it is nil then do nothing."
   "Buffer-local: t if ‘reduce--imenu-add-menubar-index’ has been called.")
 
 
+
 ;;;; **********************
 ;;;; Keyboard and menu maps
 ;;;; **********************
@@ -539,6 +542,7 @@ updated when REDUCE Run is loaded."
   (message "REDUCE IDE Version: %s" reduce-ide-version))
 
 
+
 ;;;; ************
 ;;;; Syntax table
 ;;;; ************
@@ -565,6 +569,7 @@ updated when REDUCE Run is loaded."
   "Syntax table for REDUCE mode.")
 
 
+
 ;;;; *****************
 ;;;; REDUCE major mode
 ;;;; *****************
@@ -686,6 +691,7 @@ Mark ! followed by \" as having punctuation syntax (syntax-code
     (setq start (1+ start))))
 
 
+
 ;;;; *******************************
 ;;;; Parse REDUCE comment statements
 ;;;; *******************************
@@ -791,6 +797,7 @@ the end of that comment statement."
       (reduce--in-comment-statement-p pos)))
 
 
+
 ;;;; *****************************************************************
 ;;;; Searching for syntactic elements ignoring comments, strings, etc.
 ;;;; *****************************************************************
@@ -862,6 +869,7 @@ Return t if match found, nil otherwise."
         t))))                         ; match for original regexp found
 
 
+
 ;;;; **********************************************
 ;;;; Skipping comments and white space of all types
 ;;;; **********************************************
@@ -883,6 +891,7 @@ Return t if match found, nil otherwise."
       (forward-comment (-(buffer-size)))))) ; syntactic comments & white space
 
 
+
 ;;;; ********************
 ;;;; Indentation commands
 ;;;; ********************
@@ -1331,6 +1340,7 @@ Re-indent if the text just typed matches ‘reduce-auto-indent-regexp’."
              (reduce-indent-line))))))
 
 
+
 ;;;; ******************************
 ;;;; Operations based on procedures
 ;;;; ******************************
@@ -1456,6 +1466,7 @@ fails, report a user error."
       (narrow-to-region (point) end))))
 
 
+
 ;;;; ******************************
 ;;;; Operations based on statements
 ;;;; ******************************
@@ -1632,6 +1643,7 @@ argument minus (-) is equivalent to -1."
                          (point))))
 
 
+
 ;;;; ************************
 ;;;; Moving by block or group
 ;;;; ************************
@@ -1816,6 +1828,7 @@ Return t if successful; otherwise return nil."
     found))
 
 
+
 ;;;; ***********************************
 ;;;; Balanced expression (sexp) commands
 ;;;; ***********************************
@@ -1904,6 +1917,7 @@ If unable to kill a balanced expression, throw a user error."
                          (reduce-forward-sexp))))
 
 
+
 ;;;; ****************
 ;;;; Comment commands
 ;;;; ****************
@@ -2023,6 +2037,7 @@ justify as well."
           (fill-paragraph justify)))))))
 
 
+
 ;;;; ***************************
 ;;;; Structure template commands
 ;;;; ***************************
@@ -2121,6 +2136,7 @@ If NOSPLIT is non-nil then put OPEN and CLOSE on the same line."
   (reduce-insert-if-then 'else))
 
 
+
 ;;;; *************************************
 ;;;; Support for matching group delimiters
 ;;;; *************************************
@@ -2176,6 +2192,7 @@ If NOSPLIT is non-nil then put OPEN and CLOSE on the same line."
       )))
 
 
+
 ;;;; *****************************
 ;;;; Support for reposition-window
 ;;;; *****************************
@@ -2223,6 +2240,7 @@ error."
     (reposition-window)))
 
 
+
 ;;;; ******************************************************
 ;;;; Support for REDUCE keyword/phrase/structure completion
 ;;;; ******************************************************
@@ -2274,6 +2292,7 @@ passing on any prefix ARG (in raw form)."
            (message "Making completion list…%s" "done")))))
 
 
+
 ;;;; **********************************************************
 ;;;; Support for displaying current procedure name in mode line
 ;;;; **********************************************************
@@ -2390,6 +2409,7 @@ But don't jump out of the current procedure!"
                 ("" reduce--show-proc-format " "))))
 
 
+
 ;;;; *************
 ;;;; Imenu support
 ;;;; *************
@@ -2506,6 +2526,7 @@ Run by the hook ‘buffer-list-update-hook’."
 (add-hook 'buffer-list-update-hook #'reduce--update-bounds-of-thing-at-point)
 
 
+
 ;;;; *****************************************
 ;;;; Support for tagging procedure definitions
 ;;;; *****************************************
