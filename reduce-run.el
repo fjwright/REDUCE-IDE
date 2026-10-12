@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1998
-;; Time-stamp: <2026-10-11 17:56:58 franc>
+;; Time-stamp: <2026-10-12 16:18:34 franc>
 ;; Keywords: languages, processes
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 
@@ -830,7 +830,7 @@ The user always chooses interactively whether to echo file input."
 After waiting for 10 seconds, throw an error.
 Otherwise, leave point after the prompt, i.e. at end of buffer.
 Assume the current buffer is a REDUCE process buffer!"
-  (let ((count 10))
+  (let ((count 100))
     (while (progn
              (when (<= (setq count (1- count)) 0)
                (error "Timeout waiting for REDUCE prompt"))
@@ -839,7 +839,9 @@ Assume the current buffer is a REDUCE process buffer!"
              ;; boundaries (cf. ‘comint-bol’)
              (forward-line 0)
              (not (looking-at reduce-run-prompt)))
-      (sit-for 1)))
+      (sit-for 0.1 t))
+    ;; (message "reduce-run--wait-for-prompt count of 0.1s waits: %d" count)
+    )
   (goto-char (point-max)))
 
 (defalias 'reduce-fasl-file 'reduce-compile-file)
