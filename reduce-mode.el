@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1992
-;; Time-stamp: <2026-10-12 17:57:11 franc>
+;; Time-stamp: <2026-10-13 17:06:21 franc>
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.14.2
 ;; Package-Requires: (cl-lib)
@@ -2063,19 +2063,19 @@ With argument include a correctly indented ‘else’ on a second line."
   "Insert and indent ‘begin … end’ block; if NOSPLIT then on same line.
 Position point inside.
 With argument put ‘begin’ and ‘end’ on the same line
-\(see ‘reduce-insert-block-or-group’)."
+\(see ‘reduce--insert-block-or-group’)."
   (interactive "*P")                    ; error if buffer read-only
-  (reduce-insert-block-or-group "begin" "end" t nosplit))
+  (reduce--insert-block-or-group "begin" "end" t nosplit))
 
 (defun reduce-insert-group (&optional nosplit)
   "Insert and indent ‘<<  >>’ group; if NOSPLIT then on same line.
 Position point inside.
 With argument put ‘<<’ and ‘>>’ on the same line
-\(see ‘reduce-insert-block-or-group’)."
+\(see ‘reduce--insert-block-or-group’)."
   (interactive "*P")                    ; error if buffer read-only
-  (reduce-insert-block-or-group "<<" ">>" nil nosplit))
+  (reduce--insert-block-or-group "<<" ">>" nil nosplit))
 
-(defun reduce-insert-block-or-group (open close block nosplit)
+(defun reduce--insert-block-or-group (open close block nosplit)
   "Insert and indent ‘OPEN … CLOSE’ structure and position point inside.
 If the mark is transient and active then enclose the region; otherwise
 if point is not at the end of the line then enclose the rest of the line.
