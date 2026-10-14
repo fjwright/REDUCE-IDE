@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1992
-;; Time-stamp: <2026-10-13 17:06:21 franc>
+;; Time-stamp: <2026-10-14 17:31:13 franc>
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.14.2
 ;; Package-Requires: (cl-lib)
@@ -375,7 +375,7 @@ Run mode when used; if it is nil then do nothing."
   "C-c b" #'reduce-insert-block
   "C-c <" #'reduce-insert-group
   "C-M-l" #'reduce-reposition-window
-  "C-M-i" #'reduce-complete-symbol
+  ;; "C-M-i" #'reduce-complete-symbol      ; via completion-at-point-functions
   "C-c TAB" #'reduce-complete-symbol    ; since C-M-i used by flyspell
   "M-R" #'run-reduce)
 
@@ -675,7 +675,9 @@ also affects this mode.  Entry to this mode runs the hooks on
    parse-sexp-lookup-properties t)
   ;; This is needed for the comment statement parser:
   (add-hook 'before-change-functions
-            'reduce--comment-seq-reset nil t))
+            'reduce--comment-seq-reset nil t)
+  (add-hook 'completion-at-point-functions
+            #'reduce-completion-at-point nil 'local))
 
 (defun reduce--syntax-propertize (start end)
   "Syntax-propertize buffer text between START and END.
@@ -692,9 +694,9 @@ Mark ! followed by \" as having punctuation syntax (syntax-code
 
 
 
-;;;; *******************************
-;;;; Parse REDUCE comment statements
-;;;; *******************************
+;;;; ************************
+;;;; Parse comment statements
+;;;; ************************
 
 ;; Created: October 2022
 
@@ -798,9 +800,9 @@ the end of that comment statement."
 
 
 
-;;;; *****************************************************************
-;;;; Searching for syntactic elements ignoring comments, strings, etc.
-;;;; *****************************************************************
+;;;; **************************************************************
+;;;; Search for syntactic elements ignoring comments, strings, etc.
+;;;; **************************************************************
 
 (defun reduce--re-search-forward (regexp &optional MOVE)
   "Syntactic search forwards for REGEXP.
@@ -870,9 +872,9 @@ Return t if match found, nil otherwise."
 
 
 
-;;;; **********************************************
-;;;; Skipping comments and white space of all types
-;;;; **********************************************
+;;;; ******************************************
+;;;; Skip comments and white space of all types
+;;;; ******************************************
 
 (defun reduce--skip-comments-forward ()
   "Move forwards across comments and white space of all types."
@@ -892,9 +894,9 @@ Return t if match found, nil otherwise."
 
 
 
-;;;; ********************
-;;;; Indentation commands
-;;;; ********************
+;;;; ***********
+;;;; Indentation
+;;;; ***********
 
 ;; This section updated 13 October 2022, but needs a lot more work!
 
@@ -1644,9 +1646,9 @@ argument minus (-) is equivalent to -1."
 
 
 
-;;;; ************************
-;;;; Moving by block or group
-;;;; ************************
+;;;; **********************
+;;;; Move by block or group
+;;;; **********************
 
 ;; This section updated September 2022.
 
@@ -1829,9 +1831,9 @@ Return t if successful; otherwise return nil."
 
 
 
-;;;; ***********************************
-;;;; Balanced expression (sexp) commands
-;;;; ***********************************
+;;;; ****************************
+;;;; Balanced expressions (sexps)
+;;;; ****************************
 
 (defun reduce-forward-sexp ()
   "Move forwards across one balanced expression (sexp).
@@ -1918,9 +1920,9 @@ If unable to kill a balanced expression, throw a user error."
 
 
 
-;;;; ****************
-;;;; Comment commands
-;;;; ****************
+;;;; ********
+;;;; Comments
+;;;; ********
 
 (defun reduce-comment-region (beg end arg)
   "Comment/uncomment every line in region, from BEG to END.
@@ -2038,9 +2040,9 @@ justify as well."
 
 
 
-;;;; ***************************
-;;;; Structure template commands
-;;;; ***************************
+;;;; *******************
+;;;; Structure templates
+;;;; *******************
 
 (defun reduce-insert-if-then (&optional else)
   "Insert ‘if … then’; if ELSE then include ‘else’.
@@ -2137,9 +2139,9 @@ If NOSPLIT is non-nil then put OPEN and CLOSE on the same line."
 
 
 
-;;;; *************************************
-;;;; Support for matching group delimiters
-;;;; *************************************
+;;;; **********************
+;;;; Match group delimiters
+;;;; **********************
 
 (defvar blink-matching-paren)           ; defined in ‘simple.el’
 (defvar blink-matching-paren-distance)  ; defined in ‘simple.el’
@@ -2193,9 +2195,9 @@ If NOSPLIT is non-nil then put OPEN and CLOSE on the same line."
 
 
 
-;;;; *****************************
-;;;; Support for reposition-window
-;;;; *****************************
+;;;; *****************
+;;;; Reposition window
+;;;; *****************
 
 ;; This section updated January 2023.
 
@@ -2241,11 +2243,11 @@ error."
 
 
 
-;;;; ******************************************************
-;;;; Support for REDUCE keyword/phrase/structure completion
-;;;; ******************************************************
+;;;; *******************
+;;;; Completion at point
+;;;; *******************
 
-(defun reduce-complete-symbol (arg)
+(defun reduce-complete-symbol (arg)     ; OBSOLESCENT
   "Perform completion on REDUCE symbol preceding point or region.
 Do this only if mark is transient and active.
 Compare that symbol against the elements of ‘reduce-completion-alist’.
@@ -2291,11 +2293,61 @@ passing on any prefix ARG (in raw form)."
     ;; Point is between two symbol characters (with syntax class ?w or ?_)
     (insert " ")))
 
+(defun reduce-completion-at-point ()
+  "Temporary hack as a first test of using ‘completion-at-point-functions’."
+  #'reduce-complete-symbol-tmp)
+
+(defun reduce-complete-symbol-tmp ()    ;must be nullary!
+  "Perform completion on REDUCE symbol preceding point or region.
+Do this only if mark is transient and active.
+Compare that symbol against the elements of ‘reduce-completion-alist’.
+If a perfect match (only) has a cdr then delete the match and insert
+the cdr if it is a string or call it if it is a (nullary) function,
+passing on any prefix ARG (in raw form)."
+  ;; Based on lisp-complete-symbol in lisp.el
+  (interactive "*P")                    ; error if buffer read-only
+  (let* ((end (progn
+                (cond ((and transient-mark-mode mark-active)
+                       (unless (= (point) (region-beginning))
+                         (exchange-point-and-mark)
+                         (skip-syntax-backward " "))))
+                (point)))
+         (beg (save-excursion
+                (skip-syntax-backward "w_.(")
+                (point)))
+         (pattern (buffer-substring-no-properties beg end))
+         (completion (try-completion pattern reduce-completion-alist)))
+    (cond ((eq completion t)            ; perfect match
+           (let ((fn (cdr (assoc pattern reduce-completion-alist))))
+             (when fn
+               (cond ((stringp fn) (delete-region beg end) (insert fn))
+                     ;; ((fboundp fn) (delete-region beg end) (funcall fn arg))
+                     (t (error "Completion for \"%s\" not a string or function"
+                               pattern))))))
+          ((null completion)
+           (message "Can't find completion for \"%s\"" pattern)
+           (ding))
+          ((not (string= pattern completion))
+           (delete-region beg end)
+           (insert completion)
+           (if (fboundp (cdr (assoc completion reduce-completion-alist)))
+               (setq deactivate-mark nil))) ; for beg -> begin -> …
+          (t
+           (message "Making completion list…")
+           (let ((list (all-completions pattern reduce-completion-alist)))
+             (with-output-to-temp-buffer "*Completions*"
+               (display-completion-list list)))
+           (message "Making completion list…%s" "done"))))
+  (when (and (member (syntax-after (point)) '((2) (3)))
+             (member (syntax-after (1- (point))) '((2) (3))))
+    ;; Point is between two symbol characters (with syntax class ?w or ?_)
+    (insert " ")))
+
 
 
-;;;; **********************************************************
-;;;; Support for displaying current procedure name in mode line
-;;;; **********************************************************
+;;;; *******************************************
+;;;; Display current procedure name in mode line
+;;;; *******************************************
 
 ;; This code is based loosely on ‘which-funcion-mode’ but does not use
 ;; any of its functionality.
@@ -2410,9 +2462,9 @@ But don't jump out of the current procedure!"
 
 
 
-;;;; *************
-;;;; Imenu support
-;;;; *************
+;;;; *****
+;;;; Imenu
+;;;; *****
 
 (defun reduce--imenu-add-menubar-index (&optional redraw)
   "Add Imenu to menubar; if REDRAW force update."
@@ -2527,9 +2579,9 @@ Run by the hook ‘buffer-list-update-hook’."
 
 
 
-;;;; *****************************************
-;;;; Support for tagging procedure definitions
-;;;; *****************************************
+;;;; *******
+;;;; Tagging
+;;;; *******
 
 (defcustom reduce-etags-directory invocation-directory
   "Directory containing the etags program, or nil if it is in path.
