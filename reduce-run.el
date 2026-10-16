@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1998
-;; Time-stamp: <2026-10-12 16:18:34 franc>
+;; Time-stamp: <2026-10-16 10:59:10 franc>
 ;; Keywords: languages, processes
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 
@@ -559,7 +559,7 @@ buffer and return “root”."
     ;; ‘apply’ used below because last arg is &rest!
     (set-buffer (apply #'make-comint-in-buffer
                        process-name nil (car cmd) nil (cdr cmd)))
-    (reduce-run--make-header-read-only)
+    ;; (reduce-run--make-header-read-only)
     root))
 
 (defun reduce-run--make-header-read-only ()
