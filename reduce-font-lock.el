@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: 6 June 2022 as a separate file (was part of reduce-mode.el)
-;; Time-stamp: <2026-10-17 18:20:38 franc>
+;; Time-stamp: <2026-10-18 17:45:14 franc>
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 
 ;; This file is part of REDUCE IDE.
@@ -632,12 +632,9 @@ their names should not be taken too literally!")
 (nconc font-lock-extra-managed-props '(read-only front-sticky))
 
 (defconst reduce-font-lock--run-keywords-0
-  '(;; REDUCE header:
+  '(;; REDUCE header (including newline):
     ("^REDUCE (.+ \\.\\.\\.\n" .
-     '(0 '(face reduce-header
-                read-only t
-                front-sticky (read-only)
-                )))
+     '(0 '(face reduce-header read-only t front-sticky (read-only))))
     ;; REDUCE and CSL error messages:
     ("\\(?:\\*\\{5\\}\\|\\+\\{3\\}\\).*" . 'reduce-error)
     ;; REDUCE warning messages:

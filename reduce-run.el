@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1998
-;; Time-stamp: <2026-10-16 10:59:10 franc>
+;; Time-stamp: <2026-10-18 17:40:49 franc>
 ;; Keywords: languages, processes
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 
@@ -402,8 +402,9 @@ also affects this mode.  Entry to this mode runs the hooks on
   (and reduce-show-delim-mode-on
        (require 'reduce-delim "reduce-delim" t)
        (reduce-show-delim-mode))
-  (setq comint-input-filter #'reduce-run--input-filter  ; buffer-local
-        comint-input-ignoredups t)                 ; buffer-local
+  (setq comint-input-ignoredups t)      ; buffer-local
+  (setq-local comint-input-filter #'reduce-run--input-filter
+              comint-get-old-input #'reduce-run--get-old-input)
   ;; ansi-color-process-output may cause an error on MS Windows when
   ;; CSL is terminated and is probably irrelevant anyway, so …
   (when (eq system-type 'windows-nt)
@@ -417,6 +418,16 @@ also affects this mode.  Entry to this mode runs the hooks on
 (defun reduce-run--input-filter (str)
   "True if STR does not match variable ‘reduce-input-filter’."
   (not (string-match reduce-input-filter str)))
+
+(defun reduce-run--get-old-input ()
+  "Return old REDUCE input.
+This function is called when return is typed while point is in old text.
+It returns the current input field to be submitted as process input if
+point is in previous REDUCE input; otherwise it throws a user error."
+  (let ((bof (field-beginning)))
+    (if (eq (get-char-property bof 'field) 'output)
+        (user-error "Point not in REDUCE input")
+      (field-string-no-properties bof))))
 
 (defvar reduce-run--history nil
   "Input history for the ‘run-reduce’ command.")
@@ -559,17 +570,7 @@ buffer and return “root”."
     ;; ‘apply’ used below because last arg is &rest!
     (set-buffer (apply #'make-comint-in-buffer
                        process-name nil (car cmd) nil (cdr cmd)))
-    ;; (reduce-run--make-header-read-only)
     root))
-
-(defun reduce-run--make-header-read-only ()
-  "Make REDUCE header text read-only."
-  (reduce-run--wait-for-prompt)
-  ;; Leaves point after the first prompt (at EOB).
-  (save-excursion
-    (let ((case-fold-search t) (inhibit-read-only t))
-      (add-text-properties (re-search-backward "^REDUCE") (point-max)
-                           '(read-only t front-sticky (read-only))))))
 
 (add-hook 'same-window-regexps "REDUCE") ; ??? Not sure about this! ???
 
