@@ -56,7 +56,10 @@ Optional:
 * Declare `reduce-mode-load-hook` and `reduce-run-load-hook` obsolete; use `with-eval-after-load` instead.
 * Revise new faces so that `reduce-warning` and `reduce-trace` inherit from `warning` and `success` respectively.
 * New file `reduce-dired.el`; load it to provide commands in a Dired buffer to run the current file as a REDUCE program.  This is best automated by including `(with-eval-after-load 'dired (require 'reduce-dired))` in your .emacs file.
-* Make the REDUCE header test read-only and wait for a REDUCE prompt in increments of 0.1s instead of 1s.
+* Wait for a REDUCE prompt in increments of 0.1s instead of 1s.
+* Format the REDUCE header distinctly, make it read-only and throw a user error (instead of entering it as new input) if you type RET with point in the header.
+* Revise completion in a REDUCE edit- or run-mode buffer to work better and use standard Emacs facilities.
+* Use REDUCE mode for `.rlg` files.
 
 <!-- Local Variables: -->
 <!-- fill-column: 1000 -->

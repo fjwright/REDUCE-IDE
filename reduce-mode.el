@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1992
-;; Time-stamp: <2026-10-14 17:31:13 franc>
+;; Time-stamp: <2026-10-21 15:23:33 franc>
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.14.2
 ;; Package-Requires: (cl-lib)
@@ -36,7 +36,7 @@
 ;; sturm@redlog.eu
 
 ;;;###autoload
-(add-to-list 'auto-mode-alist '("\\.\\(?:red\\|tst\\)\\'" . reduce-mode))
+(add-to-list 'auto-mode-alist '("\\.\\(?:red\\|tst\\|rlg\\)\\'" . reduce-mode))
 
 ;; To turn on only REDUCE font-lock mode by default include
 ;; (add-hook 'reduce-mode-hook 'turn-on-font-lock)
@@ -2247,6 +2247,25 @@ error."
 ;;;; Completion at point
 ;;;; *******************
 
+;; The following function is indirectly bound to "M-TAB" via the
+;; variable ‘completion-at-point-functions’:
+
+(defun reduce-completion-at-point ()
+  "Complete the text immediately preceding point.
+This function is assigned to ‘completion-at-point-functions’ in
+‘reduce-mode’."
+;; Return a list of the following form:
+;;    (START END COLLECTION . PROPS)
+  (list (save-excursion
+          (skip-syntax-backward "w_.(")
+          (point))
+        (point)
+        reduce-completion-alist))
+
+
+
+;; The following obsolescent function is bound to "C-c TAB":
+
 (defun reduce-complete-symbol (arg)     ; OBSOLESCENT
   "Perform completion on REDUCE symbol preceding point or region.
 Do this only if mark is transient and active.
@@ -2272,56 +2291,6 @@ passing on any prefix ARG (in raw form)."
              (when fn
                (cond ((stringp fn) (delete-region beg end) (insert fn))
                      ((fboundp fn) (delete-region beg end) (funcall fn arg))
-                     (t (error "Completion for \"%s\" not a string or function"
-                               pattern))))))
-          ((null completion)
-           (message "Can't find completion for \"%s\"" pattern)
-           (ding))
-          ((not (string= pattern completion))
-           (delete-region beg end)
-           (insert completion)
-           (if (fboundp (cdr (assoc completion reduce-completion-alist)))
-               (setq deactivate-mark nil))) ; for beg -> begin -> …
-          (t
-           (message "Making completion list…")
-           (let ((list (all-completions pattern reduce-completion-alist)))
-             (with-output-to-temp-buffer "*Completions*"
-               (display-completion-list list)))
-           (message "Making completion list…%s" "done"))))
-  (when (and (member (syntax-after (point)) '((2) (3)))
-             (member (syntax-after (1- (point))) '((2) (3))))
-    ;; Point is between two symbol characters (with syntax class ?w or ?_)
-    (insert " ")))
-
-(defun reduce-completion-at-point ()
-  "Temporary hack as a first test of using ‘completion-at-point-functions’."
-  #'reduce-complete-symbol-tmp)
-
-(defun reduce-complete-symbol-tmp ()    ;must be nullary!
-  "Perform completion on REDUCE symbol preceding point or region.
-Do this only if mark is transient and active.
-Compare that symbol against the elements of ‘reduce-completion-alist’.
-If a perfect match (only) has a cdr then delete the match and insert
-the cdr if it is a string or call it if it is a (nullary) function,
-passing on any prefix ARG (in raw form)."
-  ;; Based on lisp-complete-symbol in lisp.el
-  (interactive "*P")                    ; error if buffer read-only
-  (let* ((end (progn
-                (cond ((and transient-mark-mode mark-active)
-                       (unless (= (point) (region-beginning))
-                         (exchange-point-and-mark)
-                         (skip-syntax-backward " "))))
-                (point)))
-         (beg (save-excursion
-                (skip-syntax-backward "w_.(")
-                (point)))
-         (pattern (buffer-substring-no-properties beg end))
-         (completion (try-completion pattern reduce-completion-alist)))
-    (cond ((eq completion t)            ; perfect match
-           (let ((fn (cdr (assoc pattern reduce-completion-alist))))
-             (when fn
-               (cond ((stringp fn) (delete-region beg end) (insert fn))
-                     ;; ((fboundp fn) (delete-region beg end) (funcall fn arg))
                      (t (error "Completion for \"%s\" not a string or function"
                                pattern))))))
           ((null completion)
