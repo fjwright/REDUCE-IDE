@@ -59,7 +59,7 @@ Optional:
 * Wait for a REDUCE prompt in increments of 0.1s instead of 1s.
 * Format the REDUCE header distinctly, make it read-only and throw a user error (instead of entering it as new input) if you type RET with point in the header.
 * Revise completion in a REDUCE edit- or run-mode buffer to work better and use standard Emacs facilities.
-* Use REDUCE mode for `.rlg` files.
+* New mode, REDUCE View mode, which is essentially REDUCE major mode plus View minor mode, used by default for `.rlg` files.
 
 <!-- Local Variables: -->
 <!-- fill-column: 1000 -->

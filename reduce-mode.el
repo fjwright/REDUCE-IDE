@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1992
-;; Time-stamp: <2026-10-21 15:23:33 franc>
+;; Time-stamp: <2026-10-24 15:22:39 franc>
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.14.2
 ;; Package-Requires: (cl-lib)
@@ -36,7 +36,9 @@
 ;; sturm@redlog.eu
 
 ;;;###autoload
-(add-to-list 'auto-mode-alist '("\\.\\(?:red\\|tst\\|rlg\\)\\'" . reduce-mode))
+(add-to-list 'auto-mode-alist '("\\.\\(?:red\\|tst\\)\\'" . reduce-mode))
+;;;###autoload
+(add-to-list 'auto-mode-alist '("\\.rlg\\'" . reduce-view-mode))
 
 ;; To turn on only REDUCE font-lock mode by default include
 ;; (add-hook 'reduce-mode-hook 'turn-on-font-lock)
@@ -691,6 +693,23 @@ Mark ! followed by \" as having punctuation syntax (syntax-code
          (nth 3 (syntax-ppss start))    ; moves point to start
          (put-text-property start (1+ start) 'syntax-table '(1 . nil)))
     (setq start (1+ start))))
+
+;;;###autoload
+(define-derived-mode reduce-view-mode reduce-mode "REDUCE View"
+  "Major mode for viewing REDUCE input and output – part of REDUCE IDE.
+REDUCE major mode plus View minor mode.  See also ‘reduce-mode’.  Entry
+to this mode runs the hooks on ‘prog-mode-hook’, ‘reduce-mode-hook’,
+‘view-mode-hook’ and ‘reduce-view-mode-hook’ (in that order)."
+  ;; Emulate (view-mode) but without the lighter.
+  (require 'view)
+  (use-local-map
+   (setq reduce-view-mode-map
+         (make-composed-keymap view-mode-map reduce-mode-map)))
+  (keymap-local-set "e" 'reduce-mode)
+  ;; TO DO: Also need to rebind keys such as "q"
+  (view--enable)
+  (run-hooks 'view-mode-hook)
+  )
 
 
 
