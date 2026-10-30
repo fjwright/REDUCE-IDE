@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1992
-;; Time-stamp: <2026-10-24 15:22:39 franc>
+;; Time-stamp: <2026-10-30 18:07:46 franc>
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.14.2
 ;; Package-Requires: (cl-lib)
@@ -695,21 +695,13 @@ Mark ! followed by \" as having punctuation syntax (syntax-code
     (setq start (1+ start))))
 
 ;;;###autoload
-(define-derived-mode reduce-view-mode reduce-mode "REDUCE View"
+(defun reduce-view-mode ()
   "Major mode for viewing REDUCE input and output – part of REDUCE IDE.
-REDUCE major mode plus View minor mode.  See also ‘reduce-mode’.  Entry
-to this mode runs the hooks on ‘prog-mode-hook’, ‘reduce-mode-hook’,
-‘view-mode-hook’ and ‘reduce-view-mode-hook’ (in that order)."
-  ;; Emulate (view-mode) but without the lighter.
-  (require 'view)
-  (use-local-map
-   (setq reduce-view-mode-map
-         (make-composed-keymap view-mode-map reduce-mode-map)))
-  (keymap-local-set "e" 'reduce-mode)
-  ;; TO DO: Also need to rebind keys such as "q"
-  (view--enable)
-  (run-hooks 'view-mode-hook)
-  )
+REDUCE major mode (‘reduce-mode’) plus View minor mode (‘view-mode’).
+
+\\{view-mode-map}\n\n\\{reduce-mode-map}"
+  (reduce-mode)
+  (view-mode))
 
 
 
