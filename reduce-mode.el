@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1992
-;; Time-stamp: <2026-10-30 18:07:46 franc>
+;; Time-stamp: <2026-10-31 15:43:23 franc>
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 ;; Package-Version: 1.14.2
 ;; Package-Requires: (cl-lib)
@@ -159,66 +159,67 @@ This relates to repeated use of ‘reduce-forward-statement’ or
   :link '(custom-manual "(reduce-ide)Statements")
   :group 'reduce-interface)
 
-(defcustom reduce-completion-alist
-  '(("algebraic")
-    ("algebraic procedure")
-    ("ap" . "algebraic procedure")
-    ("begin" . reduce-insert-block)
-    ("clearrules")
-    ("collect")
-    ("comment")
-    ("endmodule")
-    ("factorize(")
-    ("first")
-    ("for all")
-    ("for each")
-    ("freeof")
-    ("gensym()")
-    ("ift" . reduce-expand-if-then)
-    ("if...then" . reduce-expand-if-then)
-    ("ife" . reduce-expand-if-then-else)
-    ("if...then...else" . reduce-expand-if-then-else)
-    ("impart")
-    ("infinity")
-    ("integer")
-    ("length")
-    ("linear")
-    ("load_package")
-    ("member")
-    ("module")
-    ("operator")
-    ("order")
-    ("procedure")
-    ("product")
-    ("quotient(")
-    ("remainder(")
-    ("repart")
-    ("repeat")
-    ("repeat until")
-    ("resultant(")
-    ("return")
-    ("reverse")
-    ("scalar")
-    ("second")
-    ("smember(")
-    ("such that")
-    ("st" . "such that")
-    ("symbolic")
-    ("symbolic operator")
-    ("sop" . "symbolic operator")
-    ("symbolic procedure")
-    ("sp" . "symbolic procedure")
-    ("third")
-    ("until")
-    ("where")
-    ("while")
-    ("while do")
-    ("write")
-    ("<<" . reduce-insert-group)
-    )
-  "Alist of REDUCE symbols to be completed by ‘reduce-complete-symbol’.
-Optional ‘cdr’ is a replacement string or nullary function (for structures)."
-  :type '(repeat (cons string (choice (const nil) string function)))
+(make-obsolete-variable
+ 'reduce-completion-alist
+ "use `reduce-completion-list' instead." "REDUCE-IDE 1.15")
+
+(defcustom reduce-completion-list
+  '("algebraic"
+    "algebraic procedure"
+    "begin"
+    "begin end"
+    "begin scalar\nend"
+    "clearrules"
+    "collect"
+    "comment"
+    "endmodule"
+    "factorize("
+    "first"
+    "for all"
+    "for each"
+    "freeof"
+    "gensym()"
+    "if then"
+    "then"
+    "then else"
+    "impart"
+    "infinity"
+    "integer"
+    "length"
+    "linear"
+    "load_package"
+    "member"
+    "module"
+    "operator"
+    "order"
+    "procedure"
+    "product"
+    "quotient("
+    "remainder("
+    "repart"
+    "repeat"
+    "repeat until"
+    "resultant("
+    "return"
+    "reverse"
+    "scalar"
+    "second"
+    "smember("
+    "such that"
+    "symbolic"
+    "symbolic operator"
+    "symbolic procedure"
+    "third"
+    "until"
+    "where"
+    "while"
+    "while do"
+    "with"
+    "write"
+    "<< >>")
+  "List of REDUCE completion strings."
+  :package-version '(reduce-ide . "1.15")
+  :type '(repeat string)
   :link '(custom-manual "(reduce-ide)Completion")
   :group 'reduce-interface)
 
@@ -368,7 +369,6 @@ Run mode when used; if it is nil then do nothing."
   "C-M-h" #'reduce-mark-procedure
   "C-x n d" #'reduce-narrow-to-procedure
   "C-c k" #'reduce-kill-procedure
-  ;; "C-M-\\" #'reduce-indent-region       ; via indent-region
   "C-M-q" #'reduce-indent-procedure
   "C-c ;" #'reduce-comment-region
   "C-c :" #'reduce-comment-procedure
@@ -377,8 +377,6 @@ Run mode when used; if it is nil then do nothing."
   "C-c b" #'reduce-insert-block
   "C-c <" #'reduce-insert-group
   "C-M-l" #'reduce-reposition-window
-  ;; "C-M-i" #'reduce-complete-symbol      ; via completion-at-point-functions
-  "C-c TAB" #'reduce-complete-symbol    ; since C-M-i used by flyspell
   "M-R" #'run-reduce)
 
 (defconst reduce--common-run-menu-items
@@ -545,9 +543,9 @@ updated when REDUCE Run is loaded."
 
 
 
-;;;; ************
-;;;; Syntax table
-;;;; ************
+;;;; ************************
+;;;; Syntax and abbrev tables
+;;;; ************************
 
 (defvar reduce-mode-syntax-table
   (let ((table (make-syntax-table)))
@@ -569,6 +567,20 @@ updated when REDUCE Run is loaded."
     (modify-syntax-entry ?| "." table)
     table)
   "Syntax table for REDUCE mode.")
+
+(define-abbrev-table 'reduce-mode-abbrev-table
+  '(;;(ABBREVNAME EXPANSION [HOOK] [PROPS...])
+    ("ap" "algebraic procedure")
+    ("beg" "begin scalar\nend" (lambda() (backward-char 4)))
+    ("ift" "if then" (lambda() (backward-char 5)))
+    ("ife" "if then else" (lambda() (backward-char 10)))
+    ("st" "such that")
+    ("sop" "symbolic operator")
+    ("sp" "symbolic procedure")
+    ("grp" "<< >>" (lambda() (backward-char 3)))
+    )
+  "Abbrev table for REDUCE mode."
+  :system t)
 
 
 
@@ -628,6 +640,7 @@ inherits from Prog mode, so the customization group ‘prog-mode’
 also affects this mode.  Entry to this mode runs the hooks on
 ‘prog-mode-hook’ and ‘reduce-mode-hook’ (in that order)."
   :group 'reduce
+  ;; :abbrev-table 'reduce-mode-abbrev-table ; may not be necessary
   ;; Optionally set up font-lock-mode:
   (and reduce-font-lock-mode-on
        (require 'reduce-font-lock "reduce-font-lock" t)
@@ -2258,70 +2271,17 @@ error."
 ;;;; Completion at point
 ;;;; *******************
 
-;; The following function is indirectly bound to "M-TAB" via the
-;; variable ‘completion-at-point-functions’:
-
 (defun reduce-completion-at-point ()
   "Complete the text immediately preceding point.
-This function is assigned to ‘completion-at-point-functions’ in
-‘reduce-mode’."
+\\<reduce-mode-map>>This function is assigned to ‘completion-at-point-functions’ in
+‘reduce-mode’, and hence indirectly bound to ‘\\[completion-at-point]’."
 ;; Return a list of the following form:
 ;;    (START END COLLECTION . PROPS)
   (list (save-excursion
           (skip-syntax-backward "w_.(")
           (point))
         (point)
-        reduce-completion-alist))
-
-
-
-;; The following obsolescent function is bound to "C-c TAB":
-
-(defun reduce-complete-symbol (arg)     ; OBSOLESCENT
-  "Perform completion on REDUCE symbol preceding point or region.
-Do this only if mark is transient and active.
-Compare that symbol against the elements of ‘reduce-completion-alist’.
-If a perfect match (only) has a cdr then delete the match and insert
-the cdr if it is a string or call it if it is a (nullary) function,
-passing on any prefix ARG (in raw form)."
-  ;; Based on lisp-complete-symbol in lisp.el
-  (interactive "*P")                    ; error if buffer read-only
-  (let* ((end (progn
-                (cond ((and transient-mark-mode mark-active)
-                       (unless (= (point) (region-beginning))
-                         (exchange-point-and-mark)
-                         (skip-syntax-backward " "))))
-                (point)))
-         (beg (save-excursion
-                (skip-syntax-backward "w_.(")
-                (point)))
-         (pattern (buffer-substring-no-properties beg end))
-         (completion (try-completion pattern reduce-completion-alist)))
-    (cond ((eq completion t)            ; perfect match
-           (let ((fn (cdr (assoc pattern reduce-completion-alist))))
-             (when fn
-               (cond ((stringp fn) (delete-region beg end) (insert fn))
-                     ((fboundp fn) (delete-region beg end) (funcall fn arg))
-                     (t (error "Completion for \"%s\" not a string or function"
-                               pattern))))))
-          ((null completion)
-           (message "Can't find completion for \"%s\"" pattern)
-           (ding))
-          ((not (string= pattern completion))
-           (delete-region beg end)
-           (insert completion)
-           (if (fboundp (cdr (assoc completion reduce-completion-alist)))
-               (setq deactivate-mark nil))) ; for beg -> begin -> …
-          (t
-           (message "Making completion list…")
-           (let ((list (all-completions pattern reduce-completion-alist)))
-             (with-output-to-temp-buffer "*Completions*"
-               (display-completion-list list)))
-           (message "Making completion list…%s" "done"))))
-  (when (and (member (syntax-after (point)) '((2) (3)))
-             (member (syntax-after (1- (point))) '((2) (3))))
-    ;; Point is between two symbol characters (with syntax class ?w or ?_)
-    (insert " ")))
+        reduce-completion-list))
 
 
 
