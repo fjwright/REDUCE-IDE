@@ -4,7 +4,7 @@
 
 ### [Francis Wright](https://sites.google.com/site/fjwcentaur) ###
 
-Version 1.14.2, October 2026
+Version 1.15, October 2026
 
 REDUCE IDE is a package that provides an Integrated Development Environment for the [REDUCE computer algebra system](https://reduce-algebra.sourceforge.io/) within the GNU Emacs editor.  Its two major components are Emacs Lisp libraries that provide major modes for editing REDUCE source code and running a *command-line version* of REDUCE in an Emacs window.  It assumes that Emacs is running under a GUI such as Microsoft Windows or the X Window System under some flavour of UNIX or Linux, and displays Unicode character sets correctly.  REDUCE IDE does not include REDUCE, which is available separately from [SourceForge](https://sourceforge.net/projects/reduce-algebra/).  You don't need to install REDUCE in order to edit REDUCE source code using REDUCE IDE, but if you want to run REDUCE in REDUCE IDE then you do need to install REDUCE.
 
@@ -58,8 +58,11 @@ Optional:
 * New file `reduce-dired.el`; load it to provide commands in a Dired buffer to run the current file as a REDUCE program.  This is best automated by including `(with-eval-after-load 'dired (require 'reduce-dired))` in your .emacs file.
 * Wait for a REDUCE prompt in increments of 0.1s instead of 1s.
 * Format the REDUCE header distinctly, make it read-only and throw a user error (instead of entering it as new input) if you type RET with point in the header.
+* New mode, REDUCE View mode, which is just REDUCE major mode plus View minor mode, used by default for `.rlg` files.
 * Revise completion in a REDUCE edit- or run-mode buffer to work better and use standard Emacs facilities.
-* New mode, REDUCE View mode, which is essentially just REDUCE major mode plus View minor mode, used by default for `.rlg` files.
+* Rationalise completion and abbrev support:
+  * Move non-completions into a new abbrevs table; to use this, customize `reduce-mode-hook` to include `abbrevs-mode`.
+  * **Incompatible change:** Replace `reduce-completion-alist` with `reduce-completion-list`, since completions are now just strings.
 
 <!-- Local Variables: -->
 <!-- fill-column: 1000 -->

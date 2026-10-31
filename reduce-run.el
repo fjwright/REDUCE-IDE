@@ -4,7 +4,7 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1998
-;; Time-stamp: <2026-10-18 17:40:49 franc>
+;; Time-stamp: <2026-10-31 16:50:03 franc>
 ;; Keywords: languages, processes
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
 
@@ -282,8 +282,6 @@ mode such as keybindings, or load extensions."
   "S-RET" #'comint-send-input
   "C-<return>" #'newline
   "C-RET" #'newline
-  "M-TAB" #'reduce-complete-symbol
-  "C-c TAB" #'reduce-complete-symbol
   :menu
   `("REDUCE"
     ["(Re)Run REDUCE" rerun-reduce
@@ -782,8 +780,6 @@ buffer."
                     (car reduce-run--history)))
            (cmd (cdr (assoc cmd reduce-run-commands))))
       (reduce-run--run-reduce-1 cmd proc-name buf-name))))
-
-(define-obsolete-function-alias 're-run-reduce 'rerun-reduce "REDUCE IDE 1.10.1")
 
 
 

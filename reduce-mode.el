@@ -4,9 +4,9 @@
 
 ;; Author: Francis J. Wright <https://sites.google.com/site/fjwcentaur>
 ;; Created: late 1992
-;; Time-stamp: <2026-10-31 15:43:23 franc>
+;; Time-stamp: <2026-10-31 16:29:12 franc>
 ;; Homepage: https://reduce-algebra.sourceforge.io/reduce-ide/
-;; Package-Version: 1.14.2
+;; Package-Version: 1.15
 ;; Package-Requires: (cl-lib)
 
 ;; This file is part of REDUCE IDE.
@@ -141,7 +141,8 @@ default it turns on ‘reduce-word-mode’, defined in ‘reduce-extra’."
 
 ;; Interface:
 
-(define-obsolete-variable-alias 'reduce-imenu 'reduce-imenu-add "1.11")
+(define-obsolete-variable-alias 'reduce-imenu
+  'reduce-imenu-add "REDUCE IDE 1.11")
 
 (defcustom reduce-imenu-add t
   "If non-nil REDUCE mode automatically calls ‘imenu-add-menubar-index’.
@@ -161,7 +162,7 @@ This relates to repeated use of ‘reduce-forward-statement’ or
 
 (make-obsolete-variable
  'reduce-completion-alist
- "use `reduce-completion-list' instead." "REDUCE-IDE 1.15")
+ "use `reduce-completion-list' instead." "REDUCE IDE 1.15")
 
 (defcustom reduce-completion-list
   '("algebraic"
@@ -298,7 +299,7 @@ Defaults to the value of ‘show-paren-mode’."
 (defcustom reduce-show-proc-delay 0.5
   "Idle time delay in seconds before showing current procedure name."
   ;; Reinstated since Emacs 30 obsoletes ‘idle-update-delay.’
-  :package-version '(reduce-ide . "1.12.1")
+  :package-version '(reduce-ide . "1.12")
   :type 'number
   :link '(custom-manual "(reduce-ide)Show Proc")
   :group 'reduce-display)
@@ -570,17 +571,16 @@ updated when REDUCE Run is loaded."
 
 (define-abbrev-table 'reduce-mode-abbrev-table
   '(;;(ABBREVNAME EXPANSION [HOOK] [PROPS...])
-    ("ap" "algebraic procedure")
-    ("beg" "begin scalar\nend" (lambda() (backward-char 4)))
-    ("ift" "if then" (lambda() (backward-char 5)))
-    ("ife" "if then else" (lambda() (backward-char 10)))
-    ("st" "such that")
-    ("sop" "symbolic operator")
-    ("sp" "symbolic procedure")
-    ("grp" "<< >>" (lambda() (backward-char 3)))
+    ("ap" "algebraic procedure" nil :system t)
+    ("beg" "begin scalar\nend" (lambda() (backward-char 4)) :system t)
+    ("grp" "<< >>" (lambda() (backward-char 3)) :system t)
+    ("ift" "if then" (lambda() (backward-char 5)) :system t)
+    ("ife" "if then else" (lambda() (backward-char 10)) :system t)
+    ("st" "such that" nil :system t)
+    ("sp" "symbolic procedure" nil :system t)
+    ("sop" "symbolic operator" nil :system t)
     )
-  "Abbrev table for REDUCE mode."
-  :system t)
+  "Abbrev table for REDUCE mode.")
 
 
 
@@ -640,7 +640,6 @@ inherits from Prog mode, so the customization group ‘prog-mode’
 also affects this mode.  Entry to this mode runs the hooks on
 ‘prog-mode-hook’ and ‘reduce-mode-hook’ (in that order)."
   :group 'reduce
-  ;; :abbrev-table 'reduce-mode-abbrev-table ; may not be necessary
   ;; Optionally set up font-lock-mode:
   (and reduce-font-lock-mode-on
        (require 'reduce-font-lock "reduce-font-lock" t)
@@ -2273,8 +2272,8 @@ error."
 
 (defun reduce-completion-at-point ()
   "Complete the text immediately preceding point.
-\\<reduce-mode-map>>This function is assigned to ‘completion-at-point-functions’ in
-‘reduce-mode’, and hence indirectly bound to ‘\\[completion-at-point]’."
+This function is assigned to ‘completion-at-point-functions’ in
+‘reduce-mode’, and hence indirectly bound to ‘C-M-i’."
 ;; Return a list of the following form:
 ;;    (START END COLLECTION . PROPS)
   (list (save-excursion
